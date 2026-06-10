@@ -1086,7 +1086,8 @@ def main():
     app.add_handler(CallbackQueryHandler(cb_delete_ok,          pattern=r"^delok:"))
     app.add_handler(CallbackQueryHandler(cb_delete_no,          pattern=r"^delno:"))
 
-    log.info("Бот v3.0 запущено ✅")
+    log.info("Бот v3.0 запущено ✅ ok")
+
     app.run_polling(drop_pending_updates=True)
 
 
