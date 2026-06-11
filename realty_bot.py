@@ -381,7 +381,7 @@ def start_monitor_job(app, chat_id: int, sp: SearchParams):
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
      [KeyboardButton("❓ Допомога")]],
-    resize_keyboard=True, persistent=True
+    resize_keyboard=True, is_persistent=True
 )
 
 
