@@ -15,7 +15,21 @@ from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     MessageHandler, ContextTypes, filters, ConversationHandler
 )
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+    def log_message(self, *args):
+        pass
+
+def run_health():
+    HTTPServer(("0.0.0.0", 10000), HealthHandler).serve_forever()
+
+threading.Thread(target=run_health, daemon=True).start()
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 log = logging.getLogger(__name__)
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "ВСТАВЬТЕ_ТОКЕН_СЮДА")
