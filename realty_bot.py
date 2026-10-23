@@ -140,7 +140,7 @@ PRICE_HINT = {
     "daily": "<code>800-1500</code>, <code>до 2000</code>",
 }
 
-(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT) = range(9)
+(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT, S_AREA) = range(10)
 
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
@@ -222,6 +222,18 @@ def price_label(s):
     return ""
 
 
+def area_label(s):
+    a = s.get("area") or {}
+    lo, hi = a.get("min"), a.get("max")
+    if lo and hi:
+        return f"{lo:g}–{hi:g} м²"
+    if lo:
+        return f"від {lo:g} м²"
+    if hi:
+        return f"до {hi:g} м²"
+    return ""
+
+
 def districts_label(s):
     return ", ".join(DISTRICT_NAMES.get(d, d) for d in district_codes(s))
 
@@ -234,6 +246,8 @@ def auto_name(s):
     parts.append(DEAL_SHORT[s["deal"]])
     if price_label(s):
         parts.append(price_label(s))
+    if area_label(s):
+        parts.append(area_label(s))
     return " · ".join(parts)
 
 
@@ -251,7 +265,8 @@ def summary(s):
     lines = [f"📋 <b>{esc(s['name'])}</b>"]
     lines.append(f"{DEALS[s['deal']]} · 📍 {CITIES.get(s['city'], s['city'])}"
                  + (f": {districts_label(s)}" if district_codes(s) else ""))
-    lines.append(f"🛏 {rooms_label(s.get('rooms'))}" + (f" · 💰 {price_label(s)}" if price_label(s) else ""))
+    lines.append(f"🛏 {rooms_label(s.get('rooms'))}" + (f" · 💰 {price_label(s)}" if price_label(s) else "")
+                 + (f" · 📐 {area_label(s)}" if area_label(s) else ""))
     if s.get("condition", "any") != "any":
         lines.append(f"🛠 {CONDITIONS[s['condition']]}")
     if (s.get("seller") or "any") != "any":
@@ -430,7 +445,7 @@ async def ask_edit_menu(src, ctx, new_message=False):
     rows = []
     if DISTRICTS.get(s["city"]):
         rows.append([("📍 Райони", "ed:dist")])
-    rows += [[("🛏 Кімнати", "ed:rooms"), ("💰 Ціна", "ed:price")],
+    rows += [[("🛏 Кімнати", "ed:rooms"), ("💰 Ціна", "ed:price"), ("📐 Площа", "ed:area")],
              [("🛠 Стан", "ed:cond"), ("👤 Продавець", "ed:seller")],
              [("🔑 Ключові слова", "ed:kw")],
              [("✅ Зберегти", "ed:save"), ("❌ Скасувати", "ed:cancel")]]
@@ -453,6 +468,8 @@ async def cb_edit_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return await ask_rooms(q, ctx)
     if act == "price":
         return await ask_price(q, ctx)
+    if act == "area":
+        return await ask_area(q, ctx)
     if act == "cond":
         return await ask_condition(q, ctx)
     if act == "seller":
@@ -571,7 +588,7 @@ async def cb_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
     set_price(ctx.user_data["new"], None, None)
-    return await after(q, ctx, ask_condition)
+    return await after(q, ctx, ask_area)
 
 
 async def txt_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -582,6 +599,34 @@ async def txt_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s = ctx.user_data["new"]
     set_price(s, lo, hi)
     await update.message.reply_text(f"💰 {price_label(s)}")
+    return await after(update.message, ctx, ask_area)
+
+
+async def ask_area(src, ctx):
+    s = ctx.user_data["new"]
+    cur = area_label(s)
+    await show(src, "📐 Площа, м². Напиши діапазон: <code>40-50</code>, <code>від 60</code>, <code>до 45</code>"
+                    + (f"\nЗараз: <b>{cur}</b>" if cur else ""),
+               kb([[("Будь-яка", "area:none")]]))
+    return S_AREA
+
+
+async def cb_area(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    ctx.user_data["new"].pop("area", None)
+    return await after(q, ctx, ask_condition)
+
+
+async def txt_area(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    t = (update.message.text or "").lower().replace("м2", "").replace("м²", "").replace("кв", "")
+    lo, hi = parse_price_range(t)
+    if not (lo or hi) or (hi and hi > 2000):
+        await update.message.reply_text("⚠️ Не зрозумів. Напиши, наприклад, 40-50 або від 60")
+        return S_AREA
+    s = ctx.user_data["new"]
+    s["area"] = {"min": lo, "max": hi}
+    await update.message.reply_text(f"📐 {area_label(s)}")
     return await after(update.message, ctx, ask_condition)
 
 
@@ -952,6 +997,8 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
             S_ROOMS: [CallbackQueryHandler(cb_rooms, pattern=r"^rooms:")],
             S_PRICE: [CallbackQueryHandler(cb_price, pattern=r"^price:"),
                       MessageHandler(filters.TEXT & ~filters.COMMAND, txt_price)],
+            S_AREA: [CallbackQueryHandler(cb_area, pattern=r"^area:"),
+                     MessageHandler(filters.TEXT & ~filters.COMMAND, txt_area)],
             S_CONDITION: [CallbackQueryHandler(cb_condition, pattern=r"^cond:")],
             S_SELLER: [CallbackQueryHandler(cb_seller, pattern=r"^sel:")],
             S_KEYWORDS: [CommandHandler("skip", skip_keywords),

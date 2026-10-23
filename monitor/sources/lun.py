@@ -51,6 +51,11 @@ def build_url(s: dict, page: int, slug: str = None) -> str:
             q.append(("price_min", str(int(rng["min"]))))
         if rng.get("max"):
             q.append(("price_max", str(int(rng["max"]))))
+    area = s.get("area") or {}
+    if area.get("min"):
+        q.append(("area_min", str(area["min"])))
+    if area.get("max"):
+        q.append(("area_max", str(area["max"])))
     q.append(("sort", "insert_time"))
     if page > 1:
         q.append(("page", str(page)))

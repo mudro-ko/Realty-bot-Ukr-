@@ -30,6 +30,11 @@ def search_params(s: dict, usd_uah: float, limit: int, district_ids=None):
             p.append(("characteristic[234][from]", int(lo * 0.9)))
         if hi:
             p.append(("characteristic[234][to]", int(hi * 1.1)))
+    area = s.get("area") or {}
+    if area.get("min"):
+        p.append(("characteristic[214][from]", area["min"]))      # 214 — загальна площа
+    if area.get("max"):
+        p.append(("characteristic[214][to]", area["max"]))
     ids = s.get("_district", {}).get("ria_ids", []) if district_ids is None else district_ids
     for i, did in enumerate(ids):
         p.append((f"district_id[{i}]", did))
