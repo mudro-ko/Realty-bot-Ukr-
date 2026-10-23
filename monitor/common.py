@@ -55,6 +55,8 @@ class Listing:
     agency: Optional[bool] = None                    # явна позначка ріелтора/агентства
     district_name: str = ""                          # район/мікрорайон як його називає сайт
     district_id: Optional[int] = None                # ID району на сайті (DIM.RIA)
+    complex: str = ""                                # ЖК, як його називає сайт
+    complex_id: Optional[int] = None                 # ID ЖК на сайті (DIM.RIA newbuild_id)
     extra_keys: list = field(default_factory=list)   # додаткові ключі для дедуплікації (groupId тощо)
     initial: bool = False                            # з першого запуску джерела (стартова підбірка)
 

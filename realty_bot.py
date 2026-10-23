@@ -33,6 +33,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
 from monitor.__main__ import run_search
 from monitor.archive import Archive
 from monitor.export import build_report
+from monitor import zhk as Z
 from monitor.filters import DISTRICTS, district_codes, split_keywords
 from monitor.telegram import Telegram as Collector, esc
 
@@ -140,7 +141,8 @@ PRICE_HINT = {
     "daily": "<code>800-1500</code>, <code>до 2000</code>",
 }
 
-(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT, S_AREA) = range(10)
+(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT, S_AREA,
+ S_WHERE, S_ZHK) = range(12)
 
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
@@ -240,7 +242,9 @@ def districts_label(s):
 
 def auto_name(s):
     parts = [CITIES.get(s["city"], s["city"])]
-    if district_codes(s):
+    if s.get("zhk"):
+        parts.append("ЖК " + zhk_summary(s, limit=2))
+    elif district_codes(s):
         parts.append(districts_label(s))
     parts.append(rooms_label(s.get("rooms")))
     parts.append(DEAL_SHORT[s["deal"]])
@@ -264,7 +268,9 @@ def keywords_label(s):
 def summary(s):
     lines = [f"📋 <b>{esc(s['name'])}</b>"]
     lines.append(f"{DEALS[s['deal']]} · 📍 {CITIES.get(s['city'], s['city'])}"
-                 + (f": {districts_label(s)}" if district_codes(s) else ""))
+                 + (f": {districts_label(s)}" if district_codes(s) and not s.get("zhk") else ""))
+    if s.get("zhk"):
+        lines.append(f"🏢 ЖК ({len(s['zhk'])}): {esc(zhk_summary(s, limit=8))}")
     lines.append(f"🛏 {rooms_label(s.get('rooms'))}" + (f" · 💰 {price_label(s)}" if price_label(s) else "")
                  + (f" · 📐 {area_label(s)}" if area_label(s) else ""))
     if s.get("condition", "any") != "any":
@@ -273,7 +279,12 @@ def summary(s):
         lines.append(SELLERS[s["seller"]])
     lines += keywords_label(s)
     src = " + ".join({"lun": "ЛУН", "dimria": "DIM.RIA"}[x] for x in s.get("sources", []))
-    status = "⏸ на паузі" if s.get("paused") else f"🟢 кожні {INTERVALS.get(s.get('interval', 30), str(s.get('interval')) + ' хв')}"
+    if s.get("paused"):
+        status = "⏸ на паузі"
+    elif s.get("digest"):
+        status = digest_label(s["digest"])
+    else:
+        status = f"🟢 кожні {INTERVALS.get(s.get('interval', 30), str(s.get('interval')) + ' хв')}"
     lines.append(f"🔔 {status} · {src}")
     if s.get("last_run"):
         lines.append(f"🕒 остання перевірка: {s['last_run']}")
@@ -365,9 +376,18 @@ async def check_search(app: Application, chat_id: int, sid: str, manual=False):
                 await app.bot.send_message(chat_id, "⚠️ Не вдалося перевірити, деталі в data/bot.log")
             return
         rep = report.get(sid, {})
+        digest = bool(s.get("digest"))
         with db.lock:
             if db.get(chat_id, sid) is None:       # пошук видалили, поки перевіряли
                 return
+            if digest:
+                # режим дайджесту: складаємо в чергу; надсилаємо за розкладом або при ручній перевірці
+                pending = (chat["state"].get(sid) or {}).get("pending", []) + outbox
+                st["pending"] = [] if manual else pending[-200:]
+                if manual:
+                    outbox = pending
+                else:
+                    outbox = []
             chat["state"][sid] = st
             s["last_run"] = datetime.now(KYIV).strftime("%d.%m %H:%M")
             s["next_due"] = time.time() + int(s.get("interval", 30)) * 60
@@ -407,6 +427,49 @@ async def deliver(app: Application, chat_id: int, outbox: list) -> int:
     return sent
 
 
+WEEKDAYS = ["пн", "вт", "ср", "чт", "пт", "сб", "нд"]
+
+
+def next_digest(dg: dict, after: datetime = None) -> float:
+    """Наступний час дайджесту за місцевим часом комп'ютера. dow=None — щодня."""
+    now = after or datetime.now()
+    t = now.replace(hour=int(dg.get("hour", 14)), minute=int(dg.get("minute", 0)), second=0, microsecond=0)
+    if dg.get("dow") is None:
+        if t <= now:
+            t += timedelta(days=1)
+    else:
+        t += timedelta(days=(int(dg["dow"]) - t.weekday()) % 7)
+        if t <= now:
+            t += timedelta(days=7)
+    return t.timestamp()
+
+
+def digest_label(dg: dict) -> str:
+    when = "щодня" if dg.get("dow") is None else f"щотижня, {WEEKDAYS[int(dg['dow'])]}"
+    return f"🗓 дайджест {when} о {int(dg.get('hour', 14)):02d}:{int(dg.get('minute', 0)):02d}"
+
+
+async def send_digest(app: Application, chat_id: int, sid: str):
+    db: DB = app.bot_data["db"]
+    with db.lock:
+        s = db.get(chat_id, sid)
+        if not s:
+            return
+        st = db.chat(chat_id)["state"].setdefault(sid, {})
+        pending, st["pending"] = st.get("pending", []), []
+        s["digest_next"] = next_digest(s["digest"])
+    db.save()
+    listings = [m for m in pending if m["type"] == "listing"]
+    others = [m for m in pending if m["type"] != "listing"]
+    cap = 25
+    head = (f"🗓 <b>Дайджест · {esc(s['name'])}</b>\n"
+            + (f"Нових оголошень: <b>{len(listings)}</b>" if listings else "Нових оголошень за цей період немає."))
+    if len(listings) > cap:
+        head += f"\nПоказую {cap} найсвіжіших, усі — у «📊 Звіт»."
+    await app.bot.send_message(chat_id, head, parse_mode=ParseMode.HTML)
+    await deliver(app, chat_id, others + listings[-cap:])
+
+
 async def tick(ctx: ContextTypes.DEFAULT_TYPE):
     """Раз на хвилину: запускає перевірки, у яких настав час."""
     db: DB = ctx.bot_data["db"]
@@ -421,6 +484,21 @@ async def tick(ctx: ContextTypes.DEFAULT_TYPE):
                     due.append((int(cid), s["id"]))
     for cid, sid in due:
         await check_search(ctx.application, cid, sid)
+    # дайджести, у яких настав час
+    digests = []
+    with db.lock:
+        for cid, chat in db.data["chats"].items():
+            if not chat_allowed(cid, db):
+                continue
+            for s in chat["searches"]:
+                if s.get("digest") and not s.get("paused"):
+                    if not s.get("digest_next"):
+                        s["digest_next"] = next_digest(s["digest"])
+                    elif s["digest_next"] <= time.time():
+                        digests.append((int(cid), s["id"]))
+    for cid, sid in digests:
+        await check_search(ctx.application, cid, sid)       # свіжа перевірка перед відправкою
+        await send_digest(ctx.application, cid, sid)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -481,8 +559,13 @@ async def edit_search(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def ask_edit_menu(src, ctx, new_message=False):
     s = ctx.user_data["new"]
     rows = []
+    loc = []
     if DISTRICTS.get(s["city"]):
-        rows.append([("📍 Райони", "ed:dist")])
+        loc.append(("📍 Райони", "ed:dist"))
+    if Z.has_catalog(s["city"]):
+        loc.append(("🏢 ЖК", "ed:zhk"))
+    if loc:
+        rows.append(loc)
     rows += [[("🛏 Кімнати", "ed:rooms"), ("💰 Ціна", "ed:price"), ("📐 Площа", "ed:area")],
              [("🛠 Стан", "ed:cond"), ("👤 Продавець", "ed:seller")],
              [("🔑 Ключові слова", "ed:kw")],
@@ -502,6 +585,8 @@ async def cb_edit_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     act = q.data.split(":", 1)[1]
     if act == "dist":
         return await ask_district(q, ctx)
+    if act == "zhk":
+        return await ask_zhk_menu(q, ctx)
     if act == "rooms":
         return await ask_rooms(q, ctx)
     if act == "price":
@@ -539,6 +624,9 @@ async def cb_city(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s = ctx.user_data["new"]
     s["city"] = q.data.split(":", 1)[1]
     s["districts"] = []
+    s.pop("zhk", None)
+    if Z.has_catalog(s["city"]):
+        return await ask_where(q, ctx)
     if not DISTRICTS.get(s["city"]):
         return await ask_rooms(q, ctx)
     return await ask_district(q, ctx)
@@ -571,6 +659,7 @@ async def cb_district(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_reply_markup(reply_markup=district_kb(s))
         return S_DISTRICT
     s.pop("district", None)
+    s.pop("zhk", None)
     return await after(q, ctx, ask_rooms)
 
 
@@ -748,7 +837,8 @@ async def finish(src, ctx):
             # нові фільтри → переглядаємо все заново; вже надіслане не повторюємо
             st = db.chat(chat_id)["state"].get(s["id"], {})
             keep = {"sent": st.get("sent", {})}
-            if old and district_codes(old) == district_codes(s) and old.get("city") == s.get("city"):
+            if old and district_codes(old) == district_codes(s) and old.get("city") == s.get("city") \
+                    and sorted(old.get("zhk") or []) == sorted(s.get("zhk") or []):
                 keep["learned_micro"] = st.get("learned_micro", [])
                 keep["ria_learned"] = st.get("ria_learned", {})
             db.chat(chat_id)["state"][s["id"]] = keep
@@ -779,6 +869,188 @@ async def cancel_and_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ctx.user_data.pop("edit", None)
     await my_searches(update, ctx)
     return ConversationHandler.END
+
+
+# ── Вибір ЖК ──────────────────────────────────────────────────
+ZHK_PAGE = 10
+ADMIN_DISTRICTS = ["prymorskyi", "kyivskyi", "khadzhybeiskyi", "peresypskyi"]
+
+
+def zhk_label(z, selected):
+    extra = z.get("developer") or z.get("micro") or ""
+    ppm = f" · ${z['ppm']:,}/м²".replace(",", " ") if z.get("ppm") else ""
+    t = ("✅ " if selected else "") + z["name"] + (f" · {extra}" if extra else "") + ppm
+    return t if len(t) <= 60 else t[:58] + "…"
+
+
+def zhk_summary(s, limit=4):
+    keys = s.get("zhk") or []
+    names = [(Z.by_key(s["city"], k) or {"name": k})["name"] for k in keys]
+    if len(names) > limit:
+        return ", ".join(names[:limit]) + f" +{len(names) - limit}"
+    return ", ".join(names)
+
+
+async def ask_where(src, ctx):
+    s = ctx.user_data["new"]
+    await show(src, f"📍 {CITIES[s['city']]}: як шукати?",
+               kb([[("📍 За районами", "where:dist")], [("🏢 Конкретні ЖК", "where:zhk")]]))
+    return S_WHERE
+
+
+async def cb_where(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    s = ctx.user_data["new"]
+    if q.data == "where:zhk":
+        s.setdefault("zhk", [])
+        return await ask_zhk_menu(q, ctx)
+    s.pop("zhk", None)
+    return await ask_district(q, ctx)
+
+
+async def ask_zhk_menu(src, ctx):
+    s = ctx.user_data["new"]
+    n = len(s.get("zhk") or [])
+    txt = ("🏢 <b>Вибір ЖК</b> (можна кілька).\n"
+           "Знайди потрібні за районом, забудовником або просто напиши частину назви "
+           "(напр. <i>перлина</i>, <i>традиції</i>, <i>корфу</i>).")
+    if n:
+        txt += f"\n\nОбрано: <b>{esc(zhk_summary(s))}</b>"
+    rows = [[("📍 За районом", "zm:dist"), ("🏗 За забудовником", "zm:dev")],
+            [("🔎 Написати назву", "zm:name")]]
+    if n:
+        rows.append([(f"📋 Обрані ({n})", "zm:sel")])
+    rows.append([("✔️ Готово", "zm:done")])
+    ctx.user_data["zhk_view"] = None
+    await show(src, txt, kb(rows))
+    return S_ZHK
+
+
+def zhk_list_kb(s, items, page, nav_prefix):
+    sel = set(s.get("zhk") or [])
+    pages = max(1, (len(items) + ZHK_PAGE - 1) // ZHK_PAGE)
+    page = max(0, min(page, pages - 1))
+    chunk = items[page * ZHK_PAGE:(page + 1) * ZHK_PAGE]
+    rows = [[(zhk_label(z, z["key"] in sel), f"zt:{Z.index_of(s['city'], z['key'])}")] for z in chunk]
+    nav = []
+    if page > 0:
+        nav.append(("◀️", f"{nav_prefix}:{page - 1}"))
+    if pages > 1:
+        nav.append((f"{page + 1}/{pages}", "noop"))
+    if page < pages - 1:
+        nav.append(("▶️", f"{nav_prefix}:{page + 1}"))
+    if nav:
+        rows.append(nav)
+    rows.append([("⬅️ Меню ЖК", "zm:menu"), ("✔️ Готово", "zm:done")])
+    return kb(rows)
+
+
+def zhk_view_items(s, view):
+    kind, arg = view[0], view[1]
+    city = s["city"]
+    if kind == "dist":
+        return in_district_sorted(city, arg)
+    if kind == "dev":
+        return Z.of_developer(city, arg)
+    if kind == "q":
+        return Z.search(city, arg, limit=40)
+    if kind == "sel":
+        return [z for z in (Z.by_key(city, k) for k in (s.get("zhk") or [])) if z]
+    return []
+
+
+def in_district_sorted(city, code):
+    return sorted(Z.in_district(city, code), key=lambda z: (-(z.get("listings") or 0), z["name"]))
+
+
+async def show_zhk_view(src, ctx, view, page=0):
+    s = ctx.user_data["new"]
+    ctx.user_data["zhk_view"] = (view[0], view[1], page)
+    items = zhk_view_items(s, view)
+    titles = {"dist": lambda a: f"📍 {DISTRICT_NAMES.get(a, a)} — ЖК (найбільше оголошень зверху)",
+              "dev": lambda a: f"🏗 {a} — ЖК",
+              "q": lambda a: f"🔎 «{a}»",
+              "sel": lambda a: "📋 Обрані ЖК (натисни, щоб прибрати)"}
+    head = titles[view[0]](view[1])
+    if not items:
+        await show(src, head + "\n\nНічого не знайдено. Спробуй іншу назву.",
+                   kb([[("⬅️ Меню ЖК", "zm:menu")]]))
+        return S_ZHK
+    prefix = {"dist": "zd", "dev": "zv", "q": "zq", "sel": "zs"}[view[0]]
+    await show(src, head + f"\n<i>Галочкою позначені обрані. Ціна — медіана $/м² продажу.</i>",
+               zhk_list_kb(s, items, page, prefix))
+    return S_ZHK
+
+
+async def cb_zhk(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    s = ctx.user_data["new"]
+    data = q.data
+    if data == "noop":
+        await q.answer()
+        return S_ZHK
+    await q.answer()
+    if data == "zm:menu":
+        return await ask_zhk_menu(q, ctx)
+    if data == "zm:dist":
+        rows = [[(f"{DISTRICT_NAMES[d]} ({len(Z.in_district(s['city'], d))})", f"zd0:{d}")] for d in ADMIN_DISTRICTS
+                if Z.in_district(s["city"], d)]
+        rows.append([("⬅️ Меню ЖК", "zm:menu")])
+        await show(q, "📍 Обери район:", kb(rows))
+        return S_ZHK
+    if data == "zm:dev":
+        devs = Z.developers(s["city"])[:24]
+        ctx.user_data["zhk_devs"] = [d for d, _ in devs]
+        rows = chunks([(f"{d} ({n})", f"zv0:{i}") for i, (d, n) in enumerate(devs)], 2)
+        rows.append([("⬅️ Меню ЖК", "zm:menu")])
+        await show(q, "🏗 Обери забудовника:", kb(rows))
+        return S_ZHK
+    if data == "zm:name":
+        ctx.user_data["zhk_view"] = None
+        await show(q, "🔎 Напиши частину назви ЖК, наприклад: <i>перлина</i>, <i>одеські традиції</i>, <i>kadorr</i>",
+                   kb([[("⬅️ Меню ЖК", "zm:menu")]]))
+        return S_ZHK
+    if data == "zm:sel":
+        return await show_zhk_view(q, ctx, ("sel", ""))
+    if data == "zm:done":
+        if s.get("zhk"):
+            s.pop("districts", None)
+            s.pop("district", None)
+        else:
+            s.pop("zhk", None)
+        return await after(q, ctx, ask_rooms)
+    if data.startswith("zd0:"):
+        return await show_zhk_view(q, ctx, ("dist", data[4:]))
+    if data.startswith("zv0:"):
+        devs = ctx.user_data.get("zhk_devs") or []
+        i = int(data[4:])
+        return await show_zhk_view(q, ctx, ("dev", devs[i] if i < len(devs) else ""))
+    if data[:3] in ("zd:", "zv:", "zq:", "zs:"):
+        v = ctx.user_data.get("zhk_view")
+        if v:
+            return await show_zhk_view(q, ctx, (v[0], v[1]), int(data[3:]))
+        return await ask_zhk_menu(q, ctx)
+    if data.startswith("zt:"):
+        idx = int(data[3:])
+        cat = Z.catalog(s["city"])
+        if 0 <= idx < len(cat):
+            key = cat[idx]["key"]
+            sel = s.setdefault("zhk", [])
+            sel.remove(key) if key in sel else sel.append(key)
+        v = ctx.user_data.get("zhk_view")
+        if v:
+            return await show_zhk_view(q, ctx, (v[0], v[1]), v[2])
+        return await ask_zhk_menu(q, ctx)
+    return S_ZHK
+
+
+async def txt_zhk(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    text = (update.message.text or "").strip()
+    if len(text) < 2:
+        await update.message.reply_text("Напиши хоча б 2 літери назви ЖК.")
+        return S_ZHK
+    return await show_zhk_view(update.message, ctx, ("q", text))
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -812,7 +1084,7 @@ async def cb_manage(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     cid = q.message.chat_id
     act, sid = q.data.split(":", 1)
     if act == "frqset":
-        sid, minutes = sid.split(":")
+        sid, minutes = sid.split(":", 1)
     s = db.get(cid, sid)
     if not s:
         await q.answer("Пошук не знайдено")
@@ -831,12 +1103,20 @@ async def cb_manage(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         db.save()
         await q.edit_message_text(summary(s), parse_mode=ParseMode.HTML, reply_markup=search_kb(s))
     elif act == "frq":
-        rows = [[(t, f"frqset:{sid}:{m}") for m, t in INTERVALS.items()]]
+        rows = [[(t, f"frqset:{sid}:{m}") for m, t in INTERVALS.items()],
+                [("🗓 Щотижня, сб 14:00", f"frqset:{sid}:w5"), ("🗓 Щодня, 14:00", f"frqset:{sid}:d")]]
         await q.edit_message_reply_markup(reply_markup=kb(rows))
     elif act == "frqset":
         with db.lock:
-            s["interval"] = int(minutes)
-            s["next_due"] = time.time() + int(minutes) * 60
+            if minutes in ("w5", "d"):
+                s["digest"] = {"dow": 5 if minutes == "w5" else None, "hour": 14, "minute": 0}
+                s["digest_next"] = next_digest(s["digest"])
+                s["interval"] = 180                    # у фоні перевіряємо раз на 3 год, щоб нічого не пропустити
+            else:
+                s.pop("digest", None)
+                s.pop("digest_next", None)
+                s["interval"] = int(minutes)
+            s["next_due"] = time.time() + int(s["interval"]) * 60
         db.save()
         await q.edit_message_text(summary(s), parse_mode=ParseMode.HTML, reply_markup=search_kb(s))
     elif act == "del":
@@ -1197,6 +1477,22 @@ def migrate(db: DB, archive: Archive):
                     pass
                 s["v"], s["next_due"], changed = SCHEMA_V, 0, True
                 log.info("Міграція пошуку %s на v%d", s["id"], SCHEMA_V)
+    patch_path = os.path.join(os.path.dirname(db.path), "patch.json")
+    if os.path.exists(patch_path):
+        try:
+            patch = json.load(open(patch_path, encoding="utf-8"))
+            with db.lock:
+                for chat in db.data["chats"].values():
+                    for s in chat["searches"]:
+                        for k, v in (patch.get("searches", {}).get(s["id"]) or {}).items():
+                            s[k] = v
+                            changed = True
+                        if s.get("digest"):
+                            s["digest_next"] = next_digest(s["digest"])
+            os.replace(patch_path, patch_path + ".applied")
+            log.info("Застосовано %s", patch_path)
+        except Exception:
+            log.exception("Не вдалося застосувати patch.json")
     if changed:
         db.save()
 
@@ -1218,6 +1514,9 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
             S_DEAL: [CallbackQueryHandler(cb_deal, pattern=r"^deal:")],
             S_CITY: [CallbackQueryHandler(cb_city, pattern=r"^city:")],
             S_DISTRICT: [CallbackQueryHandler(cb_district, pattern=r"^dsel:")],
+            S_WHERE: [CallbackQueryHandler(cb_where, pattern=r"^where:")],
+            S_ZHK: [CallbackQueryHandler(cb_zhk, pattern=r"^(zm|zd0|zv0|zd|zv|zq|zs|zt):|^noop$"),
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, txt_zhk)],
             S_ROOMS: [CallbackQueryHandler(cb_rooms, pattern=r"^rooms:")],
             S_PRICE: [CallbackQueryHandler(cb_price, pattern=r"^price:"),
                       MessageHandler(filters.TEXT & ~filters.COMMAND, txt_price)],

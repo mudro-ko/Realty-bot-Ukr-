@@ -50,9 +50,11 @@ def _header(ws, row, cols, widths=None):
             ws.column_dimensions[get_column_letter(i)].width = max(ws.column_dimensions[get_column_letter(i)].width or 0, w)
 
 
-LIST_COLS = ["Знайдено", "Ціна $", "Ціна ₴", "$/м²", "Кімн.", "Площа м²", "Поверх", "Адреса",
+LIST_COLS = ["Знайдено", "Ціна $", "Ціна ₴", "$/м²", "Кімн.", "Площа м²", "Поверх", "ЖК", "Адреса",
              "Стан", "Власник", "Зміна ціни", "Сайт", "Посилання", "Опис"]
-LIST_W = [16, 11, 12, 8, 7, 10, 9, 42, 18, 9, 14, 13, 12, 60]
+LIST_W = [16, 11, 12, 8, 7, 10, 9, 22, 42, 18, 9, 14, 13, 12, 60]
+LINK_COL = LIST_COLS.index("Посилання") + 1
+DESC_COL = LIST_COLS.index("Опис") + 1
 
 
 def listing_sheet(ws, name, rows, deal):
@@ -70,12 +72,12 @@ def listing_sheet(ws, name, rows, deal):
         floor = f"{r['floor']}/{r['floors']}" if r.get("floor") and r.get("floors") else (r.get("floor") or "")
         ws.append([
             r.get("first_seen"), r.get("price_usd"), r.get("price_uah"), _ppm(r) if deal == "sale" else None,
-            r.get("rooms"), r.get("area"), floor, r.get("geo") or r.get("street"),
+            r.get("rooms"), r.get("area"), floor, re.sub(r"^ЖК\s+", "", r.get("complex") or ""), r.get("geo") or r.get("street"),
             COND_SHORT.get(r.get("condition"), "—"), "так" if r.get("is_owner") else "",
             delta_txt, r.get("origin"), "відкрити", " ".join((r.get("text") or "").split())[:300],
         ])
         i = ws.max_row
-        link = ws.cell(row=i, column=13)
+        link = ws.cell(row=i, column=LINK_COL)
         link.hyperlink, link.font = r.get("url"), LINK_FONT
         if delta < 0:
             for c in range(1, len(LIST_COLS) + 1):
@@ -84,7 +86,7 @@ def listing_sheet(ws, name, rows, deal):
         for c in ws.iter_cols(min_col=col, max_col=col, min_row=4):
             for cell in c:
                 cell.number_format = "#,##0"
-    for row in ws.iter_rows(min_row=4, max_row=ws.max_row, min_col=14, max_col=14):
+    for row in ws.iter_rows(min_row=4, max_row=ws.max_row, min_col=DESC_COL, max_col=DESC_COL):
         for cell in row:
             cell.alignment = Alignment(wrap_text=False)
     ws.freeze_panes = "B4"
@@ -156,6 +158,24 @@ def analytics_block(ws, start_row, name, rows, deal, link_sheet):
         ws.cell(row=r, column=3, value=_med([x.get(money) for x in g])).number_format = "#,##0"
         if deal == "sale":
             ws.cell(row=r, column=4, value=_med([_ppm(x) for x in g])).number_format = "#,##0"
+
+    # за ЖК
+    by_zhk = defaultdict(list)
+    for x in rows:
+        if x.get("complex"):
+            by_zhk[re.sub(r"^ЖК\s+", "", x["complex"])].append(x)
+    if by_zhk:
+        r += 2
+        ws.cell(row=r, column=1, value="За ЖК (топ-15 за кількістю)").font = SUB_FONT
+        r += 1
+        _header(ws, r, ["ЖК", "Оголошень", f"Медіана, {sym}", "Медіана $/м²" if deal == "sale" else "Медіана м²"])
+        for name, g in sorted(by_zhk.items(), key=lambda kv: -len(kv[1]))[:15]:
+            r += 1
+            ws.cell(row=r, column=1, value=name)
+            ws.cell(row=r, column=2, value=len(g))
+            ws.cell(row=r, column=3, value=_med([x.get(money) for x in g])).number_format = "#,##0"
+            ws.cell(row=r, column=4, value=_med([_ppm(x) for x in g]) if deal == "sale"
+                    else _med([x.get("area") for x in g])).number_format = "#,##0"
 
     # динаміка по тижнях
     r += 2

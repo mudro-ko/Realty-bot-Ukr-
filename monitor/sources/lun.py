@@ -17,7 +17,7 @@ REF_RE = re.compile(r"\$[0-9a-f]+")
 FLIGHT_RE = re.compile(r'self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)')
 
 
-def build_url(s: dict, page: int, slug: str = None) -> str:
+def build_url(s: dict, page: int, seg: str = None) -> str:
     """Кімнати — повтореним параметром (room_count=3&room_count=4): форму «3,4» ЛУН не розуміє."""
     if s.get("lun_url"):
         # користувач вставив готове посилання з фільтрами з сайту ЛУН
@@ -36,11 +36,9 @@ def build_url(s: dict, page: int, slug: str = None) -> str:
         return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), ""))
 
     section = SECTION[s["deal"]]
-    path = f"/{section}/{CITY[s['city']]}/flats"
-    if slug is None:
-        slug = (s.get("_district") or {}).get("lun")
-    if slug:
-        path += f"-{slug}"
+    if seg is None and (s.get("_district") or {}).get("lun"):
+        seg = "flats-" + s["_district"]["lun"]
+    path = f"/{section}/{CITY[s['city']]}/{seg or 'flats'}"
     q = [("room_count", str(r)) for r in s.get("rooms") or []]
     # ціна на стороні ЛУН: валюта ОБОВ'ЯЗКОВО великими літерами (USD/UAH), інакше сторінка порожня
     field, cur = ("price_usd", "USD") if s["deal"] == "sale" else ("price_uah", "UAH")
@@ -129,6 +127,7 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
             pu = int(price * 1.08)
             pa = int(pu * usd_uah)
     site = (c.get("site") or {}).get("displayName") or "lun.ua"
+    rc = next((g for g in (c.get("geoEntities") or []) if g.get("type") == "residential_complex"), None)
     extra = []
     if c.get("groupId"):
         extra.append(f"lung:{c['groupId']}")
@@ -148,6 +147,7 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
         published=(c.get("insertTime") or "").replace("T", " ")[:16],
         without_renovation=c.get("withoutRenovation"),
         is_owner=c.get("isOwner"),
+        complex=(rc or {}).get("name") or "",
         without_commission=c.get("withoutCommission"),
         extra_keys=extra,
     )
@@ -158,7 +158,13 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
     Кілька районів — окрема сторінка ЛУН на кожен."""
     if s["deal"] not in SECTION and not s.get("lun_url"):
         return [], 0, "", [], []
-    slugs = [None] if s.get("lun_url") else ((s.get("_district") or {}).get("lun_slugs") or [None])
+    d = s.get("_district") or {}
+    if s.get("lun_url"):
+        slugs = [None]
+    elif d.get("zhk"):
+        slugs = d.get("lun_segs") or [None]                         # сторінка кожного ЖК
+    else:
+        slugs = [f"flats-{x}" for x in d.get("lun_slugs") or []] or [None]
     if max_pages is None:
         # перший запуск / після зміни пошуку — глибоко (у звіт), далі — лише свіжі сторінки
         max_pages = 10 if (first_run or backfill) else 3

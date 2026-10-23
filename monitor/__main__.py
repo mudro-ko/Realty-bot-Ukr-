@@ -64,6 +64,7 @@ def run_search(s, st, tg, settings, report, archive=None):
         s["_district"]["names"] += learned
     if s["_district"]:
         s["_district"]["ria_learned"] = st.setdefault("ria_learned", {})   # назва мікрорайону → ID на DIM.RIA
+        s["_district"]["ria_zhk_learned"] = st.setdefault("ria_zhk_learned", {})   # назва ЖК → newbuild_id
     sent = st.setdefault("sent", {})
     today = datetime.now(KYIV).strftime("%Y-%m-%d")
 

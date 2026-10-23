@@ -83,7 +83,14 @@ def district_codes(s: dict) -> list:
 
 
 def resolve_district(s: dict) -> dict:
-    """Об'єднує кілька районів: сторінки ЛУН, ID і назви для DIM.RIA."""
+    """Об'єднує кілька районів: сторінки ЛУН, ID і назви для DIM.RIA.
+    Якщо обрано ЖК — шукаємо саме в них (райони тоді не враховуються)."""
+    if s.get("zhk"):
+        from . import zhk as Z
+        items = [Z.by_key(s["city"], k) or {"key": k, "name": k} for k in s["zhk"]]
+        return {"zhk": True, "lun_segs": [z["key"] for z in items],
+                "zhk_names": [z["name"] for z in items],
+                "ria_nb_ids": [z["ria_id"] for z in items if z.get("ria_id")]}
     codes = district_codes(s)
     if not codes:
         return {}
