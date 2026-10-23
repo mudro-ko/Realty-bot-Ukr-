@@ -40,25 +40,14 @@ def ria_info(text):
 
 
 TESTS = [
-    ("lun_myk_lisky", "https://lun.ua/sale/mykolaiv/flats-lisky", lun_info),
-    ("lun_myk_rooms_a", "https://lun.ua/sale/mykolaiv/flats-lisky?roomCount=3&roomCount=4", lun_info),
-    ("lun_myk_rooms_b", "https://lun.ua/sale/mykolaiv/flats-lisky?room_count=3&room_count=4", lun_info),
-    ("lun_ods_sort_a", "https://lun.ua/sale/odesa/flats?sort=insert_time", lun_info),
-    ("lun_ods_sort_b", "https://lun.ua/sale/odesa/flats?sortBy=insertTime", lun_info),
-    ("lun_search_raw", "https://lun.ua/search?geo_id=10016589&section_id=1&language=uk&sort=insert_time", lun_info),
-    ("lun_ods_page2", "https://lun.ua/sale/odesa/flats?page=2", lun_info),
-    ("lun_ods_price", "https://lun.ua/sale/odesa/flats?price_max=50000&currency=usd", lun_info),
-    ("lun_rent_ods", "https://lun.ua/rent/odesa/flats", lun_info),
-    ("lun_daily_ods", "https://lun.ua/daily/odesa/flats", lun_info),
-    ("ria_myk", "https://dom.ria.com/uk/prodazha-kvartir/nikolaev/", ria_info),
-    ("ria_ods_sort", "https://dom.ria.com/uk/prodazha-kvartir/odessa/?sort=created_at", ria_info),
-    ("ria_ods_bezrem", "https://dom.ria.com/uk/prodazha-kvartir/odessa-bez-remonta/", ria_info),
-    ("ria_ods_3k", "https://dom.ria.com/uk/prodazha-kvartir/odessa-3k/", ria_info),
-    ("ria_ods_daily", "https://dom.ria.com/uk/posutochno-kvartir/odessa/", ria_info),
-    ("ria_se_sort", "https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at", None),
-    ("ria_se_rooms", "https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&characteristic%5B209%5D%5Bfrom%5D=3&characteristic%5B209%5D%5Bto%5D=4", None),
-    ("ria_se_price", "https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&characteristic%5B234%5D%5Bto%5D=30000&characteristic%5B242%5D=239", None),
-    ("ria_data", "https://dom.ria.com/realty/data/34962517?lang_id=4", None),
+    ("a_rep_sort", "https://lun.ua/sale/mykolaiv/flats-lisky?room_count=3&room_count=4&sort=insert_time", lun_info),
+    ("b_sort_comma", "https://lun.ua/sale/mykolaiv/flats-lisky?sort=insert_time&room_count=3,4", lun_info),
+    ("c_sort_rep", "https://lun.ua/sale/mykolaiv/flats-lisky?sort=insert_time&room_count=3&room_count=4", lun_info),
+    ("d_comma_only", "https://lun.ua/sale/mykolaiv/flats-lisky?room_count=3,4", lun_info),
+    ("e_sort_only", "https://lun.ua/sale/mykolaiv/flats-lisky?sort=insert_time", lun_info),
+    ("f_ods_rep_sort", "https://lun.ua/sale/odesa/flats?room_count=1&room_count=2&sort=insert_time", lun_info),
+    ("g_ods_comma_sort", "https://lun.ua/sale/odesa/flats?room_count=1,2&sort=insert_time", lun_info),
+    ("h_ods_single_sort", "https://lun.ua/sale/odesa/flats?room_count=2&sort=insert_time", lun_info),
 ]
 
 for k, u, fn in TESTS:
@@ -71,18 +60,3 @@ for k, u, fn in TESTS:
         print(f"{k}: ERR {e}")
     time.sleep(1.5)
 
-# LUN front-end bundles: which query-param names the filters use
-try:
-    h = S.get("https://lun.ua/sale/odesa/flats", timeout=25).text
-    chunks = sorted(set(re.findall(r'https://lun\.ua/_next/static/chunks/[A-Za-z0-9_\-]+\.js', h)))
-    found = {}
-    for cu in chunks:
-        js = S.get(cu, timeout=25).text
-        for w in re.findall(r'"((?:room_count|roomCount|price_max|priceMax|price_min|sort|sort_by|repair|insert_time|is_owner|currency|area_total_min|area_total_max)[a-z_]*)"', js):
-            found[w] = found.get(w, 0) + 1
-        for m in re.finditer(r'.{0,120}insert_time.{0,160}', js):
-            print("JSCTX", cu[-20:], m.group(0)[:280])
-        time.sleep(0.3)
-    print("LUN_JS_KEYS", json.dumps(found))
-except Exception as e:
-    print("lun js ERR", e)
