@@ -86,15 +86,22 @@ def fetch(s, seen, first_run, backfill=False, cap=None, with_price=True, pages=1
     deep = first_run or backfill
     cap = cap or (60 if deep else 25)
     total, ordered = 0, []
+    max_pages = max(pages, 6 if deep else 3)             # сервер віддає ~10 id на сторінку, size ігнорує
     for pair in pairs[:8]:
-        for page in range(pages):
+        got, count = 0, 0
+        for page in range(max_pages):
             data = get(SEARCH, params=params(s, pair, size=60 if deep else 40, page=page, with_price=with_price)).json()
             sr = (data.get("result") or {}).get("search_result") or {}
             if page == 0:
-                total += sr.get("count") or 0
-            for i in sr.get("ids") or []:
+                count = sr.get("count") or 0
+                total += count
+            ids = sr.get("ids") or []
+            for i in ids:
                 if i not in ordered:
                     ordered.append(i)
+            got += len(ids)
+            if not ids or got >= count or (not deep and page + 1 >= pages and not any(f"ria:{i}" not in seen for i in ids)):
+                break
     unseen = [i for i in ordered if f"ria:{i}" not in seen]
     targets = [(i, True) for i in unseen] + ([(i, False) for i in ordered if f"ria:{i}" in seen] if backfill else [])
     log.info("AUTO.RIA %s: ID %d, нових %d, всього %d", s.get("id"), len(ordered), len(unseen), total)
