@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      STATE_BRANCH: ${{ github.event_name == 'push' && 'state-test' || 'state' }}
+      STATE_BRANCH: ${{ github.event_name == 'push' && 'state-test2' || 'state' }}
     steps:
       - uses: actions/checkout@v4
 

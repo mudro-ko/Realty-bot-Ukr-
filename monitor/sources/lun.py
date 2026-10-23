@@ -13,6 +13,7 @@ BASE = "https://lun.ua"
 CITY = {"odesa": "odesa", "mykolaiv": "mykolaiv", "kyiv": "kyiv"}
 SECTION = {"sale": "sale", "rent": "rent"}   # подобової оренди на ЛУН немає
 
+REF_RE = re.compile(r"\$[0-9a-f]+")
 FLIGHT_RE = re.compile(r'self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)')
 
 
@@ -46,6 +47,31 @@ def build_url(s: dict, page: int) -> str:
     return f"{BASE}{path}?{urlencode(q)}"
 
 
+ROW_RE = re.compile(rb"([0-9a-f]+):")
+
+
+def text_rows(flight: str) -> dict:
+    """Довгі тексти Next.js виносить в окремі рядки «<id>:T<довжина_hex>,<текст>», а в картці лишає «$<id>»."""
+    b = flight.encode("utf-8")
+    rows, i, n = {}, 0, len(b)
+    while i < n:
+        m = ROW_RE.match(b, i)
+        if not m:
+            j = b.find(b"\n", i)
+            i = n if j < 0 else j + 1
+            continue
+        key, i = m.group(1).decode(), m.end()
+        if b[i:i + 1] == b"T":
+            comma = b.find(b",", i)
+            length = int(b[i + 1:comma], 16)
+            rows[key] = b[comma + 1:comma + 1 + length].decode("utf-8", "replace")
+            i = comma + 1 + length
+        else:
+            j = b.find(b"\n", i)
+            i = n if j < 0 else j + 1
+    return rows
+
+
 def parse_page(html: str):
     flight = "".join(json.loads('"' + m + '"') for m in FLIGHT_RE.findall(html))
     i = flight.find('{"realties":{"cards":')
@@ -53,7 +79,14 @@ def parse_page(html: str):
         return [], 0
     obj, _ = json.JSONDecoder().raw_decode(flight, i)
     r = obj["realties"]
-    return r.get("cards") or [], r.get("totalRealtiesCount") or 0
+    cards = r.get("cards") or []
+    if any(isinstance(c.get("text"), str) and REF_RE.fullmatch(c["text"]) for c in cards):
+        rows = text_rows(flight)
+        for c in cards:
+            t = c.get("text")
+            if isinstance(t, str) and REF_RE.fullmatch(t):
+                c["text"] = rows.get(t[1:], "")
+    return cards, r.get("totalRealtiesCount") or 0
 
 
 def photo_url(card) -> str:
