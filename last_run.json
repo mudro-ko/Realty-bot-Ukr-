@@ -1,0 +1,104 @@
+{
+ "time": "2026-10-23 13:34",
+ "dry_run": true,
+ "searches": {
+  "mykolaiv-lisky-sale": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 99,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    },
+    "dimria": {
+     "total": 7,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    }
+   },
+   "to_send": 0,
+   "seconds": 4.5
+  },
+  "odesa-sale": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 45759,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    },
+    "dimria": {
+     "total": 9573,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    }
+   },
+   "to_send": 0,
+   "seconds": 3.2
+  },
+  "odesa-rent": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 10178,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    },
+    "dimria": {
+     "total": 1506,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    }
+   },
+   "to_send": 0,
+   "seconds": 3.3
+  },
+  "odesa-daily": {
+   "first_run": false,
+   "sources": {
+    "dimria": {
+     "total": 572,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": false
+    }
+   },
+   "to_send": 0,
+   "seconds": 1.3
+  },
+  "kyiv-rent": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 21300,
+     "new": 2,
+     "passed": 2,
+     "filtered": {},
+     "first_run": false
+    },
+    "dimria": {
+     "total": 3525,
+     "new": 1,
+     "passed": 1,
+     "filtered": {},
+     "first_run": false
+    }
+   },
+   "to_send": 3,
+   "seconds": 4.6
+  }
+ }
+}
