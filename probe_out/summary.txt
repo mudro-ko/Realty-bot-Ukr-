@@ -1,0 +1,51 @@
+200 https://auto.ria.com/api/search/auto 2852
+['40338410', '40075820', '40598436', '40069401', '40201006', '39378276', '40594952', '40593175', '40593169', '39731118']
+200 https://auto.ria.com/demo/bu/searchPage/v2/view/auto/40338410/ 13978
+  40338410 optionStyles ["_red"] | шкір у JSON: []
+200 https://auto.ria.com/uk/auto_bmw_x1_40338410.html 592247
+  HTML hits: 4
+     'Template","id":"descGenerationBase","isHide":false,"margin":{"top":16},"elements":[{"type":"Text","content":"Покоління, комплектація, модифікація","typography":"footnote","color":"disabled"}]},{"type":"TextTemplate","id":"descGenerationBaseValue","isHide":false,"margin":{"top":8},"elements'
+     '"main_col_buyVinCheckCarvin_buyVinCheckCarvinBadge"},{"key":"log_type","value":"listing"}]}}},{"type":"Text","content":"Комплектація авто","typography":"badge","color":"contrastPrimary"}],"sizeStr":"medium","style":"strokeLight","backgroundColor":"inverseElevated"}],"price":{"type":"Text",'
+     '!--[--><!--[--><!--[--><span class="common-text ws-pre-wrap footnote" style="color:var(--disabled);"><!--[-->Покоління, комплектація, модифікація<!--]--></span><!--]--><!--]--><!--]--></div><!--]--><!--]--><!--]--><!--[--><!--[--><!--[--><div id="descGenerationBaseValue" class="text-templa'
+     '></path></svg><!--]--><!--[--><span class="common-text ws-pre-wrap badge" style="color:var(--contrastPrimary);"><!--[-->Комплектація авто<!--]--></span><!--]--><!--]--><!--]--><!--]--></span></div><!--]--><!--]--><!--]--><!--]--></div><div class="paid-inspection_footer"><div class="paid-in'
+200 https://auto.ria.com/demo/bu/searchPage/v2/view/auto/40075820/ 13079
+  40075820 optionStyles ["_red"] | шкір у JSON: []
+200 https://auto.ria.com/uk/auto_bmw_x1_40075820.html 612165
+  HTML hits: 5
+     'гажника, задній бампер, четверть крила ліва, резонатор глушника. Всі деталі були замінені на орігінальні в колір. Гарна комплектація, салон у відміному стані , дуже доглянутий. Узли та агрегати справні та в робочому стані. Проведенно повне ТО ходової, замінено моторне мастило, всі фітра, т'
+     'Template","id":"descGenerationBase","isHide":false,"margin":{"top":16},"elements":[{"type":"Text","content":"Покоління, комплектація, модифікація","typography":"footnote","color":"disabled"}]},{"type":"TextTemplate","id":"descGenerationBaseValue","isHide":false,"margin":{"top":8},"elements'
+     '"main_col_buyVinCheckCarvin_buyVinCheckCarvinBadge"},{"key":"log_type","value":"listing"}]}}},{"type":"Text","content":"Комплектація авто","typography":"badge","color":"contrastPrimary"}],"sizeStr":"medium","style":"strokeLight","backgroundColor":"inverseElevated"}],"price":{"type":"Text",'
+     'гажника, задній бампер, четверть крила ліва, резонатор глушника. Всі деталі були замінені на орігінальні в колір. Гарна комплектація, салон у відміному стані , дуже доглянутий. Узли та агрегати справні та в робочому стані. Проведенно повне ТО ходової, замінено моторне мастило, всі фітра, т'
+     'гажника, задній бампер, четверть крила ліва, резонатор глушника. Всі деталі були замінені на орігінальні в колір. Гарна комплектація, салон у відміному стані , дуже доглянутий. Узли та агрегати справні та в робочому стані. Проведенно повне ТО ходової, замінено моторне мастило, всі фітра, т'
+200 https://auto.ria.com/demo/bu/searchPage/v2/view/auto/40598436/ 14403
+  40598436 optionStyles [] | шкір у JSON: []
+200 https://auto.ria.com/uk/auto_bmw_x1_40598436.html 577579
+  HTML hits: 4
+     'Template","id":"descGenerationBase","isHide":false,"margin":{"top":16},"elements":[{"type":"Text","content":"Покоління, комплектація, модифікація","typography":"footnote","color":"disabled"}]},{"type":"TextTemplate","id":"descGenerationBaseValue","isHide":false,"margin":{"top":8},"elements'
+     '"main_col_buyVinCheckCarvin_buyVinCheckCarvinBadge"},{"key":"log_type","value":"listing"}]}}},{"type":"Text","content":"Комплектація авто","typography":"badge","color":"contrastPrimary"}],"sizeStr":"medium","style":"strokeLight","backgroundColor":"inverseElevated"}],"price":{"type":"Text",'
+     '!--[--><!--[--><!--[--><span class="common-text ws-pre-wrap footnote" style="color:var(--disabled);"><!--[-->Покоління, комплектація, модифікація<!--]--></span><!--]--><!--]--><!--]--></div><!--]--><!--]--><!--]--><!--[--><!--[--><!--[--><div id="descGenerationBaseValue" class="text-templa'
+     '></path></svg><!--]--><!--[--><span class="common-text ws-pre-wrap badge" style="color:var(--contrastPrimary);"><!--[-->Комплектація авто<!--]--></span><!--]--><!--]--><!--]--><!--]--></span></div><!--]--><!--]--><!--]--><!--]--></div><div class="paid-inspection_footer"><div class="paid-in'
+200 https://auto.ria.com/demo/bu/searchPage/v2/view/auto/40069401/ 15142
+  40069401 optionStyles [] | шкір у JSON: []
+200 https://auto.ria.com/uk/auto_bmw_x1_40069401.html 517938
+  HTML hits: 4
+     'Template","id":"descGenerationBase","isHide":false,"margin":{"top":16},"elements":[{"type":"Text","content":"Покоління, комплектація, модифікація","typography":"footnote","color":"disabled"}]},{"type":"TextTemplate","id":"descGenerationBaseValue","isHide":false,"margin":{"top":8},"elements'
+     '"main_col_buyVinCheckCarvin_buyVinCheckCarvinBadge"},{"key":"log_type","value":"listing"}]}}},{"type":"Text","content":"Комплектація авто","typography":"badge","color":"contrastPrimary"}],"sizeStr":"medium","style":"strokeLight","backgroundColor":"inverseElevated"}],"price":{"type":"Text",'
+     '!--[--><!--[--><!--[--><span class="common-text ws-pre-wrap footnote" style="color:var(--disabled);"><!--[-->Покоління, комплектація, модифікація<!--]--></span><!--]--><!--]--><!--]--></div><!--]--><!--]--><!--]--><!--[--><!--[--><!--[--><div id="descGenerationBaseValue" class="text-templa'
+     '></path></svg><!--]--><!--[--><span class="common-text ws-pre-wrap badge" style="color:var(--contrastPrimary);"><!--[-->Комплектація авто<!--]--></span><!--]--><!--]--><!--]--><!--]--></span></div><!--]--><!--]--><!--]--><!--]--></div><div class="paid-inspection_footer"><div class="paid-in'
+200 https://auto.ria.com/demo/bu/searchPage/v2/view/auto/40201006/ 16291
+  40201006 optionStyles ["_red"] | шкір у JSON: []
+200 https://auto.ria.com/uk/auto_bmw_x1_40201006.html 643081
+  HTML hits: 4
+     'Template","id":"descGenerationBase","isHide":false,"margin":{"top":16},"elements":[{"type":"Text","content":"Покоління, комплектація, модифікація","typography":"footnote","color":"disabled"}]},{"type":"TextTemplate","id":"descGenerationBaseValue","isHide":false,"margin":{"top":8},"elements'
+     '"main_col_buyVinCheckCarvin_buyVinCheckCarvinBadge"},{"key":"log_type","value":"listing"}]}}},{"type":"Text","content":"Комплектація авто","typography":"badge","color":"contrastPrimary"}],"sizeStr":"medium","style":"strokeLight","backgroundColor":"inverseElevated"}],"price":{"type":"Text",'
+     '!--[--><!--[--><!--[--><span class="common-text ws-pre-wrap footnote" style="color:var(--disabled);"><!--[-->Покоління, комплектація, модифікація<!--]--></span><!--]--><!--]--><!--]--></div><!--]--><!--]--><!--]--><!--[--><!--[--><!--[--><div id="descGenerationBaseValue" class="text-templa'
+     '></path></svg><!--]--><!--[--><span class="common-text ws-pre-wrap badge" style="color:var(--contrastPrimary);"><!--[-->Комплектація авто<!--]--></span><!--]--><!--]--><!--]--><!--]--></span></div><!--]--><!--]--><!--]--><!--]--></div><div class="paid-inspection_footer"><div class="paid-in'
+200 https://auto.ria.com/demo/bu/searchPage/v2/view/auto/39378276/ 12900
+  39378276 optionStyles ["_red"] | шкір у JSON: []
+200 https://auto.ria.com/uk/auto_bmw_x1_39378276.html 558862
+  HTML hits: 4
+     'Template","id":"descGenerationBase","isHide":false,"margin":{"top":16},"elements":[{"type":"Text","content":"Покоління, комплектація, модифікація","typography":"footnote","color":"disabled"}]},{"type":"TextTemplate","id":"descGenerationBaseValue","isHide":false,"margin":{"top":8},"elements'
+     '"main_col_buyVinCheckCarvin_buyVinCheckCarvinBadge"},{"key":"log_type","value":"listing"}]}}},{"type":"Text","content":"Комплектація авто","typography":"badge","color":"contrastPrimary"}],"sizeStr":"medium","style":"strokeLight","backgroundColor":"inverseElevated"}],"price":{"type":"Text",'
+     '!--[--><!--[--><!--[--><span class="common-text ws-pre-wrap footnote" style="color:var(--disabled);"><!--[-->Покоління, комплектація, модифікація<!--]--></span><!--]--><!--]--><!--]--></div><!--]--><!--]--><!--]--><!--[--><!--[--><!--[--><div id="descGenerationBaseValue" class="text-templa'
+     '></path></svg><!--]--><!--[--><span class="common-text ws-pre-wrap badge" style="color:var(--contrastPrimary);"><!--[-->Комплектація авто<!--]--></span><!--]--><!--]--><!--]--><!--]--></span></div><!--]--><!--]--><!--]--><!--]--></div><div class="paid-inspection_footer"><div class="paid-in'
