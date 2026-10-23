@@ -54,8 +54,10 @@ def prune(d: dict):
 
 def run_search(s, st, tg, settings, report):
     usd_uah = float(settings.get("usd_uah", 41.5))
-    first = not st.get("initialized")
+    first = not st.get("initialized")          # перший запуск пошуку взагалі
+    inited = st.setdefault("init_sources", [])  # джерела, які вже хоч раз відпрацювали
     seen, fps = st.setdefault("seen", {}), st.setdefault("fps", {})
+    groups = st.setdefault("groups", {})
     s["_district"] = resolve_district(s)
     today = datetime.now(KYIV).strftime("%Y-%m-%d")
 
@@ -63,22 +65,24 @@ def run_search(s, st, tg, settings, report):
     errors = st.setdefault("errors", {})
     for name in s.get("sources") or ["lun", "dimria"]:
         mod = SOURCES[name]
+        src_first = name not in inited
         try:
-            new, total, link, also_seen = mod.fetch(s, seen, usd_uah, first)
+            new, total, link, also_seen = mod.fetch(s, seen, usd_uah, src_first)
             errors[name] = 0
         except Exception as e:
             errors[name] = errors.get(name, 0) + 1
             log.exception("%s / %s: помилка", s["id"], name)
-            rep["sources"][name] = {"error": f"{type(e).__name__}: {e}"[:300], "fails_in_row": errors[name]}
+            rep["sources"][name] = {"error": f"{type(e).__name__}: {e}"[:400], "fails_in_row": errors[name]}
             if errors[name] == 3:
                 tg.text(f"⚠️ <b>{esc(s['name'])}</b>: джерело {name} не відповідає вже 3 запуски поспіль. "
                         f"Можливо, змінилась структура сайту.")
             continue
+        if src_first:
+            inited.append(name)
         totals[name], links[name] = total, link
         for k in also_seen:
             seen[k] = today
-        passed = 0
-        reasons = {}
+        passed, reasons = 0, {}
         for l in new:
             seen[l.key] = today
             ok, why = passes(l, s)
@@ -86,38 +90,45 @@ def run_search(s, st, tg, settings, report):
                 reasons[why] = reasons.get(why, 0) + 1
                 continue
             passed += 1
+            l.initial = src_first
             candidates.append(l)
-        rep["sources"][name] = {"total": total, "new": len(new), "passed": passed, "filtered": reasons}
+        rep["sources"][name] = {"total": total, "new": len(new), "passed": passed,
+                                "filtered": reasons, "first_run": src_first}
 
     # дедуплікація: той самий об'єкт з різних сайтів / повторні публікації
     fresh = []
     for l in candidates:
         fp = fingerprint(l)
-        if any(k in st.get("groups", {}) for k in l.extra_keys) or (fp and fp in fps):
+        if any(k in groups for k in l.extra_keys) or (fp and fp in fps):
             continue
         if fp:
             fps[fp] = today
         for k in l.extra_keys:
-            st.setdefault("groups", {})[k] = today
+            groups[k] = today
         fresh.append(l)
     fresh.sort(key=lambda x: x.published or "", reverse=True)
-    rep["to_send"] = len(fresh)
 
-    limit = int(settings.get("first_run_send", 10)) if first else int(settings.get("max_per_search", 15))
-    if first:
+    # «стартові» (з джерел, що запустились уперше) — лише кілька найновіших; справді нові — всі до ліміту
+    initial = [l for l in fresh if l.initial][: int(settings.get("first_run_send", 10))]
+    really_new = [l for l in fresh if not l.initial]
+    limit = int(settings.get("max_per_search", 15))
+    rep["to_send"] = len(initial) + min(limit, len(really_new))
+
+    if first and (totals or initial):
         tot = " + ".join(f"{k}: {v}" for k, v in totals.items())
         tg.text(f"🔎 Запустив моніторинг «<b>{esc(s['name'])}</b>».\n"
                 f"Актуальних зараз: {tot or '—'} (до фільтрів).\n"
-                f"Показую {min(limit, len(fresh))} найновіших, що пройшли фільтри; далі пишу лише про нові.")
-    for l in fresh[:limit]:
+                f"Показую {len(initial)} найновіших, що пройшли фільтри; далі пишу лише про нові.")
+    for l in initial + really_new[:limit]:
         tg.listing(l, s["name"])
-    if len(fresh) > limit:
-        tg.text(f"…і ще {len(fresh) - limit} нових у «{esc(s['name'])}». "
+    if len(really_new) > limit:
+        tg.text(f"…і ще {len(really_new) - limit} нових у «{esc(s['name'])}». "
                 + " ".join(f'<a href="{esc(u)}">{k}</a>' for k, u in links.items() if u))
 
-    st["initialized"] = True
+    if totals:
+        st["initialized"] = True
     st["last_run"] = now_iso()
-    prune(seen); prune(fps); prune(st.get("groups", {}))
+    prune(seen); prune(fps); prune(groups)
     report[s["id"]] = rep
 
 

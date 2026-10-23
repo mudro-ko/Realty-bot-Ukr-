@@ -17,28 +17,33 @@ FLIGHT_RE = re.compile(r'self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)')
 
 
 def build_url(s: dict, page: int) -> str:
+    """Кімнати — повтореним параметром (room_count=3&room_count=4): форму «3,4» ЛУН не розуміє."""
     if s.get("lun_url"):
         # користувач вставив готове посилання з фільтрами з сайту ЛУН
         parts = urlsplit(s["lun_url"])
-        q = dict(parse_qsl(parts.query))
-        q["sort"] = "insert_time"
+        q = []
+        for k, v in parse_qsl(parts.query):
+            if k in ("sort", "page"):
+                continue
+            if k == "room_count" and "," in v:
+                q += [(k, x) for x in v.split(",") if x]
+            else:
+                q.append((k, v))
+        q.append(("sort", "insert_time"))
         if page > 1:
-            q["page"] = str(page)
-        else:
-            q.pop("page", None)
-        return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q, safe=","), ""))
+            q.append(("page", str(page)))
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), ""))
 
     section = SECTION[s["deal"]]
     path = f"/{section}/{CITY[s['city']]}/flats"
     slug = s.get("_district", {}).get("lun")
     if slug:
         path += f"-{slug}"
-    q = {"sort": "insert_time"}
-    if s.get("rooms"):
-        q["room_count"] = ",".join(str(r) for r in s["rooms"])
+    q = [("room_count", str(r)) for r in s.get("rooms") or []]
+    q.append(("sort", "insert_time"))
     if page > 1:
-        q["page"] = str(page)
-    return f"{BASE}{path}?{urlencode(q, safe=',')}"
+        q.append(("page", str(page)))
+    return f"{BASE}{path}?{urlencode(q)}"
 
 
 def parse_page(html: str):

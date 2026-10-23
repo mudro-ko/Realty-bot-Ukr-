@@ -53,6 +53,7 @@ class Listing:
     is_owner: Optional[bool] = None
     without_commission: Optional[bool] = None
     extra_keys: list = field(default_factory=list)   # додаткові ключі для дедуплікації (groupId тощо)
+    initial: bool = False                            # з першого запуску джерела (стартова підбірка)
 
 
 STREET_WORDS = r"\b(вул|вулиця|ул|улица|просп|проспект|пр-т|пров|провулок|переулок|пер|бульв|бульвар|б-р|пл|площа|площадь|узвіз|шосе|дорога|набережна|майдан)\b\.?"
