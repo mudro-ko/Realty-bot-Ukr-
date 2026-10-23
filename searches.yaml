@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────
+#  Пошуки для монітора нерухомості
+#  Кожен пошук — окремий блок. enabled: false — вимкнено.
+#  Джерела: lun (ЛУН, у т.ч. оголошення з OLX і rieltor.ua), dimria (DIM.RIA)
+# ─────────────────────────────────────────────────────────────
+
+settings:
+  usd_uah: 41.5          # курс для порівняння цін у різних валютах
+  max_per_search: 15     # максимум нових оголошень за один запуск на пошук
+  first_run_send: 10     # скільки найновіших показати при першому запуску пошуку
+
+searches:
+
+  # ── Миколаїв ────────────────────────────────────────────────
+  - id: mykolaiv-lisky-sale
+    name: "Миколаїв · Ліски · 3–4к · продаж"
+    enabled: true
+    city: mykolaiv          # odesa | mykolaiv | kyiv
+    deal: sale              # sale | rent | daily (подобова — лише DIM.RIA)
+    district: lisky
+    rooms: [3, 4]
+    price_usd: {min: null, max: null}
+    area: {min: null, max: null}
+    # any | needs_repair | needs_repair_or_cosmetic | renovated
+    condition: needs_repair_or_cosmetic
+    exclude_keywords: []
+    sources: [lun, dimria]
+
+  # ── Одеса (заповни параметри і постав enabled: true) ────────
+  - id: odesa-sale
+    name: "Одеса · продаж"
+    enabled: false
+    city: odesa
+    deal: sale
+    district: null          # напр. prymorskyi, kyivskyi, arkadiia, tsentr …
+    rooms: [1, 2]
+    price_usd: {min: null, max: 60000}
+    area: {min: 30, max: null}
+    floors: {not_first: true, not_last: false}
+    condition: any
+    exclude_keywords: []
+    sources: [lun, dimria]
+
+  - id: odesa-rent
+    name: "Одеса · довгострокова оренда"
+    enabled: false
+    city: odesa
+    deal: rent
+    district: null
+    rooms: [1, 2]
+    price_uah: {min: null, max: 15000}
+    owner_only: false       # тільки від власника (де сайт це позначає)
+    no_commission: false
+    condition: any
+    exclude_keywords: ["подобово", "посуточно"]
+    sources: [lun, dimria]
+
+  - id: odesa-daily
+    name: "Одеса · подобово"
+    enabled: false
+    city: odesa
+    deal: daily
+    rooms: [1]
+    price_uah: {min: null, max: 2000}
+    sources: [dimria]
+
+  # ── Київ (поки вимкнено) ────────────────────────────────────
+  - id: kyiv-rent
+    name: "Київ · оренда"
+    enabled: false
+    city: kyiv
+    deal: rent
+    rooms: [1, 2]
+    price_uah: {max: 25000}
+    sources: [lun, dimria]
+
+  # Порада: можна вставити готове посилання з ЛУН з усіма фільтрами,
+  # які ти виставив на сайті:  lun_url: "https://lun.ua/sale/odesa/flats?room_count=2"
