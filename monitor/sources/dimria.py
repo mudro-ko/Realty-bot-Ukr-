@@ -149,6 +149,4 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         if wanted and l.district_id and district:
             learned.setdefault(district, l.district_id)
         (new if is_new else refreshed).append(l)
-    if not total:
-        total = len(ordered)
     return new, total, "https://dom.ria.com/uk/", skipped_ids, refreshed

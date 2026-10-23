@@ -157,7 +157,7 @@ def run_search(s, st, tg, settings, report, archive=None):
         parts = []
         if "lun" in totals:
             parts.append(f"ЛУН: {totals['lun']} за кімнатами/ціною/районом")
-        if "dimria" in totals:
+        if totals.get("dimria"):
             parts.append(f"DIM.RIA: {totals['dimria']}")
         archive_note = " Усі — у «📊 Звіт»." if archive is not None else ""
         tg.text(f"🔎 Запустив моніторинг «<b>{esc(s['name'])}</b>».\n"
