@@ -52,7 +52,7 @@ jobs:
         run: |
           [ -f state/seen.json ] || exit 0
           D="$RUNNER_TEMP/statebranch"; rm -rf "$D"; mkdir -p "$D"
-          cp state/*.json "$D"/ ; cp state/*.md "$D"/ 2>/dev/null || true
+          cp state/*.json "$D"/ ; cp state/*.md state/*.gz "$D"/ 2>/dev/null || true
           cd "$D"
           git init -q -b "$STATE_BRANCH"
           git config user.name "realty-monitor"

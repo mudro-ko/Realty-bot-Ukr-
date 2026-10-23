@@ -113,6 +113,10 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, max_pages: int =
         cards, total = parse_page(html)
         if not cards:
             if page == 1:
+                import gzip, os
+                dbg = os.path.join(os.environ.get("STATE_DIR", "state"), f"debug_lun_{s['id']}.html.gz")
+                with gzip.open(dbg, "wt", encoding="utf-8") as f:
+                    f.write(html)
                 title = re.search(r"<title>(.*?)</title>", html, re.S)
                 raise RuntimeError(
                     f"ЛУН не віддав карток: HTTP {r.status_code}, {len(html)} байт, "
