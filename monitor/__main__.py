@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 import yaml
 
 from .common import fingerprint, log
-from .filters import passes, resolve_district
+from .filters import micro_from_geo, passes, resolve_district
 from .sources import dimria, lun
 from .telegram import Telegram, dump_json, esc, outbox_markdown
 
@@ -59,6 +59,9 @@ def run_search(s, st, tg, settings, report, archive=None):
     seen, fps = st.setdefault("seen", {}), st.setdefault("fps", {})
     groups = st.setdefault("groups", {})
     s["_district"] = resolve_district(s)
+    learned = st.setdefault("learned_micro", [])
+    if s["_district"].get("admin"):
+        s["_district"]["names"] += learned
     today = datetime.now(KYIV).strftime("%Y-%m-%d")
 
     candidates, totals, links, rep = [], {}, {}, {"first_run": first, "sources": {}}
@@ -68,7 +71,8 @@ def run_search(s, st, tg, settings, report, archive=None):
         backfill = archive is not None and archive.count(s["id"]) == 0
     except Exception:
         backfill = False
-    for name in s.get("sources") or ["lun", "dimria"]:
+    order = sorted(s.get("sources") or ["lun", "dimria"], key=lambda x: x != "lun")   # ЛУН першим
+    for name in order:
         mod = SOURCES[name]
         src_first = name not in inited
         try:
@@ -84,6 +88,12 @@ def run_search(s, st, tg, settings, report, archive=None):
             continue
         if src_first:
             inited.append(name)
+        if name == "lun" and s["_district"].get("admin"):
+            for l in new + refreshed:
+                m = micro_from_geo(l.geo, s["city"])
+                if m and m not in learned and len(learned) < 80:
+                    learned.append(m)
+                    s["_district"]["names"].append(m)
         totals[name], links[name] = total, link
         for k in also_seen:
             seen[k] = today

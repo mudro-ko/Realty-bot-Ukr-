@@ -4,6 +4,7 @@
 2) Деталі тягнемо окремим запитом — тільки для ID, яких ще не бачили.
 """
 from ..common import Listing, get, log
+from ..filters import district_match
 
 SEARCH = "https://dom.ria.com/node/searchEngine/v2/"
 DATA = "https://dom.ria.com/realty/data/{id}"
@@ -107,7 +108,7 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         except Exception as e:
             log.warning("DIM.RIA деталі %s: %s", rid, e)
             continue
-        if wanted and not any(w.lower() in district.lower() for w in wanted):
+        if wanted and not district_match(district, wanted):
             if is_new:
                 skipped_ids.append(l.key)
             continue

@@ -10,9 +10,11 @@ DISTRICTS = {
     },
     "odesa": {
         # приклади; slug ЛУН видно в адресі сторінки району: lun.ua/sale/odesa/flats-<slug>
-        "prymorskyi": {"lun": "prymorskyi-district", "names": ["Приморськ"]},
-        "kyivskyi": {"lun": "kyivskyi-district", "names": ["Київськ"]},
-        "khadzhybeiskyi": {"lun": "khadzhybeiskyi-district", "names": ["Хаджибейськ", "Малинов"]},
+        # admin: адмінрайон — DIM.RIA часто вказує лише мікрорайон, тож бот «вчиться» складу району з адрес ЛУН
+        "prymorskyi": {"lun": "prymorskyi-district", "names": ["Приморськ"], "admin": True},
+        "kyivskyi": {"lun": "kyivskyi-district", "names": ["Київськ"], "admin": True},
+        "khadzhybeiskyi": {"lun": "khadzhybeiskyi-district", "names": ["Хаджибейськ", "Малинов"], "admin": True},
+        "peresypskyi": {"lun": "peresypskyi-district", "names": ["Пересипськ", "Суворов"], "admin": True},
         "tsentr": {"lun": "tsentr", "names": ["Центр"]},
         "arkadiia": {"lun": "arkadiia", "names": ["Аркаді"]},
         "serednii-fontan": {"lun": "serednii-fontan", "names": ["Середній Фонтан"]},
@@ -38,13 +40,47 @@ COSMETIC_WORDS = [
 ]
 
 
+CITY_NAMES = {"odesa": "Одеса", "mykolaiv": "Миколаїв", "kyiv": "Київ"}
+
+
+def micro_from_geo(geo: str, city: str):
+    """«вул. Х, 12, Таїрова, Київський, Одеса, Одеська область» → «Таїрова» (мікрорайон перед адмінрайоном)."""
+    parts = [p.strip() for p in (geo or "").split(",")]
+    name = CITY_NAMES.get(city)
+    if name not in parts:
+        return None
+    i = parts.index(name)
+    if i < 2:
+        return None
+    m = parts[i - 2]
+    if not m or re.search(r"\d", m) or re.search(STREET_HINTS, m.lower()):
+        return None
+    return m
+
+
+STREET_HINTS = r"(вул|просп|пров|бульв|узвіз|шосе|дорога|площа|набережна|алея|тупик|спуск|линия|лінія|ж/м|жк )"
+
+
+GENERIC_WORDS = {"сел", "селище", "поселок", "посёлок", "містечко", "масив", "мкр", "мікрорайон", "район",
+                 "фонтан", "ж/м", "житловий", "жилмассив", "місто"}
+
+
+def district_match(district: str, wanted: list) -> bool:
+    d = (district or "").lower()
+    for w in wanted or []:
+        toks = [t for t in re.findall(r"[a-zа-яіїєґ']+", w.lower()) if t not in GENERIC_WORDS and len(t) > 2]
+        if toks and all(t in d for t in toks):
+            return True
+    return False
+
+
 def resolve_district(s: dict) -> dict:
     d = s.get("district")
     if not d:
         return {}
     known = DISTRICTS.get(s["city"], {}).get(d)
     if known:
-        return known
+        return dict(known, names=list(known.get("names", [])))
     # невідомий район: вважаємо, що це slug ЛУН, а назву перевіряємо по адресі
     return {"lun": d, "names": [s.get("district_name") or d]}
 
