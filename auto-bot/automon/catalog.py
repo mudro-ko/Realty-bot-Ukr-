@@ -84,7 +84,18 @@ BODY_FROM_NAME = {"седан": "sedan", "позашляховик": "suv", "к�
                   "пікап": "pickup", "фастбек": "liftback"}
 
 
-def _cache(name, ttl, fetch):
+_SEED = None
+
+
+def _seed():
+    global _SEED
+    if _SEED is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog_seed.json")
+        _SEED = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {"marks": [], "models": {}}
+    return _SEED
+
+
+def _cache(name, ttl, fetch, seed=None):
     os.makedirs(CACHE_DIR, exist_ok=True)
     path = os.path.join(CACHE_DIR, name)
     if os.path.exists(path) and time.time() - os.path.getmtime(path) < ttl:
@@ -100,12 +111,12 @@ def _cache(name, ttl, fetch):
         log.warning("Довідник %s: %s", name, e)
         if os.path.exists(path):
             return json.load(open(path, encoding="utf-8"))
-        return []
+        return seed or []
 
 
 def brands():
     """[{'name','value'}] — усі марки легкових."""
-    return _cache("marks.json", 14 * 86400, lambda: get(f"{API}/categories/1/marks").json())
+    return _cache("marks.json", 14 * 86400, lambda: get(f"{API}/categories/1/marks", retries=1).json(), _seed()["marks"])
 
 
 def brand_by_name(name):
@@ -122,7 +133,8 @@ def brand_by_id(bid):
 
 def models(brand_id):
     return _cache(f"models_{brand_id}.json", 14 * 86400,
-                  lambda: get(f"{API}/categories/1/marks/{brand_id}/models").json())
+                  lambda: get(f"{API}/categories/1/marks/{brand_id}/models", retries=1).json(),
+                  _seed()["models"].get(str(brand_id), []))
 
 
 def model_by_id(brand_id, mid):

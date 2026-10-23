@@ -10,18 +10,16 @@ DEFAULT_CHANNELS = ["autobazarkyiv1", "KievavtoSale", "kievavto2", "kievautotrad
                     "avtorynok_ukraina", "imperiya_auto_1"]
 
 POST_RE = re.compile(r'<div class="tgme_widget_message_wrap.*?data-post="([^"]+)"(.*?)(?=<div class="tgme_widget_message_wrap|\Z)', re.S)
-TEXT_RE = re.compile(r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', re.S)
+TEXT_RE = re.compile(r'<div class="tgme_widget_message_text js-message_text"[^>]*>(.*?)</div>', re.S)   # не цитата-відповідь
 TIME_RE = re.compile(r'<time datetime="([^"]+)"')
 PHOTO_RE = re.compile(r"tgme_widget_message_photo_wrap[^>]*background-image:url\('([^']+)'\)")
 
 YEAR_RE = re.compile(r"(?<!\d)(19[89]\d|20[0-3]\d)(?!\d)")
 VIN_RE = re.compile(r"\b([A-HJ-NPR-Z0-9]{17})\b")
 RIA_RE = re.compile(r"auto\.ria\.com/\S*?(\d{8})\.html")
+PRICE_EMOJI_RE = re.compile(r"(?:💵|💰|💲|ціна|цена|price|вартість|стоимость)[\ufe0f :\-–=]{0,4}(\d{1,3}(?:[ .,\u00a0]\d{3})+|\d{3,6})(?![\d])(?!\s*(?:км|km|тис|тыс|грн|uah|₴))", re.I)
+NEW_PRICE_RE = re.compile(r"(?:нова|новая|актуальн\w*|зараз|сейчас|тепер|теперь|знижка|скидка|new)\W{0,3}(?:ціна|цена|price)?\W{0,6}$", re.I)
 PRICE_RE = re.compile(r"(?<![\w(])(?:\$\s*(\d{1,3}(?:[ ., ]\d{3})+|\d{3,6})|(\d{1,3}(?:[ ., ]\d{3})+|\d{3,6})\s*(?:\$|usd|дол|у\.е))", re.I)
-MILEAGE_RE = re.compile(
-    r"(?:(?:пробіг|пробег|пробігу)\D{0,12}(\d{1,3}(?:[ .,]\d{3})?)\s*(тис|тыс|т\.?|k|к|000)?\s*(км|миль|mi)?)"
-    r"|(?:(\d{1,3}(?:[ .,]\d{3})?)\s*(тис|тыс|т|k|к)\.?\s*(?:км|km)?\.?\s*(миль|mi)?\s*(?:пробіг|пробег|пробега|пробігу)?)"
-    r"|(?:(\d{2,3}[ .,]?\d{3})\s*(км|km))", re.I)
 ENGINE_RE = re.compile(r"(?<![\d.])([0-9][.,][0-9])\s*(?:л\b|l\b|тді|tdi|tsi|tfsi|бензин|дизель|газ|гібрид|гибрид|hybrid|d\b|i\b|t\b|$|\s)", re.I)
 
 
@@ -61,8 +59,17 @@ def _brand_index():
     return _brand_cache
 
 
+FIELD_BRAND_RE = re.compile(r"(?:марка|brand)\s*[:\-]\s*([^\n|,]+)", re.I)
+FIELD_MODEL_RE = re.compile(r"(?:модель|model)\s*[:\-]\s*([^\n|,]+)", re.I)
+
+
 def find_brand(text):
-    head = C.norm(" ".join(text.replace("#", " ").splitlines()[:3]))[:200]
+    fb = FIELD_BRAND_RE.search(text)
+    if fb:
+        fm = FIELD_MODEL_RE.search(text)
+        text = f"{fb.group(1).strip()} {fm.group(1).strip() if fm else ''}\n" + text
+    lines = [ln for ln in text.replace("#", " ").splitlines() if ln.strip()]
+    head = C.norm(" ".join(lines[:4]))[:240]
     best = None
     for key, b in _brand_index().items():
         i = head.find(key)
@@ -70,6 +77,40 @@ def find_brand(text):
                                                                    (i == best[0] and len(key) > best[2])):
             best = (i, b, len(key))
     return (best[1], best[0] + best[2], head) if best else (None, 0, head)
+
+
+MB_CLASS_RE = re.compile(r"(?<![a-z])(gle|glc|gls|gla|glb|cla|cls|slk|sl|gl|ml|eqe|eqs|eqc|amg gt|[abcegsv])[\s-]?(\d{2,3})(?!\d)", re.I)
+BMW_SERIES_RE = re.compile(r"(?<![a-z\d])(?:m)?([1-8])(\d{2})(?:[a-z]{0,2})(?![\d])", re.I)
+LEX_RE = re.compile(r"(?<![a-z])(rx|nx|es|gx|lx|is|ux|ls|gs|ct)\s?(\d{3})", re.I)
+
+
+def _designation(brand, rest, ms):
+    """E220d → E-Class, 530e/M550i → 5 Series, RX350 → RX, GLE 450 → GLE-Class."""
+    name = brand["name"]
+    want = None
+    if name == "Mercedes-Benz":
+        m = MB_CLASS_RE.search(rest)
+        if m:
+            cls = m.group(1).upper()
+            want = [f"{cls}-Class", f"{cls}-Class Coupe", cls]
+    elif name == "BMW":
+        if re.search(r"(?<![a-z])x\s?([1-7])\b", rest):
+            want = ["X" + re.search(r"(?<![a-z])x\s?([1-7])\b", rest).group(1)]
+        else:
+            m = BMW_SERIES_RE.search(rest)
+            if m:
+                want = [f"{m.group(1)} Series"]
+    elif name == "Lexus":
+        m = LEX_RE.search(rest)
+        if m:
+            want = [m.group(1).upper()]
+    if not want:
+        return None
+    for w in want:
+        hit = next((x for x in ms if C.norm(x["name"]) == C.norm(w)), None)
+        if hit:
+            return hit
+    return None
 
 
 def find_model(brand, head, after):
@@ -86,7 +127,9 @@ def find_model(brand, head, after):
             if j >= 0 and (j == 0 or not rest[j - 1].isalnum()) and (j + len(v) == len(rest) or not rest[j + len(v)].isalnum()):
                 if best is None or len(v) > best[1]:
                     best = (m, len(v))
-    return best[0] if best else None
+    if best and len(C.norm(best[0]["name"])) >= 2:
+        return best[0]
+    return _designation(brand, rest, C.models(brand["value"])) or (best[0] if best else None)
 
 
 def _int(s):
@@ -94,8 +137,8 @@ def _int(s):
 
 
 def parse_price(text):
-    vals = []
-    for m in PRICE_RE.finditer(text):
+    vals, fresh = [], None
+    for m in list(PRICE_RE.finditer(text)) + list(PRICE_EMOJI_RE.finditer(text)):
         raw = m.group(1) or m.group(2)
         start = m.start()
         before = text[max(0, start - 12):start].lower()
@@ -106,38 +149,45 @@ def parse_price(text):
         except ValueError:
             continue
         if 500 <= v <= 3_000_000:
-            vals.append(v)
-    return vals[-1] if vals else None        # остання ціна — зазвичай актуальна («37.999$ → 36.999$»)
+            vals.append((start, v))
+            if NEW_PRICE_RE.search(text[max(0, start - 30):start]):
+                fresh = v
+    if fresh:
+        return fresh                          # «НОВА ЦІНА: 55.000$»
+    vals.sort()
+    return vals[-1][1] if vals else None      # остання ціна — зазвичай актуальна («37.999$ → 36.999$»)
+
+
+MIL_RE = re.compile(
+    r"(?:(пробі[гж]\w*|пробег\w*)\W{0,4})?(\d{1,3}(?:[ .,]\d{3})+|\d{1,6})(?:[.,]\d)?\s*"
+    r"(тис\w*|тыс\w*|т(?=[\s.]|км|миль)\.?|k(?=\s|$|\b)|к(?=\s|$|\W))?\s*\.?\s*(км|km|миль|mi\b)?\.?\s*(пробі\w*|пробег\w*)?", re.I)
 
 
 def parse_mileage(text):
-    for m in MILEAGE_RE.finditer(text):
-        g = m.groups()
-        if g[0]:
-            v, unit, dist = g[0], g[1], g[2]
-        elif g[3]:
-            v, unit, dist = g[3], g[4], g[5]
-        else:
-            v, unit, dist = g[6], None, g[7]
+    for m in MIL_RE.finditer(text):
+        kw, num, unit, dist = m.group(1) or m.group(5), m.group(2), m.group(3), m.group(4)
+        if not (kw or dist):
+            continue
+        if not unit and not dist and re.fullmatch(r"(19|20)\d\d", num):
+            continue
         try:
-            n = float(re.sub(r"[ ,]", "", v).replace(".", "")) if re.search(r"[ .,]\d{3}$", v) else float(v.replace(",", "."))
+            n = int(re.sub(r"[ .,]", "", num)) if re.search(r"[ .,]\d{3}$", num) else float(num.replace(",", "."))
         except ValueError:
             continue
-        if unit and unit.lower().startswith(("тис", "тыс", "т", "k", "к")):
-            km = n
-        elif n >= 1000:
-            km = n / 1000
-        else:
-            km = n
-        if dist and dist.lower() in ("миль", "mi") or re.search(r"тис\w*\s+миль|тыс\w*\s+миль|миль", text[m.start():m.end() + 8], re.I):
+        km = n if unit else (n / 1000 if n >= 1000 else n)
+        if dist and dist.lower() in ("миль", "mi"):
             km *= 1.609
-        if 0 <= km <= 1500:
+        if 0 < km <= 1500:
             return int(round(km))
     return None
 
 
 def parse_fuel(t):
     t = t.lower()
+    f = re.search(r"(?:паливо|топливо|двигун|двигатель)\s*[:\-]?\s*(?:\d[.,]\d\s*)?(бензин|дизель|газ|електро|электро|гібрид|гибрид)", t)
+    if f:
+        w = f.group(1)
+        return {"бензин": "petrol", "дизель": "diesel", "газ": "lpg", "електро": "electric", "электро": "electric"}.get(w, "hybrid")
     if re.search(r"plug-?in|phev|плагін|плагин|підзаряд", t):
         return "phev"
     if re.search(r"електро|электро|electric|\bev\b|kwh|квт\W?год", t) and not re.search(r"бензин|дизель", t):
@@ -178,7 +228,11 @@ def parse_city(t):
     for key, rid in sorted(C.CITY_REGION.items(), key=lambda kv: -len(kv[0])):
         if re.search(r"(?<!\w)" + re.escape(key), low):
             line = next((ln for ln in t.splitlines() if key in ln.lower()), "")
-            return line.strip(" 📍🏙").strip()[:40], rid
+            line = re.sub(r"^[\W_]*(?:(?:місто|город|місцезнаходження|местонахождение|локація|локация|м\.)\s*[:\-]?\s*)?", "", line.strip(), flags=re.I)
+            if len(line) > 30 or re.search(r"\d{4}|\$", line):        # рядок не про місто — показуємо лише назву
+                line = key.capitalize()
+            line = re.sub(r"^#", "", line).split("|")[0].split(",")[0].strip(" 📍🏙🇺🇦")
+            return line[:30], rid
     return "", None
 
 
