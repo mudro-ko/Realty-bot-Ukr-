@@ -1,0 +1,61 @@
+name: realty-monitor
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"     # кожні 30 хв (UTC; GitHub може запізнюватися на кілька хвилин)
+  workflow_dispatch: {}         # ручний запуск: вкладка Actions → realty-monitor → Run workflow
+  push:
+    branches: [claude/monitor]  # тестові прогони з гілки розробки (сухий режим)
+
+concurrency:
+  group: realty-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STATE_BRANCH: ${{ github.event_name == 'push' && 'state-test' || 'state' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: monitor/requirements.txt
+
+      - run: pip install -r monitor/requirements.txt
+
+      - name: Load state
+        run: |
+          mkdir -p state
+          if git fetch -q origin "$STATE_BRANCH" 2>/dev/null; then
+            git show "FETCH_HEAD:seen.json" > state/seen.json 2>/dev/null || rm -f state/seen.json
+          fi
+          ls -la state
+
+      - name: Run monitor
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ github.event_name != 'push' && secrets.TELEGRAM_BOT_TOKEN || '' }}
+          TELEGRAM_CHAT_ID: ${{ github.event_name != 'push' && secrets.TELEGRAM_CHAT_ID || '' }}
+          SEARCHES_YAML: ${{ secrets.SEARCHES_YAML }}
+          ENABLE_ALL: ${{ github.event_name == 'push' && '1' || '' }}
+        run: python -m monitor
+
+      - name: Save state
+        if: always()
+        run: |
+          [ -f state/seen.json ] || exit 0
+          D="$RUNNER_TEMP/statebranch"; rm -rf "$D"; mkdir -p "$D"
+          cp state/*.json "$D"/ ; cp state/*.md "$D"/ 2>/dev/null || true
+          cd "$D"
+          git init -q -b "$STATE_BRANCH"
+          git config user.name "realty-monitor"
+          git config user.email "realty-monitor@users.noreply.github.com"
+          git add -A && git commit -qm "state $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$STATE_BRANCH"
