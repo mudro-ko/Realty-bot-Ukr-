@@ -40,29 +40,25 @@ def ria_info(text):
 
 
 TESTS = [
-    ('l_base', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time', lun_info),
-    ('l_pmax', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_max=85000', lun_info),
-    ('l_pmin_pmax_usd', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_min=50000&price_max=85000&currency=usd', lun_info),
-    ('l_pmin_pmax_USD', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_min=50000&price_max=85000&currency=USD', lun_info),
-    ('l_pmax_cur1', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_max=85000&currency=1', lun_info),
-    ('l_pmax_cur_usd_only', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&currency=usd&price_max=85000', lun_info),
-    ('l_priceMax', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&priceMax=85000&priceMin=50000', lun_info),
-    ('l_repair', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&repair=1', lun_info),
-    ('r_base', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at', None),
-    ('r_rooms', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B209%5D%5Bfrom%5D=1&characteristic%5B209%5D%5Bto%5D=2', None),
-    ('r_price_to', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bto%5D=85000', None),
-    ('r_price_from_to', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
-    ('r_rooms_price', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B209%5D%5Bfrom%5D=1&characteristic%5B209%5D%5Bto%5D=2&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
-    ('r_price_alt', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&price_cur=1&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
-    ('r_price_simple', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&currency=1&price_from=50000&price_to=85000', None),
+    ('r_wodupl', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&wo_dupl=1', None),
+    ('r_wodupl_f', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&wo_dupl=1&characteristic%5B209%5D%5Bfrom%5D=1&characteristic%5B209%5D%5Bto%5D=2&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
+    ('r_f', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B209%5D%5Bfrom%5D=1&characteristic%5B209%5D%5Bto%5D=2&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
+    ('l_rent_uah', 'https://lun.ua/rent/odesa/flats-kyivskyi-district?room_count=1&sort=insert_time&price_max=12000&currency=UAH', lun_info),
+    ('l_rent_none', 'https://lun.ua/rent/odesa/flats-kyivskyi-district?room_count=1&sort=insert_time', lun_info),
 ]
 
+VERIFY = []
 for k, u, fn in TESTS:
     try:
         r = S.get(u, timeout=25)
         save(k, r)
         info = fn(r.text) if fn else r.text[:400].replace("\n", " ")
         print(f"{k}: {r.status_code} final={r.url[:110]} :: {info}")
+        if k.startswith("r_") and r.ok:
+            for rid in r.json().get("items", [])[:4]:
+                d = S.get(f"https://dom.ria.com/realty/data/{rid}?lang_id=4", timeout=25).json()
+                print(f"   {k} id={rid} rooms={d.get('rooms_count')} price$={(d.get('priceArr') or {}).get('1')} distr={d.get('district_name_uk')}")
+                time.sleep(0.8)
     except Exception as e:
         print(f"{k}: ERR {e}")
     time.sleep(1.5)
