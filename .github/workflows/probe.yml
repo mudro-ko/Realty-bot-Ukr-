@@ -2,6 +2,8 @@ name: probe
 on:
   push:
     branches: [claude/probe]
+permissions:
+  contents: write
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -10,6 +12,14 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install requests
-      - run: python probe/probe.py
-      - uses: actions/upload-artifact@v4
-        with: {name: probe_out, path: probe_out, retention-days: 1}
+      - run: mkdir -p probe_out && python probe/probe.py | tee probe_out/summary.txt || true
+      - name: push results to claude/probe-out
+        run: |
+          mkdir -p probe_out
+          cd probe_out && gzip -9 -f *.html *.json 2>/dev/null; cd ..
+          git config user.name "probe-bot"; git config user.email "probe@users.noreply.github.com"
+          git checkout --orphan claude/probe-out
+          git rm -rq --cached . 
+          git add -f probe_out
+          git commit -qm "probe results"
+          git push -f origin claude/probe-out

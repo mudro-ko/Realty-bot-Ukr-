@@ -1,6 +1,7 @@
 import os, re, json, sys, time
 import requests
 OUT = "probe_out"; os.makedirs(OUT, exist_ok=True)
+sys.stdout.reconfigure(line_buffering=True)
 H = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36",
      "Accept-Language": "uk-UA,uk;q=0.9,ru;q=0.8,en;q=0.7",
      "Accept": "text/html,application/json;q=0.9,*/*;q=0.8"}
