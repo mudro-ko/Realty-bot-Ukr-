@@ -1,0 +1,116 @@
+{
+ "time": "2026-10-23 13:27",
+ "dry_run": true,
+ "searches": {
+  "mykolaiv-lisky-sale": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 99,
+     "new": 55,
+     "passed": 51,
+     "filtered": {
+      "стан": 4
+     },
+     "first_run": true
+    },
+    "dimria": {
+     "total": 7,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": true
+    }
+   },
+   "to_send": 10,
+   "seconds": 8.1
+  },
+  "odesa-sale": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 45750,
+     "new": 72,
+     "passed": 31,
+     "filtered": {
+      "ціна $": 30,
+      "перший поверх": 5,
+      "площа": 6
+     },
+     "first_run": true
+    },
+    "dimria": {
+     "total": 9573,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": true
+    }
+   },
+   "to_send": 10,
+   "seconds": 13.4
+  },
+  "odesa-rent": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 10170,
+     "new": 72,
+     "passed": 57,
+     "filtered": {
+      "ціна ₴": 15
+     },
+     "first_run": true
+    },
+    "dimria": {
+     "total": 1504,
+     "new": 1,
+     "passed": 1,
+     "filtered": {},
+     "first_run": true
+    }
+   },
+   "to_send": 10,
+   "seconds": 9.3
+  },
+  "odesa-daily": {
+   "first_run": false,
+   "sources": {
+    "dimria": {
+     "total": 572,
+     "new": 0,
+     "passed": 0,
+     "filtered": {},
+     "first_run": true
+    }
+   },
+   "to_send": 0,
+   "seconds": 1.4
+  },
+  "kyiv-rent": {
+   "first_run": false,
+   "sources": {
+    "lun": {
+     "total": 21280,
+     "new": 72,
+     "passed": 57,
+     "filtered": {
+      "ціна ₴": 15
+     },
+     "first_run": true
+    },
+    "dimria": {
+     "total": 3523,
+     "new": 4,
+     "passed": 1,
+     "filtered": {
+      "ціна ₴": 3
+     },
+     "first_run": true
+    }
+   },
+   "to_send": 10,
+   "seconds": 12.1
+  }
+ }
+}
