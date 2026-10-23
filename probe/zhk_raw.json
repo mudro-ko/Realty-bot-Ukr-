@@ -1,0 +1,5296 @@
+{
+ "catalog": [
+  {
+   "lun_bid": 7865,
+   "name": "Рішельєвський Пасаж",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": "Від $ 84 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11621,
+   "name": "ЖК Real Park Nova",
+   "developer": "STIKON",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 33 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4384,
+   "name": "ЖК Одеська Чайка (Сахарова)",
+   "developer": "ПЛАТИНУМБУД",
+   "district": "Крижанівка",
+   "price_from": "Від $ 33 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11606,
+   "name": "ЖК Era Family",
+   "developer": null,
+   "district": "Крижанівка",
+   "price_from": "Від $ 21 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3218,
+   "name": "ЖК Перлинний квартал на Сахарова",
+   "developer": "Kadorr Group",
+   "district": "Крижанівка",
+   "price_from": "Від $ 44 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6387,
+   "name": "ЖК Modern",
+   "developer": "STIKON",
+   "district": "Київський",
+   "price_from": "Від $ 56 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7675,
+   "name": "ЖК KADORR City",
+   "developer": "Kadorr Group",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 50 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11344,
+   "name": "ЖК ODESA CITY",
+   "developer": "ПЛАТИНУМБУД",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 30 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6962,
+   "name": "ЖК Перший Французький",
+   "developer": "Отрада-Девелопмент",
+   "district": "Приморський",
+   "price_from": "Від $ 86 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6382,
+   "name": "ЖК Прохоровський квартал",
+   "developer": "STIKON",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 40 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6834,
+   "name": "ЖК Sea Town",
+   "developer": "ПЛАТИНУМБУД",
+   "district": "Пересипський",
+   "price_from": "Від $ 36 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11525,
+   "name": "ЖК 70 Перлина",
+   "developer": "Kadorr Group",
+   "district": "Київський",
+   "price_from": "Від $ 66 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5017,
+   "name": "Мікрорайон Таїровські сади",
+   "developer": "КУБ Корпорація",
+   "district": "Лиманка",
+   "price_from": "Від $ 28 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5568,
+   "name": "Авторський район",
+   "developer": "Рів'єра девелопмент",
+   "district": "Фонтанка",
+   "price_from": "Від $ 25 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8846,
+   "name": "КМ Semila",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": "Від $ 175 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4597,
+   "name": "Житловий район Сади Рів'єри",
+   "developer": "КУБ Корпорація",
+   "district": "Фонтанка",
+   "price_from": "Від $ 31 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 9734,
+   "name": "Апарт-комплекс Breeze Marine",
+   "developer": "Eletaria Development",
+   "district": "Приморський",
+   "price_from": "Від $ 52 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3123,
+   "name": "ЖК Золота Ера",
+   "developer": "Привілей",
+   "district": "Крижанівка",
+   "price_from": "Від $ 61 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4462,
+   "name": "ЖК Aqua Marine",
+   "developer": "КУБ Корпорація",
+   "district": "Київський",
+   "price_from": "Від $ 41 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11379,
+   "name": "Арт-резиденція Garden City",
+   "developer": "Два Академіка",
+   "district": "Київський",
+   "price_from": "Від $ 212 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6623,
+   "name": "ЖК Еллада",
+   "developer": "Гефест",
+   "district": "Приморський",
+   "price_from": "Від $ 40 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6629,
+   "name": "ЖК Чайка Люкс",
+   "developer": "ПЛАТИНУМБУД",
+   "district": "Фонтанка",
+   "price_from": "Від $ 37 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11045,
+   "name": "Житловий парк Cuvee Village",
+   "developer": "Два Академіка",
+   "district": "Лиманка",
+   "price_from": "Від $ 65 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8804,
+   "name": "ЖК Акварель 10",
+   "developer": "Акварель",
+   "district": "Фонтанка",
+   "price_from": "Від $ 27 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6522,
+   "name": "ЖК Атмосфера",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": "Від $ 46 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7309,
+   "name": "ЖК Prostranstvo на Радісній",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5836,
+   "name": "Unity Towers",
+   "developer": "Mega Line, Рів'єра девелопмент",
+   "district": "Приморський",
+   "price_from": "Від $ 37 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6158,
+   "name": "ЖК Derby Style House",
+   "developer": "Graf development",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 32 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7361,
+   "name": "Житлове містечко KEKS",
+   "developer": "ZEZMAN",
+   "district": "Авангард",
+   "price_from": "Від $ 12 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6624,
+   "name": "ЖК Акварель-3",
+   "developer": "Акварель",
+   "district": "Приморський",
+   "price_from": "Від $ 34 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4739,
+   "name": "ЖК Приморські Сади",
+   "developer": "Graf development",
+   "district": "Крижанівка",
+   "price_from": "Від $ 22 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7600,
+   "name": "ЖК Акварель-7",
+   "developer": "Акварель",
+   "district": "Пересипський",
+   "price_from": "Від $ 39 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7522,
+   "name": "ЖК Лідерсівський",
+   "developer": "ОдесаБуд",
+   "district": "Приморський",
+   "price_from": "Від $ 97 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 9994,
+   "name": "ЖК Golden City",
+   "developer": "Будсмарт",
+   "district": "Крижанівка",
+   "price_from": "Від $ 25 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4814,
+   "name": "Житлове містечко ARTVILLE",
+   "developer": "ZEZMAN",
+   "district": "Авангард",
+   "price_from": "Від $ 16 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8816,
+   "name": "ЖК Меридіан",
+   "developer": "Materik",
+   "district": "Ліски",
+   "price_from": "Від $ 24 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 10755,
+   "name": "OZONE",
+   "developer": "Whale Development",
+   "district": "Приморський",
+   "price_from": "Від $ 129 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11671,
+   "name": "ЖК КВАРТАЛ SOHO",
+   "developer": "Heritage",
+   "district": "Приморський",
+   "price_from": "Від $ 74 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6485,
+   "name": "ЖК Одеські традиції на Глушко",
+   "developer": null,
+   "district": "Київський",
+   "price_from": "Від $ 49 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5560,
+   "name": "Kandinsky Odesa Residence",
+   "developer": "Perfect Group, Citex Development",
+   "district": "Приморський",
+   "price_from": "Від $ 98 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3179,
+   "name": "ЖК Parkside",
+   "developer": "БМУ-1",
+   "district": "Приморський",
+   "price_from": "Від $ 50 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6665,
+   "name": "ЖК Аврора",
+   "developer": "Руніком Інвест",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 40 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4970,
+   "name": "ЖК Парк Совіньйон",
+   "developer": "ЗАРС",
+   "district": "Таїрове",
+   "price_from": "Від $ 42 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6867,
+   "name": "ЖК на Прохоровській",
+   "developer": "Одесстрой",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 28 тис.",
+   "url": "https://lun.ua/new/odesa/na-prokhorovskii"
+  },
+  {
+   "lun_bid": 7103,
+   "name": "Пространство на Дачній",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7121,
+   "name": "ЖК Avinion",
+   "developer": "МВДім",
+   "district": "Київський",
+   "price_from": "Від $ 45 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7505,
+   "name": "ЖК Парк Морський",
+   "developer": null,
+   "district": "Південне",
+   "price_from": "Від $ 23 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5992,
+   "name": "ЖК Альтаїр-3",
+   "developer": "БУДОВА",
+   "district": "Київський",
+   "price_from": "Від $ 41 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7469,
+   "name": "ЖК Smart House",
+   "developer": "БУДІВЕЛЬНА ГРУПА \"ПАЛЬМИРА\"",
+   "district": "Південне",
+   "price_from": "Від $ 18 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4707,
+   "name": "ЖК Manhattan",
+   "developer": "Graf development",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6547,
+   "name": "ЖК ITown",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": "Від $ 55 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6614,
+   "name": "ЖК Бульвар Акацій",
+   "developer": "Тірас",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 34 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5882,
+   "name": "ЖК Посейдон",
+   "developer": "Гефест",
+   "district": "Київський",
+   "price_from": "Від $ 62 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11828,
+   "name": "ЖК Одеські традиції на Старосінній",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7822,
+   "name": "ЖК Art House",
+   "developer": "KONA",
+   "district": "Приморський",
+   "price_from": "Від $ 54 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8397,
+   "name": "ЖК Гринвіч Парк",
+   "developer": "Degas Group",
+   "district": "Ілічанка",
+   "price_from": "Від $ 22 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 9090,
+   "name": "ЖК Гімназист",
+   "developer": "Heritage",
+   "district": "Приморський",
+   "price_from": "Від $ 107 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4375,
+   "name": "ЖК CITY PARK",
+   "developer": "KONA",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 25 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7783,
+   "name": "Дохідний дім Salve",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": "Від $ 33 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6150,
+   "name": "ЖК Удобний",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": "Від $ 37 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 1908,
+   "name": "ЖК Нова Європа",
+   "developer": "Degas Group",
+   "district": "Ілічанка",
+   "price_from": "Від $ 22 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7969,
+   "name": "ЖК Будинок Потоцького",
+   "developer": "Руніком Інвест",
+   "district": "Приморський",
+   "price_from": "Від $ 95 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 9885,
+   "name": "ЖК Кімолос",
+   "developer": "Гефест",
+   "district": "Приморський",
+   "price_from": "Від $ 93 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7576,
+   "name": "ЖК Калейдоскоп",
+   "developer": "INGRAD Development Group",
+   "district": "Лиманка",
+   "price_from": "Від $ 51 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5746,
+   "name": "ЖК RealPark",
+   "developer": "STIKON",
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6729,
+   "name": "Апарт-комплекс Морська резиденція",
+   "developer": "БУДОВА",
+   "district": "Приморський",
+   "price_from": "Від $ 47 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8618,
+   "name": "Апарт-комплекс Times",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": "Від $ 27 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3111,
+   "name": "ЖБК Співучий Фонтан",
+   "developer": "Одісей-СМУ-11",
+   "district": "Київський",
+   "price_from": "Від $ 24 тис.",
+   "url": "https://lun.ua/new/odesa/spivuchyi-fontan"
+  },
+  {
+   "lun_bid": 6054,
+   "name": "ЖК Sea View",
+   "developer": "БУДОВА",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7917,
+   "name": "Doma Trabotti",
+   "developer": "Citex Development",
+   "district": "Приморський",
+   "price_from": "Від $ 90 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5597,
+   "name": "Aston Hall",
+   "developer": "American Investment Fund",
+   "district": "Приморський",
+   "price_from": "Від $ 257 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 405,
+   "name": "ЖМ Острови",
+   "developer": "KONA",
+   "district": "Пересипський",
+   "price_from": "Від $ 43 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 10748,
+   "name": "ЖК RUE MÉNARS",
+   "developer": "Фамільний Дім",
+   "district": "Київський",
+   "price_from": "Від $ 44 тис.",
+   "url": "https://lun.ua/new/odesa/rue-m-nars"
+  },
+  {
+   "lun_bid": 6554,
+   "name": "ЖК RosenTal",
+   "developer": "Руніком Інвест",
+   "district": "Лиманка",
+   "price_from": "Від $ 27 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11354,
+   "name": "MIY by Five Forces",
+   "developer": "Spatium Group",
+   "district": "Приморський",
+   "price_from": "Від $ 207 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5125,
+   "name": "ЖК ЛісSky",
+   "developer": "KONA",
+   "district": "Крижанівка",
+   "price_from": "Від $ 36 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11683,
+   "name": "КМ ONE CLUB VILLAGE",
+   "developer": "Harmony Development",
+   "district": "Ліски",
+   "price_from": "Від $ 86 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6944,
+   "name": "ЖК Олексіївський",
+   "developer": "Materik",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 61 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8789,
+   "name": "ЖК Дім у моря Premier",
+   "developer": "Югінвест",
+   "district": "Південне",
+   "price_from": "Від $ 28 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8105,
+   "name": "Пространство біля Стамбульського парка",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": "Від $ 36 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 1511,
+   "name": "КМ Сосновий берег",
+   "developer": null,
+   "district": "Ліски",
+   "price_from": "Від $ 20 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6845,
+   "name": "ЖК Оскар",
+   "developer": "БУДОВА",
+   "district": "Приморський",
+   "price_from": "Від $ 56 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4708,
+   "name": "ЖК Парус",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": "Від $ 53 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7371,
+   "name": "ЖК Скай Сіті Плюс",
+   "developer": "БУДОВА",
+   "district": "Київський",
+   "price_from": "Від $ 34 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 763,
+   "name": "Морська симфонія",
+   "developer": "Терракс",
+   "district": "Приморський",
+   "price_from": "Від $ 50 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3248,
+   "name": "ЖК Costa fontana",
+   "developer": "Київміськбуд",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5508,
+   "name": "ЖК Kokos Avenue",
+   "developer": "Артхаус Южне",
+   "district": "Південне",
+   "price_from": "Від $ 29 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5651,
+   "name": "Олімпійський",
+   "developer": "STIKON",
+   "district": "Приморський",
+   "price_from": "Від $ 77 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7423,
+   "name": "ЖК Будинок на Степовій",
+   "developer": "ОдесаБуд",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 13 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7680,
+   "name": "ЖК Mandarin ART",
+   "developer": "БУДОВА",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 754,
+   "name": "ЖК Нові Черемушки",
+   "developer": "Одесстрой",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 50 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 10847,
+   "name": "ITown ART Apartments",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": "Від $ 57 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5210,
+   "name": "ЖК на Єфимова",
+   "developer": "Одесстрой",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 54 тис.",
+   "url": "https://lun.ua/new/odesa/na-yefymova"
+  },
+  {
+   "lun_bid": 4872,
+   "name": "ЖК SunCity",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": "Від $ 145 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6829,
+   "name": "ЖК MARINIST residence",
+   "developer": "Whale Development",
+   "district": "Київський",
+   "price_from": "Від $ 71 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 10309,
+   "name": "КМ Gross Liebental",
+   "developer": "ZEZMAN",
+   "district": "Авангард",
+   "price_from": "Від $ 47 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5766,
+   "name": "Клубний будинок Biarritz",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": "Від $ 481 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 10994,
+   "name": "КМ Академічний",
+   "developer": null,
+   "district": "Крижанівка",
+   "price_from": "Від $ 68 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 10781,
+   "name": "ЖК ITOWN ART",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": "Від $ 35 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7550,
+   "name": "Best Resort Apartments",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": "Від $ 25 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5043,
+   "name": "ЖК Чотири сезони",
+   "developer": "БУДОВА",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8881,
+   "name": "ЖК Акварель-9",
+   "developer": "Акварель",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8361,
+   "name": "Пространство на Інглезі",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Київський",
+   "price_from": "Від $ 28 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7915,
+   "name": "ЖК Парус",
+   "developer": null,
+   "district": "Південне",
+   "price_from": "Від $ 33 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7764,
+   "name": "ЖК City House Resort",
+   "developer": "АПК Менеджмент",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9073,
+   "name": "вул. Кругова, 53",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": "Від $ 60 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 1899,
+   "name": "ЖК Маріїнський",
+   "developer": "Сфера ЛТД",
+   "district": "Великодолинське",
+   "price_from": "Від $ 19 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5865,
+   "name": "ЖК на Єврейській",
+   "developer": "БУДОВА",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5083,
+   "name": "ЖК Дім у моря",
+   "developer": "Югінвест",
+   "district": "Південне",
+   "price_from": "Від $ 27 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11376,
+   "name": "LELEKA by Odesa",
+   "developer": "Spatium Group",
+   "district": "Приморський",
+   "price_from": "Від $ 52 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 365,
+   "name": "ЖК Янтарний",
+   "developer": "Мікромегас",
+   "district": "Ілічанка",
+   "price_from": "Від $ 27 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 1243,
+   "name": "КМ Золотий Берег",
+   "developer": "Житлобудсервіс-1",
+   "district": "Київський",
+   "price_from": "Від $ 1.4 млн",
+   "url": null
+  },
+  {
+   "lun_bid": 4200,
+   "name": "Клубний будинок Graf",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": "Від $ 950 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 2223,
+   "name": "ЖК Курортний",
+   "developer": "Мікромегас",
+   "district": "Приморський",
+   "price_from": "Від $ 52 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7871,
+   "name": "Таунхауси Перша лінія, 31",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": "Від $ 135 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8263,
+   "name": "ARCHOTEL AVENUE",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": "Від $ 321 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7483,
+   "name": "Французький бульвар, 29б",
+   "developer": "ЗАРС",
+   "district": "Приморський",
+   "price_from": "Від $ 159 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6417,
+   "name": "Aura Apart",
+   "developer": "Aura",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4231,
+   "name": "ЖК Форрест",
+   "developer": "ГК Premium Space",
+   "district": "Фонтанка",
+   "price_from": "Від $ 28 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7807,
+   "name": "ЖК Сокіл",
+   "developer": "Sokol development",
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7941,
+   "name": "ЖК Центральний",
+   "developer": "Assol Group",
+   "district": "Ізмаїл",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/izmail-tsentralnyi"
+  },
+  {
+   "lun_bid": 11843,
+   "name": "ЖК BREEZE RESIDENCE",
+   "developer": "Eletaria Development",
+   "district": null,
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 399,
+   "name": "ЖК Одеський двір",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 11237,
+   "name": "КМ ARTPARK",
+   "developer": "Harmony Development",
+   "district": "Авангард",
+   "price_from": "Від $ 84 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7855,
+   "name": "Апарт-комплекс Ітака",
+   "developer": "Гефест",
+   "district": "Київський",
+   "price_from": "Від $ 70 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3537,
+   "name": "ЖК Кольоровий бульвар",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5049,
+   "name": "КМ Бугове",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": "Від $ 80 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8828,
+   "name": "ЖК Теплий дім Plus",
+   "developer": "Основа Девелопмент",
+   "district": "Крижанівка",
+   "price_from": "Від $ 37 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6326,
+   "name": "ЖК Віндзор",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": "Від $ 150 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 4680,
+   "name": "ЖК English house (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 45 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 3020,
+   "name": "ЖК Green Wood",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6669,
+   "name": "ЖК Emporium Tower",
+   "developer": "Mega Line",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8998,
+   "name": "ЖК Калейдоскоп 2",
+   "developer": "INGRAD Development Group",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7559,
+   "name": "ЖК Sunrise City",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": "Від $ 38 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5152,
+   "name": "ЖК Парк Фонтанів",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9022,
+   "name": "Клубний квартал Chateau Grand",
+   "developer": "BudCapital",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8701,
+   "name": "вул. Прохоровська, 33/1",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/prokhorovska-st-33-1"
+  },
+  {
+   "lun_bid": 7504,
+   "name": "ЖК на Розумовській",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/na-rozumovskii"
+  },
+  {
+   "lun_bid": 7533,
+   "name": "ЖК Брусника",
+   "developer": "Ліга ЮгСтрой",
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 11598,
+   "name": "Таунхауси Lazur Village",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": "Від $ 112 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7328,
+   "name": "ЖК Лотос Холл",
+   "developer": null,
+   "district": "Київський",
+   "price_from": "Від $ 97 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11140,
+   "name": "Апарт-комплекс White",
+   "developer": "Materik",
+   "district": "Хаджибейський",
+   "price_from": "Від $ 45 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11944,
+   "name": "ЖК GOLDEN CITY",
+   "developer": "Будсмарт",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 11799,
+   "name": "ЖК Sun Park 2",
+   "developer": "Assol Group",
+   "district": "Ізмаїл",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7461,
+   "name": "ЖК Клубна резиденція",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": "Від $ 81 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 2298,
+   "name": "КМ Дайберг",
+   "developer": "Свій дім",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4782,
+   "name": "ЖК BRUSSELS",
+   "developer": "5PDevelopment",
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7817,
+   "name": "ЖК M.Park",
+   "developer": "БУДОВА",
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8008,
+   "name": "Апарт-комплекс Primorsky Residence",
+   "developer": "Devent Development",
+   "district": "Південне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4285,
+   "name": "КМ Лінія Успіху",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": "Від $ 85 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11104,
+   "name": "КМ Альпійський-3",
+   "developer": null,
+   "district": "Київський",
+   "price_from": "Від $ 285 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8793,
+   "name": "Таунхауси Avinion",
+   "developer": "МВДім",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7033,
+   "name": "ЖК Марко Поло (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6648,
+   "name": "ЖК Graf у моря",
+   "developer": "Graf development",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6171,
+   "name": "ЖК Місто Мрій",
+   "developer": "Інвестиції та Інновації",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/misto-mrii"
+  },
+  {
+   "lun_bid": 4685,
+   "name": "ЖК Palais Royal (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 75 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 6910,
+   "name": "13-а станція Великого Фонтану",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/13th-stantsiia-velykoho-fontanu"
+  },
+  {
+   "lun_bid": 11401,
+   "name": "ЖБК Перлина Дунаю",
+   "developer": null,
+   "district": "Кілія",
+   "price_from": "Від $ 16 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7760,
+   "name": "КМ Затишний",
+   "developer": null,
+   "district": "Південне",
+   "price_from": "Від $ 23 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8181,
+   "name": "ЖК на Будівельному",
+   "developer": "Дельта Груп",
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/na-budivelnomu"
+  },
+  {
+   "lun_bid": 8276,
+   "name": "вул. Сергія Шелухина, 54",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": "Від $ 160 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 11802,
+   "name": "ЖК Sun Park",
+   "developer": "Assol Group",
+   "district": "Ізмаїл",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6141,
+   "name": "Iner Home",
+   "developer": "Ecoteck Development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 1507,
+   "name": "КМ Перлинне",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": "Від $ 40 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7996,
+   "name": "вул. Канатна, 15",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/kanatna-st-15"
+  },
+  {
+   "lun_bid": 8092,
+   "name": "Клубний будинок M1 Club Apartments",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 3290,
+   "name": "ЖК Вежі Фонтана",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/vezhi-fontana"
+  },
+  {
+   "lun_bid": 11797,
+   "name": "ЖК CRYSTAL III",
+   "developer": "Assol Group",
+   "district": "Ізмаїл",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10167,
+   "name": "Апарт-готель Soho House",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/soho-house-apartments"
+  },
+  {
+   "lun_bid": 4681,
+   "name": "ЖК Premium Residence (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6154,
+   "name": "КМ Світлий Совіньон",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9932,
+   "name": "ЖК Першотравневий",
+   "developer": "Дельта Груп",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10281,
+   "name": "ЖК Хай-тек",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5238,
+   "name": "ЖК Хвиля",
+   "developer": "Мікромегас",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7867,
+   "name": "ЖК Юпітер",
+   "developer": "Два Академіка",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 11796,
+   "name": "ЖК Софія 3",
+   "developer": "Assol Group",
+   "district": "Ізмаїл",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9252,
+   "name": "ЖК Стерлинг",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/sterlynh"
+  },
+  {
+   "lun_bid": 7308,
+   "name": "Пространство на Шмідта",
+   "developer": "Група компаній «PROSTRANSTVO»",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 11798,
+   "name": "ЖК Затишний",
+   "developer": "Assol Group",
+   "district": "Ізмаїл",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7017,
+   "name": "Клубний будинок Воронцовський",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7400,
+   "name": "ЖК City House History",
+   "developer": "АПК Менеджмент",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7923,
+   "name": "Клубний будинок Community",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 406,
+   "name": "ЖК Спадок Дерибаса",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 11064,
+   "name": "КМ МАЄТОК",
+   "developer": "MAETOK Development",
+   "district": "Таїрове",
+   "price_from": "Від $ 350 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 8277,
+   "name": "вул. Владислава Бувалкіна, 73",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/vladyslava-buvalkina-st-73"
+  },
+  {
+   "lun_bid": 7257,
+   "name": "ЖК Колумб (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8454,
+   "name": "ЖК CRYSTAL LUX",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7401,
+   "name": "Клубний будинок Graf на Катеринській",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7356,
+   "name": "ЖК Морський",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 6619,
+   "name": "ЖК Smart Hall",
+   "developer": "ЮРАФІРА-БУД",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7879,
+   "name": "ЖК Русь",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 791,
+   "name": "ЖК Озерки",
+   "developer": null,
+   "district": "Нова Долина",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7053,
+   "name": "вул. Давида Ойстраха, 8а",
+   "developer": "Одесстрой",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/davyda-oistrakha-st-8a"
+  },
+  {
+   "lun_bid": 7258,
+   "name": "ЖК Бельгійський дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 75 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5126,
+   "name": "ЖК Green Park",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4884,
+   "name": "вул. Отамана Головатого, 24",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7007,
+   "name": "Клубний будинок Graf на Педагогічній",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7895,
+   "name": "ЖК Чорноморський",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7868,
+   "name": "ЖК Зірковий",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7501,
+   "name": "Таунхауси Теремки",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 1512,
+   "name": "КМ Аріадна",
+   "developer": null,
+   "district": "Чорноморське",
+   "price_from": "Від $ 242 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7688,
+   "name": "ЖК Парковий 2",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/parkovyi-2"
+  },
+  {
+   "lun_bid": 8319,
+   "name": "ЖК Мармелад",
+   "developer": "Devent Development",
+   "district": "Ілічанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 3007,
+   "name": "ЖК Комфорт",
+   "developer": "ЕкоЙолка",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-comfort"
+  },
+  {
+   "lun_bid": 10283,
+   "name": "ЖК Перемога",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-peremoha"
+  },
+  {
+   "lun_bid": 7259,
+   "name": "ЖК Французький дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/kryzhanivka-frantsuzkyi-dim-zelenyi-mys"
+  },
+  {
+   "lun_bid": 6053,
+   "name": "ЖК Малий Марсель-2",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8362,
+   "name": "вул. Крайня, 1-14",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/fontanka-krainia-st-1-14"
+  },
+  {
+   "lun_bid": 3142,
+   "name": "ЖК Суворівський 2",
+   "developer": "Реал-Груп",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9457,
+   "name": "Таунхауси Царське село",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10324,
+   "name": "вул. Пирогова, 2б",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/bilhorod-dnistrovskyi-pyrohova-st-2"
+  },
+  {
+   "lun_bid": 5814,
+   "name": "ЖК Центральний",
+   "developer": "Центральний",
+   "district": "Великодолинське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7897,
+   "name": "Таунхауси САДИБА",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7903,
+   "name": "ЖК Вільний Совіньон",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8509,
+   "name": "Дуплекси Дубовий гай",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5269,
+   "name": "Гагарінське плато",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/haharinske-plato"
+  },
+  {
+   "lun_bid": 8549,
+   "name": "вул. Хантадзе, 13",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-khantadze-st-13"
+  },
+  {
+   "lun_bid": 7605,
+   "name": "Клубний будинок Crystal House",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4073,
+   "name": "ЖК Молодіжний",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8847,
+   "name": "КМ Semila (Дайберг)",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9870,
+   "name": "вул. Приморська, 53",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/prymorska-st-53"
+  },
+  {
+   "lun_bid": 6422,
+   "name": "пров. Морехідний",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/morekhidnyi-ln"
+  },
+  {
+   "lun_bid": 8218,
+   "name": "Таунхауси CLEVER",
+   "developer": null,
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4616,
+   "name": "ЖК Семицветик",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8743,
+   "name": "вул. Балківська, 55",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/balkivska-st-55"
+  },
+  {
+   "lun_bid": 6710,
+   "name": "Domino Townhouse",
+   "developer": null,
+   "district": "Прилиманське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8835,
+   "name": "Таунхауси Затишний дворик",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10298,
+   "name": "вул. 40-річчя Перемоги",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/tairove-40-richchia-peremohy-st"
+  },
+  {
+   "lun_bid": 7289,
+   "name": "ЖК Будинок на Мечникова",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/budynok-na-mechnykova"
+  },
+  {
+   "lun_bid": 5823,
+   "name": "Клубний будинок Малий Марсель",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10232,
+   "name": "вул. Парусна",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-parusna-st"
+  },
+  {
+   "lun_bid": 7879,
+   "name": "ЖК Русь",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 791,
+   "name": "ЖК Озерки",
+   "developer": null,
+   "district": "Нова Долина",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7053,
+   "name": "вул. Давида Ойстраха, 8а",
+   "developer": "Одесстрой",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/davyda-oistrakha-st-8a"
+  },
+  {
+   "lun_bid": 7258,
+   "name": "ЖК Бельгійський дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 75 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5126,
+   "name": "ЖК Green Park",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4884,
+   "name": "вул. Отамана Головатого, 24",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7007,
+   "name": "Клубний будинок Graf на Педагогічній",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7895,
+   "name": "ЖК Чорноморський",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7868,
+   "name": "ЖК Зірковий",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7501,
+   "name": "Таунхауси Теремки",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 1512,
+   "name": "КМ Аріадна",
+   "developer": null,
+   "district": "Чорноморське",
+   "price_from": "Від $ 242 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7688,
+   "name": "ЖК Парковий 2",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/parkovyi-2"
+  },
+  {
+   "lun_bid": 8319,
+   "name": "ЖК Мармелад",
+   "developer": "Devent Development",
+   "district": "Ілічанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 3007,
+   "name": "ЖК Комфорт",
+   "developer": "ЕкоЙолка",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-comfort"
+  },
+  {
+   "lun_bid": 10283,
+   "name": "ЖК Перемога",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-peremoha"
+  },
+  {
+   "lun_bid": 7259,
+   "name": "ЖК Французький дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/kryzhanivka-frantsuzkyi-dim-zelenyi-mys"
+  },
+  {
+   "lun_bid": 6053,
+   "name": "ЖК Малий Марсель-2",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8362,
+   "name": "вул. Крайня, 1-14",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/fontanka-krainia-st-1-14"
+  },
+  {
+   "lun_bid": 3142,
+   "name": "ЖК Суворівський 2",
+   "developer": "Реал-Груп",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9457,
+   "name": "Таунхауси Царське село",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10324,
+   "name": "вул. Пирогова, 2б",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/bilhorod-dnistrovskyi-pyrohova-st-2"
+  },
+  {
+   "lun_bid": 5814,
+   "name": "ЖК Центральний",
+   "developer": "Центральний",
+   "district": "Великодолинське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7897,
+   "name": "Таунхауси САДИБА",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7903,
+   "name": "ЖК Вільний Совіньон",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8509,
+   "name": "Дуплекси Дубовий гай",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5269,
+   "name": "Гагарінське плато",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/haharinske-plato"
+  },
+  {
+   "lun_bid": 8549,
+   "name": "вул. Хантадзе, 13",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-khantadze-st-13"
+  },
+  {
+   "lun_bid": 7605,
+   "name": "Клубний будинок Crystal House",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4073,
+   "name": "ЖК Молодіжний",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8847,
+   "name": "КМ Semila (Дайберг)",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9870,
+   "name": "вул. Приморська, 53",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/prymorska-st-53"
+  },
+  {
+   "lun_bid": 6422,
+   "name": "пров. Морехідний",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/morekhidnyi-ln"
+  },
+  {
+   "lun_bid": 8218,
+   "name": "Таунхауси CLEVER",
+   "developer": null,
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4616,
+   "name": "ЖК Семицветик",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8743,
+   "name": "вул. Балківська, 55",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/balkivska-st-55"
+  },
+  {
+   "lun_bid": 6710,
+   "name": "Domino Townhouse",
+   "developer": null,
+   "district": "Прилиманське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8835,
+   "name": "Таунхауси Затишний дворик",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10298,
+   "name": "вул. 40-річчя Перемоги",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/tairove-40-richchia-peremohy-st"
+  },
+  {
+   "lun_bid": 7289,
+   "name": "ЖК Будинок на Мечникова",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/budynok-na-mechnykova"
+  },
+  {
+   "lun_bid": 5823,
+   "name": "Клубний будинок Малий Марсель",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10232,
+   "name": "вул. Парусна",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-parusna-st"
+  },
+  {
+   "lun_bid": 7879,
+   "name": "ЖК Русь",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 791,
+   "name": "ЖК Озерки",
+   "developer": null,
+   "district": "Нова Долина",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7053,
+   "name": "вул. Давида Ойстраха, 8а",
+   "developer": "Одесстрой",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/davyda-oistrakha-st-8a"
+  },
+  {
+   "lun_bid": 7258,
+   "name": "ЖК Бельгійський дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 75 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5126,
+   "name": "ЖК Green Park",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4884,
+   "name": "вул. Отамана Головатого, 24",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7007,
+   "name": "Клубний будинок Graf на Педагогічній",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7895,
+   "name": "ЖК Чорноморський",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7868,
+   "name": "ЖК Зірковий",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7501,
+   "name": "Таунхауси Теремки",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 1512,
+   "name": "КМ Аріадна",
+   "developer": null,
+   "district": "Чорноморське",
+   "price_from": "Від $ 242 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7688,
+   "name": "ЖК Парковий 2",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/parkovyi-2"
+  },
+  {
+   "lun_bid": 8319,
+   "name": "ЖК Мармелад",
+   "developer": "Devent Development",
+   "district": "Ілічанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 3007,
+   "name": "ЖК Комфорт",
+   "developer": "ЕкоЙолка",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-comfort"
+  },
+  {
+   "lun_bid": 10283,
+   "name": "ЖК Перемога",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-peremoha"
+  },
+  {
+   "lun_bid": 7259,
+   "name": "ЖК Французький дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/kryzhanivka-frantsuzkyi-dim-zelenyi-mys"
+  },
+  {
+   "lun_bid": 6053,
+   "name": "ЖК Малий Марсель-2",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8362,
+   "name": "вул. Крайня, 1-14",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/fontanka-krainia-st-1-14"
+  },
+  {
+   "lun_bid": 3142,
+   "name": "ЖК Суворівський 2",
+   "developer": "Реал-Груп",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9457,
+   "name": "Таунхауси Царське село",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10324,
+   "name": "вул. Пирогова, 2б",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/bilhorod-dnistrovskyi-pyrohova-st-2"
+  },
+  {
+   "lun_bid": 5814,
+   "name": "ЖК Центральний",
+   "developer": "Центральний",
+   "district": "Великодолинське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7897,
+   "name": "Таунхауси САДИБА",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7903,
+   "name": "ЖК Вільний Совіньон",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8509,
+   "name": "Дуплекси Дубовий гай",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5269,
+   "name": "Гагарінське плато",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/haharinske-plato"
+  },
+  {
+   "lun_bid": 8549,
+   "name": "вул. Хантадзе, 13",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-khantadze-st-13"
+  },
+  {
+   "lun_bid": 7605,
+   "name": "Клубний будинок Crystal House",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4073,
+   "name": "ЖК Молодіжний",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8847,
+   "name": "КМ Semila (Дайберг)",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9870,
+   "name": "вул. Приморська, 53",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/prymorska-st-53"
+  },
+  {
+   "lun_bid": 6422,
+   "name": "пров. Морехідний",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/morekhidnyi-ln"
+  },
+  {
+   "lun_bid": 8218,
+   "name": "Таунхауси CLEVER",
+   "developer": null,
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4616,
+   "name": "ЖК Семицветик",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8743,
+   "name": "вул. Балківська, 55",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/balkivska-st-55"
+  },
+  {
+   "lun_bid": 6710,
+   "name": "Domino Townhouse",
+   "developer": null,
+   "district": "Прилиманське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8835,
+   "name": "Таунхауси Затишний дворик",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10298,
+   "name": "вул. 40-річчя Перемоги",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/tairove-40-richchia-peremohy-st"
+  },
+  {
+   "lun_bid": 7289,
+   "name": "ЖК Будинок на Мечникова",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/budynok-na-mechnykova"
+  },
+  {
+   "lun_bid": 5823,
+   "name": "Клубний будинок Малий Марсель",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10232,
+   "name": "вул. Парусна",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-parusna-st"
+  },
+  {
+   "lun_bid": 7879,
+   "name": "ЖК Русь",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 791,
+   "name": "ЖК Озерки",
+   "developer": null,
+   "district": "Нова Долина",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7053,
+   "name": "вул. Давида Ойстраха, 8а",
+   "developer": "Одесстрой",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/davyda-oistrakha-st-8a"
+  },
+  {
+   "lun_bid": 7258,
+   "name": "ЖК Бельгійський дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 75 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5126,
+   "name": "ЖК Green Park",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4884,
+   "name": "вул. Отамана Головатого, 24",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7007,
+   "name": "Клубний будинок Graf на Педагогічній",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7895,
+   "name": "ЖК Чорноморський",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7868,
+   "name": "ЖК Зірковий",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7501,
+   "name": "Таунхауси Теремки",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 1512,
+   "name": "КМ Аріадна",
+   "developer": null,
+   "district": "Чорноморське",
+   "price_from": "Від $ 242 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7688,
+   "name": "ЖК Парковий 2",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/parkovyi-2"
+  },
+  {
+   "lun_bid": 8319,
+   "name": "ЖК Мармелад",
+   "developer": "Devent Development",
+   "district": "Ілічанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 3007,
+   "name": "ЖК Комфорт",
+   "developer": "ЕкоЙолка",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-comfort"
+  },
+  {
+   "lun_bid": 10283,
+   "name": "ЖК Перемога",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-peremoha"
+  },
+  {
+   "lun_bid": 7259,
+   "name": "ЖК Французький дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/kryzhanivka-frantsuzkyi-dim-zelenyi-mys"
+  },
+  {
+   "lun_bid": 6053,
+   "name": "ЖК Малий Марсель-2",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8362,
+   "name": "вул. Крайня, 1-14",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/fontanka-krainia-st-1-14"
+  },
+  {
+   "lun_bid": 3142,
+   "name": "ЖК Суворівський 2",
+   "developer": "Реал-Груп",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9457,
+   "name": "Таунхауси Царське село",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10324,
+   "name": "вул. Пирогова, 2б",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/bilhorod-dnistrovskyi-pyrohova-st-2"
+  },
+  {
+   "lun_bid": 5814,
+   "name": "ЖК Центральний",
+   "developer": "Центральний",
+   "district": "Великодолинське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7897,
+   "name": "Таунхауси САДИБА",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7903,
+   "name": "ЖК Вільний Совіньон",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8509,
+   "name": "Дуплекси Дубовий гай",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5269,
+   "name": "Гагарінське плато",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/haharinske-plato"
+  },
+  {
+   "lun_bid": 8549,
+   "name": "вул. Хантадзе, 13",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-khantadze-st-13"
+  },
+  {
+   "lun_bid": 7605,
+   "name": "Клубний будинок Crystal House",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4073,
+   "name": "ЖК Молодіжний",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8847,
+   "name": "КМ Semila (Дайберг)",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9870,
+   "name": "вул. Приморська, 53",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/prymorska-st-53"
+  },
+  {
+   "lun_bid": 6422,
+   "name": "пров. Морехідний",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/morekhidnyi-ln"
+  },
+  {
+   "lun_bid": 8218,
+   "name": "Таунхауси CLEVER",
+   "developer": null,
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4616,
+   "name": "ЖК Семицветик",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8743,
+   "name": "вул. Балківська, 55",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/balkivska-st-55"
+  },
+  {
+   "lun_bid": 6710,
+   "name": "Domino Townhouse",
+   "developer": null,
+   "district": "Прилиманське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8835,
+   "name": "Таунхауси Затишний дворик",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10298,
+   "name": "вул. 40-річчя Перемоги",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/tairove-40-richchia-peremohy-st"
+  },
+  {
+   "lun_bid": 7289,
+   "name": "ЖК Будинок на Мечникова",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/budynok-na-mechnykova"
+  },
+  {
+   "lun_bid": 5823,
+   "name": "Клубний будинок Малий Марсель",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10232,
+   "name": "вул. Парусна",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-parusna-st"
+  },
+  {
+   "lun_bid": 7879,
+   "name": "ЖК Русь",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 791,
+   "name": "ЖК Озерки",
+   "developer": null,
+   "district": "Нова Долина",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7053,
+   "name": "вул. Давида Ойстраха, 8а",
+   "developer": "Одесстрой",
+   "district": "Пересипський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/davyda-oistrakha-st-8a"
+  },
+  {
+   "lun_bid": 7258,
+   "name": "ЖК Бельгійський дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": "Від $ 75 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 5126,
+   "name": "ЖК Green Park",
+   "developer": null,
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4884,
+   "name": "вул. Отамана Головатого, 24",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7007,
+   "name": "Клубний будинок Graf на Педагогічній",
+   "developer": "Graf development",
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7895,
+   "name": "ЖК Чорноморський",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7868,
+   "name": "ЖК Зірковий",
+   "developer": null,
+   "district": "Пересипський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7501,
+   "name": "Таунхауси Теремки",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 1512,
+   "name": "КМ Аріадна",
+   "developer": null,
+   "district": "Чорноморське",
+   "price_from": "Від $ 242 тис.",
+   "url": null
+  },
+  {
+   "lun_bid": 7688,
+   "name": "ЖК Парковий 2",
+   "developer": null,
+   "district": "Хаджибейський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/parkovyi-2"
+  },
+  {
+   "lun_bid": 8319,
+   "name": "ЖК Мармелад",
+   "developer": "Devent Development",
+   "district": "Ілічанка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 3007,
+   "name": "ЖК Комфорт",
+   "developer": "ЕкоЙолка",
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-comfort"
+  },
+  {
+   "lun_bid": 10283,
+   "name": "ЖК Перемога",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/lymanka-peremoha"
+  },
+  {
+   "lun_bid": 7259,
+   "name": "ЖК Французький дім (Зелений Мис)",
+   "developer": "Південна будівна",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/kryzhanivka-frantsuzkyi-dim-zelenyi-mys"
+  },
+  {
+   "lun_bid": 6053,
+   "name": "ЖК Малий Марсель-2",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8362,
+   "name": "вул. Крайня, 1-14",
+   "developer": null,
+   "district": "Фонтанка",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/fontanka-krainia-st-1-14"
+  },
+  {
+   "lun_bid": 3142,
+   "name": "ЖК Суворівський 2",
+   "developer": "Реал-Груп",
+   "district": "Крижанівка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9457,
+   "name": "Таунхауси Царське село",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10324,
+   "name": "вул. Пирогова, 2б",
+   "developer": null,
+   "district": "Білгород-Дністровський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/bilhorod-dnistrovskyi-pyrohova-st-2"
+  },
+  {
+   "lun_bid": 5814,
+   "name": "ЖК Центральний",
+   "developer": "Центральний",
+   "district": "Великодолинське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7897,
+   "name": "Таунхауси САДИБА",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 7903,
+   "name": "ЖК Вільний Совіньон",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8509,
+   "name": "Дуплекси Дубовий гай",
+   "developer": "Енергобуд Девелопмент",
+   "district": "Київський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 5269,
+   "name": "Гагарінське плато",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/haharinske-plato"
+  },
+  {
+   "lun_bid": 8549,
+   "name": "вул. Хантадзе, 13",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-khantadze-st-13"
+  },
+  {
+   "lun_bid": 7605,
+   "name": "Клубний будинок Crystal House",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4073,
+   "name": "ЖК Молодіжний",
+   "developer": null,
+   "district": "Молодіжне",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8847,
+   "name": "КМ Semila (Дайберг)",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 9870,
+   "name": "вул. Приморська, 53",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/prymorska-st-53"
+  },
+  {
+   "lun_bid": 6422,
+   "name": "пров. Морехідний",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/morekhidnyi-ln"
+  },
+  {
+   "lun_bid": 8218,
+   "name": "Таунхауси CLEVER",
+   "developer": null,
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 4616,
+   "name": "ЖК Семицветик",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8743,
+   "name": "вул. Балківська, 55",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/balkivska-st-55"
+  },
+  {
+   "lun_bid": 6710,
+   "name": "Domino Townhouse",
+   "developer": null,
+   "district": "Прилиманське",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 8835,
+   "name": "Таунхауси Затишний дворик",
+   "developer": null,
+   "district": "Лиманка",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10298,
+   "name": "вул. 40-річчя Перемоги",
+   "developer": null,
+   "district": "Таїрове",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/tairove-40-richchia-peremohy-st"
+  },
+  {
+   "lun_bid": 7289,
+   "name": "ЖК Будинок на Мечникова",
+   "developer": null,
+   "district": "Приморський",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/budynok-na-mechnykova"
+  },
+  {
+   "lun_bid": 5823,
+   "name": "Клубний будинок Малий Марсель",
+   "developer": "Свій дім",
+   "district": "Ліски",
+   "price_from": null,
+   "url": null
+  },
+  {
+   "lun_bid": 10232,
+   "name": "вул. Парусна",
+   "developer": null,
+   "district": "Чорноморськ",
+   "price_from": null,
+   "url": "https://lun.ua/new/odesa/chornomorsk-parusna-st"
+  }
+ ],
+ "zhk": [
+  {
+   "lun_geo_id": 10029573,
+   "name": "ЖК Двадцять четверта Перлина",
+   "link": "/sale/odesa/dvadtsiat-chetverta-perlyna",
+   "address": "Італійський бульвар",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 4,
+   "median_ppm": 2627
+  },
+  {
+   "lun_geo_id": 10028016,
+   "name": "ЖК Олександрівський",
+   "link": "/sale/odesa/aleksandrovskyi",
+   "address": "Пантелеймонівська вулиця",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1130
+  },
+  {
+   "lun_geo_id": 10030673,
+   "name": "ЖК Сорок п'ята перлина",
+   "link": "/sale/odesa/sorok-piata-perlyna",
+   "address": "вулиця Валерія Самофалова",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 2596
+  },
+  {
+   "lun_geo_id": 10028834,
+   "name": "ЖК Green Wood",
+   "link": "/sale/odesa/green-wood",
+   "address": "Французький бульвар, 85/5",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 6,
+   "median_ppm": 2701
+  },
+  {
+   "lun_geo_id": 10031114,
+   "name": "ЖК Атмосфера",
+   "link": "/sale/odesa/atmosfera",
+   "address": "Курортний провулок, 2",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 36,
+   "median_ppm": 2360
+  },
+  {
+   "lun_geo_id": 10030102,
+   "name": "ЖК Акрополь",
+   "link": "/sale/odesa/akropol",
+   "address": "Фонтанська дорога, 25",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 17,
+   "median_ppm": 1833
+  },
+  {
+   "lun_geo_id": 10027865,
+   "name": "ЖК Ланжерон",
+   "link": "/sale/odesa/lanzheron",
+   "address": "вулиця Володимира Рутківського, 5",
+   "district": "Приморський",
+   "micro": "Ланжерон",
+   "listings_seen": 3,
+   "median_ppm": 2438
+  },
+  {
+   "lun_geo_id": 10031188,
+   "name": "ЖК Еллада",
+   "link": "/sale/odesa/ellada",
+   "address": "Генуезька вулиця, 1, 1/1",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 30,
+   "median_ppm": 2141
+  },
+  {
+   "lun_geo_id": 10028350,
+   "name": "ЖК Восьма Перлина",
+   "link": "/sale/odesa/vosma-perlyna",
+   "address": "Французький бульвар, 60а",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 1,
+   "median_ppm": 2545
+  },
+  {
+   "lun_geo_id": 10030520,
+   "name": "Олімпійський",
+   "link": "/sale/odesa/olimpiiskyi",
+   "address": "проспект Шевченка, 31",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 6,
+   "median_ppm": 1312
+  },
+  {
+   "lun_geo_id": 10028540,
+   "name": "ЖК Акапулько 2",
+   "link": "/sale/odesa/akapulco-2",
+   "address": "Педагогічна вулиця, 21а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 3,
+   "median_ppm": 1231
+  },
+  {
+   "lun_geo_id": 10798494,
+   "name": "ЖК Аркадійський палац",
+   "link": "/sale/odesa/arkadiiskyi-palats",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 3,
+   "median_ppm": 1493
+  },
+  {
+   "lun_geo_id": 10030452,
+   "name": "Kandinsky Odesa Residence",
+   "link": "/sale/odesa/kandinsky-odessa-residence",
+   "address": "Французький бульвар, 63/65",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 2384
+  },
+  {
+   "lun_geo_id": 10032983,
+   "name": "ЖК Кімолос",
+   "link": "/sale/odesa/kimolos",
+   "address": "вулиця Балтиморська, 20а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 7,
+   "median_ppm": 1353
+  },
+  {
+   "lun_geo_id": 10030127,
+   "name": "ЖК Родос",
+   "link": "/sale/odesa/rodos",
+   "address": "Генуезька вулиця, 1",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 8,
+   "median_ppm": 1991
+  },
+  {
+   "lun_geo_id": 10027880,
+   "name": "ЖК Гагарін Плаза 1",
+   "link": "/sale/odesa/haharin-plaza-1",
+   "address": "Аркадійське плато, 5/1",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 3,
+   "median_ppm": 2375
+  },
+  {
+   "lun_geo_id": 10031069,
+   "name": "Апарт-комплекс Літературний",
+   "link": "/sale/odesa/apart-kompleks-literaturnyi",
+   "address": "Літературна вулиця, 10",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 6,
+   "median_ppm": 1718
+  },
+  {
+   "lun_geo_id": 10028449,
+   "name": "ЖК Дев'ята Перлина",
+   "link": "/sale/odesa/deviata-perlyna",
+   "address": "Французький бульвар, 60а",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 5,
+   "median_ppm": 1759
+  },
+  {
+   "lun_geo_id": 10027737,
+   "name": "ЖК Армійський",
+   "link": "/sale/odesa/armiiskyi",
+   "address": "вулиця Незалежності, 8а, 8б, 8г",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 1395
+  },
+  {
+   "lun_geo_id": 10028861,
+   "name": "ЖК Бельетаж",
+   "link": "/sale/odesa/beletazh",
+   "address": "вулиця Леонтовича, 16",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 2843
+  },
+  {
+   "lun_geo_id": 10798499,
+   "name": "ЖК Білий парус",
+   "link": "/sale/odesa/bilyi-parus",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 3,
+   "median_ppm": 1728
+  },
+  {
+   "lun_geo_id": 10030197,
+   "name": "ЖК Елегія Парк",
+   "link": "/sale/odesa/elehiia-park",
+   "address": "Генуезька вулиця",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 7,
+   "median_ppm": 2258
+  },
+  {
+   "lun_geo_id": 10029864,
+   "name": "ЖК Тридцять п'ята перлина",
+   "link": "/sale/odesa/trydtsiat-piayata-perlyna",
+   "address": "Літературна вулиця, 8",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 6,
+   "median_ppm": 2007
+  },
+  {
+   "lun_geo_id": 10027866,
+   "name": "ЖК Чудо-город",
+   "link": "/sale/odesa/chudo-horod",
+   "address": "Середньофонтанська вулиця, 19",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 7,
+   "median_ppm": 1011
+  },
+  {
+   "lun_geo_id": 10031116,
+   "name": "Пространство на Розкидайлівській",
+   "link": "/sale/odesa/prostranstvo-na-raskydailovskoi",
+   "address": "Розкидайлівська вулиця, 67б",
+   "district": "Приморський",
+   "micro": "Слобідка",
+   "listings_seen": 2,
+   "median_ppm": 1278
+  },
+  {
+   "lun_geo_id": 10031856,
+   "name": "ЖК Mandarin ART",
+   "link": null,
+   "address": "Канатна вулиця, 112а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1720
+  },
+  {
+   "lun_geo_id": 10028846,
+   "name": "ЖК Лімнос",
+   "link": "/sale/odesa/limnos",
+   "address": "Педагогічна вулиця, 23",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 1683
+  },
+  {
+   "lun_geo_id": 10027851,
+   "name": "ЖК Зоряне містечко",
+   "link": "/sale/odesa/zoriane-mistechko",
+   "address": "вулиця Незалежності, 11",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1497
+  },
+  {
+   "lun_geo_id": 10028898,
+   "name": "ЖК Леваневський",
+   "link": "/sale/odesa/levanevskyi",
+   "address": "провулок Толвінського, 2",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 812
+  },
+  {
+   "lun_geo_id": 10028358,
+   "name": "ЖК Париж",
+   "link": "/sale/odesa/paryzh",
+   "address": "Удільний провулок, 6",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 996
+  },
+  {
+   "lun_geo_id": 10028863,
+   "name": "Французький бульвар, 29",
+   "link": "/sale/odesa/frantsuzkyi-bulvar-29",
+   "address": "Французький бульвар, 29",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 4098
+  },
+  {
+   "lun_geo_id": 10027860,
+   "name": "ЖК Ясна Поляна",
+   "link": "/sale/odesa/yasna-polyana",
+   "address": "Відрадна вулиця, 13",
+   "district": "Приморський",
+   "micro": "Відрада",
+   "listings_seen": 3,
+   "median_ppm": 2707
+  },
+  {
+   "lun_geo_id": 10028247,
+   "name": "ЖК Maristella",
+   "link": "/sale/odesa/maristella",
+   "address": "вулиця Бернардацці, 2а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1997
+  },
+  {
+   "lun_geo_id": 10028001,
+   "name": "Французький бульвар, 22/30",
+   "link": "/sale/odesa/frantsuzkyi-bulvar-22_30",
+   "address": "Французький бульвар, 22/30",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1554
+  },
+  {
+   "lun_geo_id": 10028856,
+   "name": "ЖК Дев'ятнадцята перлина",
+   "link": "/sale/odesa/deviatnadtsiata-perlyna",
+   "address": "Французький бульвар, 60",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 2,
+   "median_ppm": 2863
+  },
+  {
+   "lun_geo_id": 10030116,
+   "name": "ЖК Чотири сезони",
+   "link": "/sale/odesa/chotyry-sezony",
+   "address": "проспект Лесі Українки, 19",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 18,
+   "median_ppm": 1513
+  },
+  {
+   "lun_geo_id": 10028015,
+   "name": "ЖК Академмістечко",
+   "link": "/sale/odesa/akademmistechko",
+   "address": "вулиця Добровольців, 10в, 10г",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 3,
+   "median_ppm": 2332
+  },
+  {
+   "lun_geo_id": 10027857,
+   "name": "ЖК Зоряне містечко-2",
+   "link": "/sale/odesa/zoriane-mistechko-2",
+   "address": "вулиця Добровольців, 10а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1902
+  },
+  {
+   "lun_geo_id": 10028862,
+   "name": "Французький бульвар, 2",
+   "link": "/sale/odesa/frantsuzkyi-bulvar-2",
+   "address": "Французький бульвар, 2",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 2000
+  },
+  {
+   "lun_geo_id": 10031469,
+   "name": "ЖК Олімпієць",
+   "link": "/sale/odesa/olimpiiets",
+   "address": "проспект Шевченка, 30",
+   "district": "Приморський",
+   "micro": "Малий Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1451
+  },
+  {
+   "lun_geo_id": 10030369,
+   "name": "ЖК Монблан",
+   "link": "/sale/odesa/monblan",
+   "address": "Компасний провулок, 1а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1899
+  },
+  {
+   "lun_geo_id": 10028886,
+   "name": "ЖБК Сонячний-4",
+   "link": "/sale/odesa/zhbk-soniachnyi-4",
+   "address": "Сонячна вулиця, 4",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1791
+  },
+  {
+   "lun_geo_id": 10029673,
+   "name": "ЖК Двадцять сьома перлина",
+   "link": "/sale/odesa/dvadtsiat-soma-perlyna",
+   "address": "вулиця Валерія Самофалова",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1850
+  },
+  {
+   "lun_geo_id": 10028828,
+   "name": "ЖК Ассоль",
+   "link": "/sale/odesa/assol",
+   "address": "вулиця Добровольців, 8",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1600
+  },
+  {
+   "lun_geo_id": 10027869,
+   "name": "ЖК Перша Перлина",
+   "link": "/sale/odesa/persha-perlyna",
+   "address": "Аркадійське плато, 5а",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 2,
+   "median_ppm": 1664
+  },
+  {
+   "lun_geo_id": 10029823,
+   "name": "ЖК Тридцять четверта перлина",
+   "link": "/sale/odesa/trydtsiat-chetverta-perlyna",
+   "address": "Басейна вулиця",
+   "district": "Приморський",
+   "micro": "Сахалінчик",
+   "listings_seen": 3,
+   "median_ppm": 1115
+  },
+  {
+   "lun_geo_id": 10029574,
+   "name": "ЖК Двадцять п'ята Перлина",
+   "link": "/sale/odesa/dvadtsiat-piata-perlyna",
+   "address": "Італійський бульвар",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1489
+  },
+  {
+   "lun_geo_id": 10029826,
+   "name": "ЖК Тридцять друга перлина",
+   "link": "/sale/odesa/trydtsiat-druha-perlyna",
+   "address": "вулиця Валерія Самофалова",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 2421
+  },
+  {
+   "lun_geo_id": 10028891,
+   "name": "ЖК Гагаринський",
+   "link": "/sale/odesa/haharynskyi",
+   "address": "Аркадійське плато, 9",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 2,
+   "median_ppm": 1416
+  },
+  {
+   "lun_geo_id": 10029572,
+   "name": "ЖК Двадцять шоста перлина",
+   "link": "/sale/odesa/dvadtsiat-shosta-perlyna",
+   "address": "Генуезька вулиця, 1",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 5,
+   "median_ppm": 1690
+  },
+  {
+   "lun_geo_id": 10031406,
+   "name": "ЖК Різдвяний",
+   "link": "/sale/odesa/rizdvianyi",
+   "address": "вулиця Новосельського, 11",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1274
+  },
+  {
+   "lun_geo_id": 10030396,
+   "name": "ЖК Тридцять шоста перлина",
+   "link": "/sale/odesa/trydtsiat-shosta-perlyna",
+   "address": "Генуезька вулиця, 1",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 2,
+   "median_ppm": 1784
+  },
+  {
+   "lun_geo_id": 10031262,
+   "name": "ЖК Бісквітний",
+   "link": "/sale/odesa/biskvitnyi",
+   "address": "Середньофонтанський провулок, 3",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1495
+  },
+  {
+   "lun_geo_id": 10030343,
+   "name": "ЖК Сорок четверта перлина",
+   "link": "/sale/odesa/sorok-chetverta-perlyna",
+   "address": "вулиця Валерія Самофалова",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 2159
+  },
+  {
+   "lun_geo_id": 10032052,
+   "name": "вул. Канатна, 15",
+   "link": "/sale/odesa/kanatna-st-15",
+   "address": "Канатна вулиця, 15",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1425
+  },
+  {
+   "lun_geo_id": 10028853,
+   "name": "ЖК Шістнадцята Перлина",
+   "link": "/sale/odesa/shistnadtsiata-perlyna",
+   "address": "провулок Асташкіна, 29",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1964
+  },
+  {
+   "lun_geo_id": 10029853,
+   "name": "ЖК Мандарин",
+   "link": "/sale/odesa/mandaryn",
+   "address": "Канатна вулиця, 122",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1369
+  },
+  {
+   "lun_geo_id": 10031189,
+   "name": "ЖК Акварель-3",
+   "link": "/sale/odesa/akvarel-3",
+   "address": "Пішонівська вулиця, 22, 24, 26",
+   "district": "Приморський",
+   "micro": "Молдаванка",
+   "listings_seen": 14,
+   "median_ppm": 963
+  },
+  {
+   "lun_geo_id": 10030176,
+   "name": "ЖК Сорок друга перлина",
+   "link": "/sale/odesa/sorok-druha-perlyna",
+   "address": "Генуезька вулиця",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 3,
+   "median_ppm": 1694
+  },
+  {
+   "lun_geo_id": 10798498,
+   "name": "ЖК Мерседес",
+   "link": "/sale/odesa/mersedes",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Ланжерон",
+   "listings_seen": 2,
+   "median_ppm": 2000
+  },
+  {
+   "lun_geo_id": 10031157,
+   "name": "ЖК П'ятдесята перлина",
+   "link": "/sale/odesa/piatdesiata-perlyna",
+   "address": "Італійський бульвар",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1836
+  },
+  {
+   "lun_geo_id": 10031622,
+   "name": "Клубний будинок Аполлон на Карантинній",
+   "link": "/sale/odesa/apollon-na-karantynnii",
+   "address": "Карантинна вулиця, 22",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1548
+  },
+  {
+   "lun_geo_id": 10027861,
+   "name": "ЖК Аркадія Хіллс",
+   "link": "/sale/odesa/arkadiia-khills",
+   "address": "Аркадіївський провулок, 9/1",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1514
+  },
+  {
+   "lun_geo_id": 10028199,
+   "name": "ЖК Гольфстрім",
+   "link": "/sale/odesa/holfstrim",
+   "address": "Генуезька вулиця, 24д",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 3,
+   "median_ppm": 1717
+  },
+  {
+   "lun_geo_id": 10032603,
+   "name": "ЖК Гімназист",
+   "link": "/sale/odesa/himnazyst",
+   "address": "Гімназична вулиця, 13",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 5,
+   "median_ppm": 2420
+  },
+  {
+   "lun_geo_id": 10028271,
+   "name": "ЖК Друга Перлина",
+   "link": "/sale/odesa/druha-perlyna",
+   "address": "Аркадійське плато, 5б",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 4,
+   "median_ppm": 1621
+  },
+  {
+   "lun_geo_id": 10028934,
+   "name": "ЖК Parkside",
+   "link": "/sale/odesa/pobeda",
+   "address": "Зоопаркова вулиця, 8в",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1579
+  },
+  {
+   "lun_geo_id": 10029137,
+   "name": "Башня CHKALOV",
+   "link": "/sale/odesa/bashnia-chkalov",
+   "address": "Велика Арнаутська вулиця, 23/1",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1755
+  },
+  {
+   "lun_geo_id": 10031066,
+   "name": "Клубний будинок Pierre",
+   "link": "/sale/odesa/klubnyi-budynok-pierre",
+   "address": "Успенський провулок, 11",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1897
+  },
+  {
+   "lun_geo_id": 10798497,
+   "name": "ЖК Південна Пальміра",
+   "link": "/sale/odesa/pivdenna-palmira",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 1,
+   "median_ppm": 1247
+  },
+  {
+   "lun_geo_id": 10028005,
+   "name": "Морська симфонія",
+   "link": "/sale/odesa/morska-symfoniia",
+   "address": "Морехідний провулок, 2/2",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 3,
+   "median_ppm": 1471
+  },
+  {
+   "lun_geo_id": 10028854,
+   "name": "ЖК Сімнадцята Перлина",
+   "link": "/sale/odesa/simnadtsiata-perlyna",
+   "address": "провулок Асташкіна, 29",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 2008
+  },
+  {
+   "lun_geo_id": 10030653,
+   "name": "Unity Towers",
+   "link": "/sale/odesa/unity-towers",
+   "address": "Аркадійське плато, 5",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 1,
+   "median_ppm": 1350
+  },
+  {
+   "lun_geo_id": 10029622,
+   "name": "ЖК Новий берег",
+   "link": "/sale/odesa/novyi-bereh",
+   "address": "Новоберегова вулиця, 12а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1630
+  },
+  {
+   "lun_geo_id": 10028248,
+   "name": "ЖК Гранд Парк",
+   "link": "/sale/odesa/grand-park",
+   "address": "вулиця Героїв Оборони Одеси, 24",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 5,
+   "median_ppm": 1190
+  },
+  {
+   "lun_geo_id": 10029827,
+   "name": "ЖК Корфу",
+   "link": "/sale/odesa/korfu",
+   "address": "Кордонний провулок, 2/2",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 2167
+  },
+  {
+   "lun_geo_id": 10798495,
+   "name": "ЖК Нова Аркадія",
+   "link": "/sale/odesa/nova-arkadiia",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 3,
+   "median_ppm": 1360
+  },
+  {
+   "lun_geo_id": 10031584,
+   "name": "ЖК Segment",
+   "link": "/sale/odesa/segment",
+   "address": "Сегедська вулиця, 13а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1933
+  },
+  {
+   "lun_geo_id": 10028890,
+   "name": "ЖК Апельсин",
+   "link": "/sale/odesa/apelsyn",
+   "address": "Середньофонтанська вулиця",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1334
+  },
+  {
+   "lun_geo_id": 10030541,
+   "name": "ЖК Сади Семіраміди",
+   "link": "/sale/odesa/sady-semiramidy",
+   "address": "вулиця Артура Савельєва",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1690
+  },
+  {
+   "lun_geo_id": 10031134,
+   "name": "ЖК ITown",
+   "link": "/sale/odesa/itown",
+   "address": "Софіївська вулиця, 1а",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1221
+  },
+  {
+   "lun_geo_id": 10028847,
+   "name": "ЖК Миконос",
+   "link": "/sale/odesa/mykonos",
+   "address": "Ванний провулок, 1а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 2,
+   "median_ppm": 1565
+  },
+  {
+   "lun_geo_id": 10031966,
+   "name": "Рішельєвський Пасаж",
+   "link": "/sale/odesa/rishelievskyi-pasazh",
+   "address": "Рішельєвська вулиця, 47",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1450
+  },
+  {
+   "lun_geo_id": 10027864,
+   "name": "ЖК Капітан",
+   "link": "/sale/odesa/kapitan",
+   "address": "Базарна вулиця, 5",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1818
+  },
+  {
+   "lun_geo_id": 10029674,
+   "name": "ЖК Двадцять восьма перлина",
+   "link": "/sale/odesa/dvadtsiat-vosma-perlyna",
+   "address": "Фонтанська дорога",
+   "district": "Київський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 2667
+  },
+  {
+   "lun_geo_id": 10031430,
+   "name": "ЖК Перший Французький",
+   "link": "/sale/odesa/pershyi-frantsuzkyi",
+   "address": "Французький бульвар, 3",
+   "district": "Приморський",
+   "micro": "Відрада",
+   "listings_seen": 1,
+   "median_ppm": 1700
+  },
+  {
+   "lun_geo_id": 10798502,
+   "name": "ЖК Підкова",
+   "link": "/sale/odesa/pidkova",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 691
+  },
+  {
+   "lun_geo_id": 10031771,
+   "name": "ЖК Лідерсівський",
+   "link": "/sale/odesa/lidersivskyi",
+   "address": "бульвар Гетьмана Сагайдачного, 7",
+   "district": "Приморський",
+   "micro": "Ланжерон",
+   "listings_seen": 3,
+   "median_ppm": 1850
+  },
+  {
+   "lun_geo_id": 10030968,
+   "name": "ЖК Віндзор",
+   "link": "/sale/odesa/vindzor",
+   "address": "вулиця Бориса Литвака, 9",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1779
+  },
+  {
+   "lun_geo_id": 10031185,
+   "name": "ЖК Smart Hall",
+   "link": "/sale/odesa/smart-hall",
+   "address": "Колонтаївська вулиця, 14а",
+   "district": "Приморський",
+   "micro": "Молдаванка",
+   "listings_seen": 1,
+   "median_ppm": 760
+  },
+  {
+   "lun_geo_id": 10030971,
+   "name": "ЖК Сорок восьма перлина",
+   "link": "/sale/odesa/corok-vosma-perlyna",
+   "address": "вулиця Валерія Самофалова",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 1705
+  },
+  {
+   "lun_geo_id": 10030865,
+   "name": "ЖК Platinum Residence",
+   "link": "/sale/odesa/platinum-residence",
+   "address": "Ванний провулок, 5г",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 2851
+  },
+  {
+   "lun_geo_id": 10030857,
+   "name": "ЖК Удобний",
+   "link": "/sale/odesa/udobnyi",
+   "address": "Середньофонтанський провулок",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 4,
+   "median_ppm": 1070
+  },
+  {
+   "lun_geo_id": 10031119,
+   "name": "ЖК Аполлон",
+   "link": "/sale/odesa/apollon",
+   "address": "2-й Куликовський провулок, 2а",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 2,
+   "median_ppm": 1663
+  },
+  {
+   "lun_geo_id": 10032918,
+   "name": "Апарт-комплекс Breeze Marine",
+   "link": "/sale/odesa/apart-kompleks-breeze-marine",
+   "address": "Ванний провулок, 9",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 2024
+  },
+  {
+   "lun_geo_id": 10031898,
+   "name": "Пространство на Літературній",
+   "link": "/sale/odesa/prostranstvo-na-literaturnii",
+   "address": "Фонтанська дорога, 71а",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1279
+  },
+  {
+   "lun_geo_id": 10028267,
+   "name": "ЖК Санторіні",
+   "link": "/sale/odesa/santorini",
+   "address": "Ванний провулок, 1",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1700
+  },
+  {
+   "lun_geo_id": 10028349,
+   "name": "ЖК Сьома Перлина",
+   "link": "/sale/odesa/soma-perlyna",
+   "address": "Французький бульвар, 60а",
+   "district": "Приморський",
+   "micro": "Аркадія",
+   "listings_seen": 1,
+   "median_ppm": 1865
+  },
+  {
+   "lun_geo_id": 10798501,
+   "name": "ЖК Кукурудза",
+   "link": "/sale/odesa/kukurudza",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1442
+  },
+  {
+   "lun_geo_id": 10787902,
+   "name": "OZONE",
+   "link": "/sale/odesa/ozone",
+   "address": "вулиця Андрія Гулого-Гуленка, 28/1",
+   "district": "Приморський",
+   "micro": null,
+   "listings_seen": 2,
+   "median_ppm": 3200
+  },
+  {
+   "lun_geo_id": 10798515,
+   "name": "ЖК Патрицій",
+   "link": "/sale/odesa/patrytsii",
+   "address": null,
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 705
+  },
+  {
+   "lun_geo_id": 10030970,
+   "name": "Клубний будинок Пушкінський",
+   "link": "/sale/odesa/klubnyi-budynok-pushkinskyi",
+   "address": "Італійська вулиця, 23",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 2098
+  },
+  {
+   "lun_geo_id": 10028398,
+   "name": "вул. Середньофонтанська, 30",
+   "link": "/sale/odesa/serednofontanska-st-30",
+   "address": "Середньофонтанська вулиця, 30",
+   "district": "Приморський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 720
+  },
+  {
+   "lun_geo_id": 10792971,
+   "name": "ЖК ITOWN ART",
+   "link": "/sale/odesa/itown-art",
+   "address": "Софіївська вулиця, 1б",
+   "district": "Приморський",
+   "micro": "Центр",
+   "listings_seen": 1,
+   "median_ppm": 1255
+  },
+  {
+   "lun_geo_id": 10028966,
+   "name": "ЖК Дмитріївський",
+   "link": "/sale/odesa/dmytriivskyi",
+   "address": "вулиця Жаботинського, 54, вул. Люстдорфская дорога, 55/6",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 19,
+   "median_ppm": 1389
+  },
+  {
+   "lun_geo_id": 10031959,
+   "name": "Апарт-комплекс Ітака",
+   "link": "/sale/odesa/apart-complex-itaka",
+   "address": "Чубаївська вулиця, 1",
+   "district": "Київський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 13,
+   "median_ppm": 1600
+  },
+  {
+   "lun_geo_id": 10029752,
+   "name": "ЖК Aqua Marine",
+   "link": "/sale/odesa/aqua-marine",
+   "address": "Фонтанська дорога, 118а",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 19,
+   "median_ppm": 937
+  },
+  {
+   "lun_geo_id": 10028885,
+   "name": "ЖБК Співучий Фонтан",
+   "link": "/sale/odesa/poiushchyi-fontan",
+   "address": "Фонтанська дорога, 30-32",
+   "district": "Київський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 1,
+   "median_ppm": 792
+  },
+  {
+   "lun_geo_id": 10031101,
+   "name": "ЖК Пространство на Гераневій",
+   "link": "/sale/odesa/prostranstvo-na-heranevii",
+   "address": "Геранієва вулиця, 8",
+   "district": "Київський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 5,
+   "median_ppm": 1380
+  },
+  {
+   "lun_geo_id": 10030933,
+   "name": "ЖК Club Marine-2",
+   "link": "/sale/odesa/club-marine-2",
+   "address": "Довга вулиця, 1а",
+   "district": "Київський",
+   "micro": "Дача Ковалевського",
+   "listings_seen": 4,
+   "median_ppm": 1669
+  },
+  {
+   "lun_geo_id": 10031087,
+   "name": "ЖК Одеські традиції на Глушко",
+   "link": "/sale/odesa/odeski-tradytsii-na-hlushko",
+   "address": "проспект Князя Ярослава Мудрого, 17а",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 24,
+   "median_ppm": 1271
+  },
+  {
+   "lun_geo_id": 10028260,
+   "name": "ЖК Альтаїр",
+   "link": "/sale/odesa/altair",
+   "address": "Люстдорфська дорога, 55",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 14,
+   "median_ppm": 1329
+  },
+  {
+   "lun_geo_id": 10028971,
+   "name": "ЖК Costa fontana",
+   "link": "/sale/odesa/costa-fontana",
+   "address": "13-я станція Великого Фонтану",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 9,
+   "median_ppm": 2428
+  },
+  {
+   "lun_geo_id": 10028198,
+   "name": "ЖК Пʼята Перлина",
+   "link": "/sale/odesa/lymanka-piataia-zhemchuzhyna",
+   "address": "Перлинна вулиця, 3",
+   "district": "Київський",
+   "micro": null,
+   "listings_seen": 1,
+   "median_ppm": 1207
+  },
+  {
+   "lun_geo_id": 10027875,
+   "name": "ЖК Золота Чайка",
+   "link": "/sale/odesa/zolota-chaika",
+   "address": "Люстдорфська дорога, 36",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 5,
+   "median_ppm": 1222
+  },
+  {
+   "lun_geo_id": 10030548,
+   "name": "ЖК Скай Сіті",
+   "link": "/sale/odesa/skai-siti",
+   "address": "Варненська вулиця, 27а/2",
+   "district": "Київський",
+   "micro": "Черемушки",
+   "listings_seen": 25,
+   "median_ppm": 1364
+  },
+  {
+   "lun_geo_id": 10029825,
+   "name": "ЖК Тридцять перша перлина",
+   "link": "/sale/odesa/trydtsiat-persha-perlyna",
+   "address": "Фонтанська дорога",
+   "district": "Київський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 3,
+   "median_ppm": 1977
+  },
+  {
+   "lun_geo_id": 10031893,
+   "name": "Via Roma",
+   "link": "/sale/odesa/via-roma",
+   "address": "вулиця Інглезі, 2",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 10,
+   "median_ppm": 1143
+  },
+  {
+   "lun_geo_id": 10031331,
+   "name": "ЖК Море",
+   "link": "/sale/odesa/more",
+   "address": "Львівська вулиця, 15б",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 8,
+   "median_ppm": 1544
+  },
+  {
+   "lun_geo_id": 10030688,
+   "name": "ЖК Посейдон",
+   "link": "/sale/odesa/poseidon",
+   "address": "вулиця Дача Ковалевського, 5",
+   "district": "Київський",
+   "micro": "Дача Ковалевського",
+   "listings_seen": 29,
+   "median_ppm": 1300
+  },
+  {
+   "lun_geo_id": 10031379,
+   "name": "Клубний будинок Консул",
+   "link": "/sale/odesa/klubnyi-budynok-konsul",
+   "address": "Фонтанська дорога, 64/1",
+   "district": "Київський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 6,
+   "median_ppm": 2100
+  },
+  {
+   "lun_geo_id": 10029580,
+   "name": "ЖК Вільямса",
+   "link": "/sale/odesa/viliamsa",
+   "address": "вулиця Євгена Чикаленка, 138б",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 3,
+   "median_ppm": 1007
+  },
+  {
+   "lun_geo_id": 10031013,
+   "name": "ЖК Modern",
+   "link": "/sale/odesa/modern",
+   "address": "вулиця Івана Франка, 40",
+   "district": "Київський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 16,
+   "median_ppm": 1214
+  },
+  {
+   "lun_geo_id": 10031054,
+   "name": "Апарт-комплекс Каліпсо",
+   "link": "/sale/odesa/apart-kompleks-kalipso",
+   "address": "13-я станція Великого Фонтану",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 1,
+   "median_ppm": 2171
+  },
+  {
+   "lun_geo_id": 10028021,
+   "name": "ЖК Одиссей СМУ-11",
+   "link": "/sale/odesa/odyssei-smu-11",
+   "address": "Люстдорфська дорога, 55",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 7,
+   "median_ppm": 1114
+  },
+  {
+   "lun_geo_id": 10030798,
+   "name": "ЖК Континент",
+   "link": "/sale/odesa/kontynent",
+   "address": "Люстдорфська дорога, 100б",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 13,
+   "median_ppm": 1056
+  },
+  {
+   "lun_geo_id": 10787900,
+   "name": "ЖК RUE MÉNARS",
+   "link": "/sale/odesa/rue-menars",
+   "address": "Люстдорфська дорога, 144",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 2,
+   "median_ppm": 1412
+  },
+  {
+   "lun_geo_id": 10031081,
+   "name": "Пространство на Донського",
+   "link": "/sale/odesa/prostranstvo-na-donskoho",
+   "address": "вулиця Дмитріївська, 59",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 2,
+   "median_ppm": 1510
+  },
+  {
+   "lun_geo_id": 10031502,
+   "name": "Пространство на Маячному",
+   "link": "/sale/odesa/prostranstvo-na-maiachnom",
+   "address": "Маячний провулок, 11",
+   "district": "Київський",
+   "micro": "Дача Ковалевського",
+   "listings_seen": 2,
+   "median_ppm": 2167
+  },
+  {
+   "lun_geo_id": 10029805,
+   "name": "ЖК Одеські традиції",
+   "link": "/sale/odesa/odesskye-tradytsyy",
+   "address": "вулиця Віталія Нестеренка",
+   "district": "Пересипський",
+   "micro": "Слобідка",
+   "listings_seen": 36,
+   "median_ppm": 1385
+  },
+  {
+   "lun_geo_id": 10031536,
+   "name": "ЖК Avinion",
+   "link": "/sale/odesa/avinion",
+   "address": "вулиця Дача Ковалевського, 91",
+   "district": "Київський",
+   "micro": "Дача Ковалевського",
+   "listings_seen": 15,
+   "median_ppm": 1220
+  },
+  {
+   "lun_geo_id": 10027852,
+   "name": "ЖК Каскад",
+   "link": "/sale/odesa/kaskad",
+   "address": "вулиця Левітана, 62",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 6,
+   "median_ppm": 825
+  },
+  {
+   "lun_geo_id": 10029904,
+   "name": "ЖК Manhattan",
+   "link": "/sale/odesa/manhattan",
+   "address": "вулиця Академіка Філатова",
+   "district": "Київський",
+   "micro": "Південно-Західний",
+   "listings_seen": 10,
+   "median_ppm": 1120
+  },
+  {
+   "lun_geo_id": 10031328,
+   "name": "ЖК MARINIST residence",
+   "link": "/sale/odesa/marinist-residence",
+   "address": "Маячний провулок, 7",
+   "district": "Київський",
+   "micro": "Дача Ковалевського",
+   "listings_seen": 10,
+   "median_ppm": 1946
+  },
+  {
+   "lun_geo_id": 10030018,
+   "name": "ЖК Омега",
+   "link": "/sale/odesa/omeha",
+   "address": "вулиця Георгія Липського, 135",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 9,
+   "median_ppm": 1521
+  },
+  {
+   "lun_geo_id": 10028000,
+   "name": "просп. Академіка Глушка, 32а",
+   "link": "/sale/odesa/akademika-hlushka-32a",
+   "address": "проспект Князя Ярослава Мудрого, 32а",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 2,
+   "median_ppm": 1144
+  },
+  {
+   "lun_geo_id": 10028935,
+   "name": "ЖК Успех",
+   "link": "/sale/odesa/uspekh",
+   "address": "проспект Небесної Сотні, 3б",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 1,
+   "median_ppm": 1371
+  },
+  {
+   "lun_geo_id": 10031854,
+   "name": "ЖК KADORR City",
+   "link": "/sale/odesa/kadorr-city",
+   "address": "вулиця Краснова",
+   "district": "Хаджибейський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 174,
+   "median_ppm": 1819
+  },
+  {
+   "lun_geo_id": 10029139,
+   "name": "ЖК Альтаїр 2",
+   "link": "/sale/odesa/altair-2",
+   "address": "Люстдорфська дорога, 90",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 4,
+   "median_ppm": 1563
+  },
+  {
+   "lun_geo_id": 10032049,
+   "name": "вул. Академіка Вернадського, 21а",
+   "link": "/sale/odesa/tulska-st-21a",
+   "address": "вулиця Академіка Вернадського, 21а",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 2,
+   "median_ppm": 1658
+  },
+  {
+   "lun_geo_id": 10029996,
+   "name": "ЖК Горизонт",
+   "link": "/sale/odesa/horyzont",
+   "address": "вулиця Костанді, 104",
+   "district": "Київський",
+   "micro": "Дерибасівка",
+   "listings_seen": 2,
+   "median_ppm": 1178
+  },
+  {
+   "lun_geo_id": 10030077,
+   "name": "ЖК Club Marine",
+   "link": "/sale/odesa/club-marine",
+   "address": "вулиця Дача Ковалевського, 121",
+   "district": "Київський",
+   "micro": "Дача Ковалевського",
+   "listings_seen": 1,
+   "median_ppm": 1333
+  },
+  {
+   "lun_geo_id": 10798511,
+   "name": "ЖК Стрекоза",
+   "link": "/sale/odesa/strekoza",
+   "address": null,
+   "district": "Київський",
+   "micro": "Вузівський",
+   "listings_seen": 1,
+   "median_ppm": 792
+  },
+  {
+   "lun_geo_id": 10031523,
+   "name": "Пространство на Дачній",
+   "link": "/sale/odesa/prostranstvo-na-dachnii",
+   "address": "Дачна вулиця, 28",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 3,
+   "median_ppm": 1393
+  },
+  {
+   "lun_geo_id": 10028926,
+   "name": "ЖК Вернісаж",
+   "link": "/sale/odesa/vernisazh",
+   "address": "вулиця Костанді",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 4,
+   "median_ppm": 1058
+  },
+  {
+   "lun_geo_id": 10028007,
+   "name": "ЖК Фонтан",
+   "link": "/sale/odesa/fontan",
+   "address": "вулиця Лігінська, 2а",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 3,
+   "median_ppm": 915
+  },
+  {
+   "lun_geo_id": 10027874,
+   "name": "ЖК Тирас",
+   "link": "/sale/odesa/tiras",
+   "address": "вулиця Академіка Корольова, 5/4",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 1,
+   "median_ppm": 1273
+  },
+  {
+   "lun_geo_id": 10031674,
+   "name": "ЖК Лотос Холл",
+   "link": "/sale/odesa/lotos-hall",
+   "address": "вулиця Новаторів, 1а",
+   "district": "Київський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 1,
+   "median_ppm": 1406
+  },
+  {
+   "lun_geo_id": 10030326,
+   "name": "ЖК CHELSEA Club House",
+   "link": "/sale/odesa/chelsea-club-house",
+   "address": "Травневий провулок, 4",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 4,
+   "median_ppm": 1916
+  },
+  {
+   "lun_geo_id": 10031639,
+   "name": "Пространство на 9-й Фонтана",
+   "link": "/sale/odesa/prostranstvo-na-9-i-fontana",
+   "address": "вулиця Одеської громади, 7",
+   "district": "Київський",
+   "micro": "Середній Фонтан",
+   "listings_seen": 3,
+   "median_ppm": 1368
+  },
+  {
+   "lun_geo_id": 10030622,
+   "name": "ЖК MAGНІТ. Будинок на Фонтані",
+   "link": "/sale/odesa/magnit.-budynok-na-fontani",
+   "address": "Фонтанська дорога, 153/18",
+   "district": "Київський",
+   "micro": "Великий фонтан",
+   "listings_seen": 1,
+   "median_ppm": 1333
+  },
+  {
+   "lun_geo_id": 10031503,
+   "name": "Пространство на Тульській",
+   "link": "/sale/odesa/prostranstvo-na-tulskii",
+   "address": "вулиця Академіка Вернадського, 110-112",
+   "district": "Київський",
+   "micro": "Таїрова",
+   "listings_seen": 2,
+   "median_ppm": 895
+  },
+  {
+   "lun_geo_id": 10030759,
+   "name": "ЖК Альтаїр-3",
+   "link": "/sale/odesa/altair-3",
+   "address": "вулиця Жаботинського, 54а",
+   "district": "Київський",
+   "micro": "Дмитриївка",
+   "listings_seen": 2,
+   "median_ppm": 1102
+  },
+  {
+   "lun_geo_id": 10028850,
+   "name": "ЖК Чотирнадцята Перлина",
+   "link": "/sale/odesa/chotyrnadtsiata-perlyna",
+   "address": "вулиця Олексія Вадатурського, 16/1",
+   "district": "Хаджибейський",
+   "micro": "Ближні Млини",
+   "listings_seen": 1,
+   "median_ppm": 1797
+  },
+  {
+   "lun_geo_id": 10895043,
+   "name": "ЖК ODESA CITY",
+   "link": "/sale/odesa/odesa-city",
+   "address": "вулиця Михайла Грушевського, 49",
+   "district": "Хаджибейський",
+   "micro": null,
+   "listings_seen": 4,
+   "median_ppm": 875
+  },
+  {
+   "lun_geo_id": 10030595,
+   "name": "ЖК RealPark",
+   "link": "/sale/odesa/realpark",
+   "address": "Овідіопольська дорога, 3",
+   "district": "Хаджибейський",
+   "micro": "Черемушки",
+   "listings_seen": 20,
+   "median_ppm": 798
+  },
+  {
+   "lun_geo_id": 10027867,
+   "name": "ЖК Фаворит",
+   "link": "/sale/odesa/favorit",
+   "address": "Артилерійська вулиця, 4в",
+   "district": "Хаджибейський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 2,
+   "median_ppm": 1438
+  },
+  {
+   "lun_geo_id": 10032069,
+   "name": "ЖК Золоті Стовпи",
+   "link": "/sale/odesa/zoloti-stovpy",
+   "address": "вулиця Миколи Боровського, 1/17",
+   "district": "Хаджибейський",
+   "micro": "Цукорне сел.",
+   "listings_seen": 16,
+   "median_ppm": 1009
+  },
+  {
+   "lun_geo_id": 10031180,
+   "name": "ЖК Бульвар Акацій",
+   "link": "/sale/odesa/bulvar-akatsii",
+   "address": "Бугаївська вулиця, 44",
+   "district": "Хаджибейський",
+   "micro": "Бугаївка",
+   "listings_seen": 9,
+   "median_ppm": 963
+  },
+  {
+   "lun_geo_id": 10027877,
+   "name": "ЖК Еталон",
+   "link": "/sale/odesa/etalon",
+   "address": "вулиця Олексія Вадатурського, 16б",
+   "district": "Хаджибейський",
+   "micro": "Ближні Млини",
+   "listings_seen": 3,
+   "median_ppm": 1000
+  },
+  {
+   "lun_geo_id": 10027870,
+   "name": "ЖК Люксембург",
+   "link": "/sale/odesa/liuksemburh",
+   "address": "вулиця Олександра Свіща, 24",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 5,
+   "median_ppm": 957
+  },
+  {
+   "lun_geo_id": 10028925,
+   "name": "ЖК Балківський",
+   "link": "/sale/odesa/balkovskyi",
+   "address": "Балківська вулиця, 137г",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 9,
+   "median_ppm": 1119
+  },
+  {
+   "lun_geo_id": 10029535,
+   "name": "ЖК Двадцять друга Перлина",
+   "link": "/sale/odesa/dvadtsiat-druha-perlyna",
+   "address": "Болгарська вулиця",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 1,
+   "median_ppm": 1660
+  },
+  {
+   "lun_geo_id": 10029695,
+   "name": "ЖК CITY PARK",
+   "link": "/sale/odesa/siti-park",
+   "address": "вулиця Саймона Літмана, 6",
+   "district": "Хаджибейський",
+   "micro": "Цукорне сел.",
+   "listings_seen": 1,
+   "median_ppm": 1247
+  },
+  {
+   "lun_geo_id": 10027736,
+   "name": "ЖК Іспанський",
+   "link": "/sale/odesa/ispanskyi",
+   "address": "Іспанський провулок, 1",
+   "district": "Хаджибейський",
+   "micro": "Цукорне сел.",
+   "listings_seen": 1,
+   "median_ppm": 1118
+  },
+  {
+   "lun_geo_id": 10030863,
+   "name": "ЖК Derby Style House",
+   "link": "/sale/odesa/derby-style-house",
+   "address": "Фонтанська дорога, 6а",
+   "district": "Хаджибейський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 4,
+   "median_ppm": 946
+  },
+  {
+   "lun_geo_id": 10031011,
+   "name": "ЖК Прохоровський квартал",
+   "link": "/sale/odesa/prokhorovskyi-kvartal",
+   "address": "Прохоровська вулиця, 40",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 25,
+   "median_ppm": 909
+  },
+  {
+   "lun_geo_id": 10027858,
+   "name": "ЖК Затишний",
+   "link": "/sale/odesa/zatyshnyi",
+   "address": "вулиця Михайла Грушевського, 1",
+   "district": "Хаджибейський",
+   "micro": "Цукорне сел.",
+   "listings_seen": 9,
+   "median_ppm": 789
+  },
+  {
+   "lun_geo_id": 10029546,
+   "name": "ЖК Михайлівське містечко",
+   "link": "/sale/odesa/mykhailovskyi-horodok",
+   "address": "Михайлівська вулиця, 8",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 6,
+   "median_ppm": 1392
+  },
+  {
+   "lun_geo_id": 10031929,
+   "name": "ЖК Сокіл",
+   "link": "/sale/odesa/sokil",
+   "address": "вулиця Космонавтів, 23к",
+   "district": "Хаджибейський",
+   "micro": "Черемушки",
+   "listings_seen": 2,
+   "median_ppm": 1171
+  },
+  {
+   "lun_geo_id": 10028381,
+   "name": "вул. Бреуса, 61/9",
+   "link": "/sale/odesa/breusa-st-61_9",
+   "address": "вулиця Бреуса, 61/9",
+   "district": "Хаджибейський",
+   "micro": "Ближні Млини",
+   "listings_seen": 3,
+   "median_ppm": 1134
+  },
+  {
+   "lun_geo_id": 10031220,
+   "name": "ЖК Аврора",
+   "link": "/sale/odesa/avrora",
+   "address": "вулиця Героїв Крут, 27а",
+   "district": "Хаджибейський",
+   "micro": "Черемушки",
+   "listings_seen": 3,
+   "median_ppm": 1000
+  },
+  {
+   "lun_geo_id": 10031412,
+   "name": "ЖК Акварель-4",
+   "link": "/sale/odesa/akvarel-4",
+   "address": "Профсоюзна вулиця, 9а",
+   "district": "Хаджибейський",
+   "micro": "Курсаки",
+   "listings_seen": 9,
+   "median_ppm": 969
+  },
+  {
+   "lun_geo_id": 10029138,
+   "name": "вул. Святослава Ріхтера, 148/2",
+   "link": "/sale/odesa/sviatoslava-rikhtera-st-148_2",
+   "address": "вулиця Святослава Ріхтера, 148/2",
+   "district": "Хаджибейський",
+   "micro": "Курсаки",
+   "listings_seen": 1,
+   "median_ppm": 1082
+  },
+  {
+   "lun_geo_id": 10798490,
+   "name": "ЖК Адміральський",
+   "link": "/sale/odesa/admiralskyi",
+   "address": null,
+   "district": "Хаджибейський",
+   "micro": "Суднобудівний сел.",
+   "listings_seen": 1,
+   "median_ppm": 959
+  },
+  {
+   "lun_geo_id": 10027881,
+   "name": "ЖК Прохорівський",
+   "link": "/sale/odesa/prohorivskyi",
+   "address": "Прохоровська вулиця",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 2,
+   "median_ppm": 1152
+  },
+  {
+   "lun_geo_id": 10031129,
+   "name": "ЖК Клубний 7",
+   "link": "/sale/odesa/klubnyi-7",
+   "address": "Балківська вулиця, 119а",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 4,
+   "median_ppm": 907
+  },
+  {
+   "lun_geo_id": 10027873,
+   "name": "ЖК Одеський двір",
+   "link": "/sale/odesa/odeskyi-dvir-st",
+   "address": "Вулиця Геннадія Афанасьєва, 11",
+   "district": "Хаджибейський",
+   "micro": "Слобідка-Воронцовка",
+   "listings_seen": 8,
+   "median_ppm": 998
+  },
+  {
+   "lun_geo_id": 10798558,
+   "name": "ЖК Квітка Молдаванки",
+   "link": "/sale/odesa/kvitka-moldavanky",
+   "address": null,
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 2,
+   "median_ppm": 897
+  },
+  {
+   "lun_geo_id": 10031228,
+   "name": "вул. Середня, 59",
+   "link": "/sale/odesa/serednia-st-59",
+   "address": "вулиця Олександра Свіща, 59",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 1,
+   "median_ppm": 485
+  },
+  {
+   "lun_geo_id": 10028399,
+   "name": "Житловий квартал Авторський",
+   "link": "/sale/odesa/fontanka-zhytlovyi-kvartal-avtorskyi",
+   "address": "Грецька вулиця, 2",
+   "district": "Хаджибейський",
+   "micro": null,
+   "listings_seen": 1,
+   "median_ppm": 1348
+  },
+  {
+   "lun_geo_id": 10028002,
+   "name": "вул. Бреуса, 63",
+   "link": "/sale/odesa/breusa-st-63",
+   "address": "вулиця Бреуса, 63",
+   "district": "Хаджибейський",
+   "micro": "Курсаки",
+   "listings_seen": 1,
+   "median_ppm": 1000
+  },
+  {
+   "lun_geo_id": 10031661,
+   "name": "ЖК Prostranstvo на Радісній",
+   "link": "/sale/odesa/prostranstvo-eco-city",
+   "address": "Радісна вулиця",
+   "district": "Хаджибейський",
+   "micro": null,
+   "listings_seen": 1,
+   "median_ppm": 1516
+  },
+  {
+   "lun_geo_id": 10031728,
+   "name": "ЖК Будинок на Степовій",
+   "link": "/sale/odesa/budynok-na-stepovii",
+   "address": "Степова вулиця, 38",
+   "district": "Хаджибейський",
+   "micro": "Молдаванка",
+   "listings_seen": 3,
+   "median_ppm": 1000
+  },
+  {
+   "lun_geo_id": 10030858,
+   "name": "ЖК Малинки",
+   "link": "/sale/odesa/malynky",
+   "address": "вулиця Олексія Вадатурського",
+   "district": "Хаджибейський",
+   "micro": "Ближні Млини",
+   "listings_seen": 1,
+   "median_ppm": 1675
+  },
+  {
+   "lun_geo_id": 10027872,
+   "name": "ЖК Одеський",
+   "link": "/sale/odesa/odeskyi-dvir",
+   "address": "вулиця Шота Руставелі",
+   "district": "Хаджибейський",
+   "micro": "Ближні Млини",
+   "listings_seen": 3,
+   "median_ppm": 1101
+  },
+  {
+   "lun_geo_id": 10917764,
+   "name": "ЖК Real Park Nova",
+   "link": "/sale/odesa/real-park-nova",
+   "address": "Овідіопольська дорога, 3",
+   "district": "Хаджибейський",
+   "micro": "Черемушки",
+   "listings_seen": 1,
+   "median_ppm": 881
+  },
+  {
+   "lun_geo_id": 10031779,
+   "name": "ЖК Брусника",
+   "link": "/sale/odesa/brusnyka",
+   "address": "вулиця Олексія Вадатурського, 127",
+   "district": "Хаджибейський",
+   "micro": "Курсаки",
+   "listings_seen": 1,
+   "median_ppm": 622
+  },
+  {
+   "lun_geo_id": 10028371,
+   "name": "ЖК Дюшес",
+   "link": "/sale/odesa/diushes",
+   "address": "вулиця Михайла Грушевського, 39/2, корп. 1,2",
+   "district": "Хаджибейський",
+   "micro": "Цукорне сел.",
+   "listings_seen": 1,
+   "median_ppm": 938
+  },
+  {
+   "lun_geo_id": 10028489,
+   "name": "ЖК Сахарова",
+   "link": "/sale/odesa/sakharova",
+   "address": "вулиця Академіка Сахарова, 37",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 4,
+   "median_ppm": 700
+  },
+  {
+   "lun_geo_id": 10027878,
+   "name": "ЖМ Острови",
+   "link": "/sale/odesa/ostrovy",
+   "address": "Марсельська вулиця",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 16,
+   "median_ppm": 1002
+  },
+  {
+   "lun_geo_id": 10030456,
+   "name": "ЖК Зодіак",
+   "link": "/sale/odesa/zodiak",
+   "address": "вулиця Академіка Заболотного, 55а",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 3,
+   "median_ppm": 806
+  },
+  {
+   "lun_geo_id": 10031817,
+   "name": "ЖК Акварель-7",
+   "link": "/sale/odesa/akvarel-7",
+   "address": "Слобідська вулиця, 56",
+   "district": "Пересипський",
+   "micro": "Слобідка",
+   "listings_seen": 28,
+   "median_ppm": 956
+  },
+  {
+   "lun_geo_id": 10029926,
+   "name": "ЖК Приморські Сади",
+   "link": "/sale/odesa/kryzhanivka-prymorski-sady",
+   "address": "Марсельська вулиця",
+   "district": "Пересипський",
+   "micro": null,
+   "listings_seen": 2,
+   "median_ppm": 982
+  },
+  {
+   "lun_geo_id": 10028922,
+   "name": "ЖК Сонячний дім",
+   "link": "/sale/odesa/soniachnyi-dim",
+   "address": "вулиця Отамана Головатого, 117",
+   "district": "Пересипський",
+   "micro": "Пересип",
+   "listings_seen": 2,
+   "median_ppm": 739
+  },
+  {
+   "lun_geo_id": 10028004,
+   "name": "ЖК Романівський",
+   "link": "/sale/odesa/romanivskyi",
+   "address": "вулиця Проценка, 50",
+   "district": "Пересипський",
+   "micro": "Слобідка",
+   "listings_seen": 6,
+   "median_ppm": 1262
+  },
+  {
+   "lun_geo_id": 10032193,
+   "name": "вул. Владислава Бувалкіна, 73",
+   "link": "/sale/odesa/henerala-bocharova-st-45",
+   "address": "вулиця Владислава Бувалкіна, 73",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 2,
+   "median_ppm": 593
+  },
+  {
+   "lun_geo_id": 10030107,
+   "name": "ЖК Лузанівський будинок",
+   "link": "/sale/odesa/luzanivskyi-budynok",
+   "address": "Миколаївська дорога, 301а",
+   "district": "Пересипський",
+   "micro": "Лузанівка",
+   "listings_seen": 4,
+   "median_ppm": 1010
+  },
+  {
+   "lun_geo_id": 10030010,
+   "name": "ЖК SunCity",
+   "link": "/sale/odesa/suncity",
+   "address": "вулиця Владислава Бувалкіна, 45",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 3,
+   "median_ppm": 1167
+  },
+  {
+   "lun_geo_id": 10030371,
+   "name": "ЖК Лузанівський Парк",
+   "link": "/sale/odesa/luzanivskyi-park",
+   "address": "Штильова вулиця, 1",
+   "district": "Пересипський",
+   "micro": "Лузанівка",
+   "listings_seen": 7,
+   "median_ppm": 942
+  },
+  {
+   "lun_geo_id": 10028954,
+   "name": "ЖК Перлинний квартал на Сахарова",
+   "link": "/sale/odesa/kryzhanivka-dvadtsiata-perlyna",
+   "address": "вулиця Академіка Сахарова",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 1,
+   "median_ppm": 881
+  },
+  {
+   "lun_geo_id": 10028296,
+   "name": "ЖК Новий квартал",
+   "link": "/sale/odesa/novyi-kvartal",
+   "address": "вулиця Владислава Бувалкіна, 21б",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 7,
+   "median_ppm": 776
+  },
+  {
+   "lun_geo_id": 10031332,
+   "name": "ЖК Love",
+   "link": "/sale/odesa/love",
+   "address": "вулиця Академіка Сахарова, 55",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 7,
+   "median_ppm": 806
+  },
+  {
+   "lun_geo_id": 10028894,
+   "name": "ЖК Ідеал-2",
+   "link": "/sale/odesa/ideal-2",
+   "address": "вулиця Академіка Заболотного, 23",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 2,
+   "median_ppm": 1229
+  },
+  {
+   "lun_geo_id": 10029790,
+   "name": "ЖК Теплий дім",
+   "link": "/sale/odesa/kryzhanivka-teplyi-dim",
+   "address": "вулиця Семена Палія, 135",
+   "district": "Пересипський",
+   "micro": null,
+   "listings_seen": 1,
+   "median_ppm": 829
+  },
+  {
+   "lun_geo_id": 10031786,
+   "name": "ЖК Пʼятдесят девʼята перлина",
+   "link": "/sale/odesa/kryzhanivka-piatdesiat-deviata-perlyna",
+   "address": null,
+   "district": "Пересипський",
+   "micro": null,
+   "listings_seen": 1,
+   "median_ppm": 1090
+  },
+  {
+   "lun_geo_id": 10028936,
+   "name": "вул. Заболотного, 34",
+   "link": "/sale/odesa/zabolotnoho-st-34",
+   "address": "вулиця Академіка Заболотного, 34",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 1,
+   "median_ppm": 986
+  },
+  {
+   "lun_geo_id": 10029531,
+   "name": "ЖК Лазурний",
+   "link": "/sale/odesa/lazurnyi",
+   "address": "Червона вулиця, 14",
+   "district": "Пересипський",
+   "micro": "Лузанівка",
+   "listings_seen": 1,
+   "median_ppm": 1122
+  },
+  {
+   "lun_geo_id": 10031333,
+   "name": "ЖК Sea Town",
+   "link": "/sale/odesa/sea-town",
+   "address": "вулиця Академіка Сахарова, 14",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 9,
+   "median_ppm": 937
+  },
+  {
+   "lun_geo_id": 10027855,
+   "name": "ЖК Європейський",
+   "link": "/sale/odesa/kryzhanivka-yevropeiskyi",
+   "address": "вулиця Академіка Сахарова",
+   "district": "Пересипський",
+   "micro": null,
+   "listings_seen": 1,
+   "median_ppm": 1049
+  },
+  {
+   "lun_geo_id": 10031426,
+   "name": "ЖК City House",
+   "link": "/sale/odesa/city-house",
+   "address": "вулиця Павла Кравцова, 2",
+   "district": "Пересипський",
+   "micro": "Пересип",
+   "listings_seen": 1,
+   "median_ppm": 857
+  },
+  {
+   "lun_geo_id": 10030366,
+   "name": "ЖК Андрієвський",
+   "link": "/sale/odesa/andriievskyi",
+   "address": "вулиця Андреєвського",
+   "district": "Пересипський",
+   "micro": "Пересип",
+   "listings_seen": 2,
+   "median_ppm": 833
+  },
+  {
+   "lun_geo_id": 10028278,
+   "name": "ЖК Новий Маяк",
+   "link": "/sale/odesa/semena-paliia-vysotsoho-st",
+   "address": "вулиця Семена Палія, 21",
+   "district": "Пересипський",
+   "micro": "селище Котовського",
+   "listings_seen": 1,
+   "median_ppm": 1007
+  }
+ ]
+}
