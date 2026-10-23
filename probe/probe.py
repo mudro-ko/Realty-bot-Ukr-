@@ -10,12 +10,13 @@ for i in ids[:6]:
     if d.status_code!=200: continue
     j=d.json(); t=json.dumps(j,ensure_ascii=False)
     print(" ",i,"optionStyles",json.dumps(j.get("optionStyles"),ensure_ascii=False)[:300],"| шкір у JSON:",[t[max(0,m.start()-60):m.end()+60] for m in re.finditer(r"(?i)шкір",t)][:3])
-    h=g(f"https://auto.ria.com/uk/auto_x_{i}.html")
+    h=g("https://auto.ria.com/uk"+j["linkToView"])
     if h.status_code==200:
         x=h.text
         hits=[x[max(0,m.start()-120):m.end()+160] for m in re.finditer(r"(?i)комплектац|шкіряний салон|Салон[^<\"]{0,30}шкір|leather",x)][:5]
         print("  HTML hits:",len(hits)); [print("    ",repr(s)) for s in hits]
         if i==ids[0]: gzip.open("probe_out/page.gz","wt").write(x)
+    continue
     for u in (f"https://auto.ria.com/api/auto/{i}/options", f"https://auto.ria.com/demo/api/autos/info?auto_id={i}", f"https://auto.ria.com/bu/blocks/json/auto/{i}/options"):
         try: g(u)
         except Exception as e: print("ERR",u,e)
