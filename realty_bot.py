@@ -33,7 +33,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
 from monitor.__main__ import run_search
 from monitor.archive import Archive
 from monitor.export import build_report
-from monitor.filters import DISTRICTS
+from monitor.filters import DISTRICTS, district_codes, split_keywords
 from monitor.telegram import Telegram as Collector, esc
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -122,13 +122,8 @@ DEAL_SHORT = {"sale": "продаж", "rent": "оренда", "daily": "подо
 CITIES = {"odesa": "Одеса", "mykolaiv": "Миколаїв", "kyiv": "Київ"}
 DISTRICT_NAMES = {
     "lisky": "Ліски", "prymorskyi": "Приморський", "kyivskyi": "Київський",
-    "khadzhybeiskyi": "Хаджибейський", "tsentr": "Центр", "arkadiia": "Аркадія",
-    "serednii-fontan": "Середній Фонтан", "malyi-fontan": "Малий Фонтан",
-}
-BUDGETS = {
-    "sale": ("USD", [20000, 30000, 40000, 50000, 70000, 100000, 150000]),
-    "rent": ("UAH", [8000, 10000, 12000, 15000, 20000, 25000, 30000]),
-    "daily": ("UAH", [800, 1200, 1500, 2000, 3000]),
+    "khadzhybeiskyi": "Хаджибейський", "peresypskyi": "Пересипський", "tsentr": "Центр",
+    "arkadiia": "Аркадія", "serednii-fontan": "Середній Фонтан", "malyi-fontan": "Малий Фонтан",
 }
 CONDITIONS = {
     "any": "🔄 Будь-який",
@@ -136,9 +131,15 @@ CONDITIONS = {
     "needs_repair_or_cosmetic": "🖌 Під ремонт або косметика",
     "renovated": "✨ Тільки з ремонтом",
 }
+SELLERS = {"any": "🔄 Будь-хто", "owner": "👤 Тільки власник / без комісії", "agency": "🏢 Тільки агентства"}
 INTERVALS = {15: "15 хв", 30: "30 хв", 60: "1 год", 180: "3 год", 360: "6 год"}
+PRICE_HINT = {
+    "sale": "<code>30000-55000</code>, <code>від 40000</code>, <code>до 60к</code>",
+    "rent": "<code>8000-14000</code>, <code>від 10000</code>, <code>до 15к</code>",
+    "daily": "<code>800-1500</code>, <code>до 2000</code>",
+}
 
-(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_BUDGET, S_CONDITION, S_STOP) = range(7)
+(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT) = range(9)
 
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
@@ -159,44 +160,102 @@ def chunks(items, n):
     return [items[i:i + n] for i in range(0, len(items), n)]
 
 
+def currency_of(deal):
+    return "USD" if deal == "sale" else "UAH"
+
+
+def price_field(deal):
+    return "price_usd" if deal == "sale" else "price_uah"
+
+
+def parse_price_range(text: str):
+    """«30000-55000», «від 40 000», «до 60к», «30к – 55к», «45000» (= до 45000) → (min, max)."""
+    t = (text or "").lower().replace(" ", " ").replace(",", ".")
+    t = re.sub(r"(\d)\s+(?=\d{3}\b)", r"\1", t)          # «40 000» → «40000»
+
+    def num(x):
+        m = re.match(r"\s*(\d+(?:\.\d+)?)\s*(к|k|тис|тыс)?", x)
+        if not m:
+            return None
+        v = float(m.group(1))
+        return int(v * 1000) if m.group(2) else int(v)
+
+    lo = hi = None
+    m = re.search(r"(\d[\d.]*\s*(?:к|k|тис|тыс)?)\s*(?:-|–|—|\.\.)\s*(\d[\d.]*\s*(?:к|k|тис|тыс)?)", t)
+    if m:
+        lo, hi = num(m.group(1)), num(m.group(2))
+    else:
+        m_from = re.search(r"(?:від|от|from|>)\s*(\d[\d.]*\s*(?:к|k|тис|тыс)?)", t)
+        m_to = re.search(r"(?:до|to|<)\s*(\d[\d.]*\s*(?:к|k|тис|тыс)?)", t)
+        if m_from:
+            lo = num(m_from.group(1))
+        if m_to:
+            hi = num(m_to.group(1))
+        if not (m_from or m_to):
+            m_one = re.search(r"\d[\d.]*\s*(?:к|k|тис|тыс)?", t)
+            if m_one:
+                hi = num(m_one.group(0))
+    if lo and hi and lo > hi:
+        lo, hi = hi, lo
+    return lo, hi
+
+
 def rooms_label(rooms):
     if not rooms:
         return "будь-яка к-сть кімнат"
-    r = sorted(rooms)
-    if 5 in r:
-        r = [x for x in r if x != 5]
-        txt = ",".join(map(str, r)).replace("4", "4+")
-    else:
-        txt = ",".join(map(str, r))
+    r = sorted(x for x in rooms if x != 5)
+    txt = ",".join("4+" if x == 4 and 5 in rooms else str(x) for x in r)
     return f"{txt}к"
+
+
+def price_label(s):
+    rng = s.get(price_field(s["deal"])) or {}
+    cur = currency_of(s["deal"])
+    lo, hi = rng.get("min"), rng.get("max")
+    if lo and hi:
+        return f"{money(lo, cur)}–{money(hi, cur)}"
+    if lo:
+        return f"від {money(lo, cur)}"
+    if hi:
+        return f"до {money(hi, cur)}"
+    return ""
+
+
+def districts_label(s):
+    return ", ".join(DISTRICT_NAMES.get(d, d) for d in district_codes(s))
 
 
 def auto_name(s):
     parts = [CITIES.get(s["city"], s["city"])]
-    if s.get("district"):
-        parts.append(DISTRICT_NAMES.get(s["district"], s["district"]))
+    if district_codes(s):
+        parts.append(districts_label(s))
     parts.append(rooms_label(s.get("rooms")))
     parts.append(DEAL_SHORT[s["deal"]])
-    pu, pa = s.get("price_usd") or {}, s.get("price_uah") or {}
-    if pu.get("max"):
-        parts.append(f"до {money(pu['max'], 'USD')}")
-    if pa.get("max"):
-        parts.append(f"до {money(pa['max'], 'UAH')}")
+    if price_label(s):
+        parts.append(price_label(s))
     return " · ".join(parts)
+
+
+def keywords_label(s):
+    inc, exc = split_keywords(s)
+    out = []
+    if inc:
+        out.append("🔑 " + esc(", ".join(inc)))
+    if exc:
+        out.append("🚫 " + esc(", ".join(exc)))
+    return out
 
 
 def summary(s):
     lines = [f"📋 <b>{esc(s['name'])}</b>"]
     lines.append(f"{DEALS[s['deal']]} · 📍 {CITIES.get(s['city'], s['city'])}"
-                 + (f", {DISTRICT_NAMES.get(s['district'], s['district'])}" if s.get("district") else ""))
-    lines.append(f"🛏 {rooms_label(s.get('rooms'))}")
-    pu, pa = s.get("price_usd") or {}, s.get("price_uah") or {}
-    if pu.get("max") or pa.get("max"):
-        lines.append("💰 до " + (money(pu["max"], "USD") if pu.get("max") else money(pa["max"], "UAH")))
+                 + (f": {districts_label(s)}" if district_codes(s) else ""))
+    lines.append(f"🛏 {rooms_label(s.get('rooms'))}" + (f" · 💰 {price_label(s)}" if price_label(s) else ""))
     if s.get("condition", "any") != "any":
         lines.append(f"🛠 {CONDITIONS[s['condition']]}")
-    if s.get("exclude_keywords"):
-        lines.append(f"🚫 {esc(', '.join(s['exclude_keywords']))}")
+    if (s.get("seller") or "any") != "any":
+        lines.append(SELLERS[s["seller"]])
+    lines += keywords_label(s)
     src = " + ".join({"lun": "ЛУН", "dimria": "DIM.RIA"}[x] for x in s.get("sources", []))
     status = "⏸ на паузі" if s.get("paused") else f"🟢 кожні {INTERVALS.get(s.get('interval', 30), str(s.get('interval')) + ' хв')}"
     lines.append(f"🔔 {status} · {src}")
@@ -311,16 +370,99 @@ async def tick(ctx: ContextTypes.DEFAULT_TYPE):
 
 
 # ═══════════════════════════════════════════════════════════════
-# ДІАЛОГ СТВОРЕННЯ ПОШУКУ
+# ДІАЛОГ: СТВОРЕННЯ / РЕДАГУВАННЯ ПОШУКУ
 # ═══════════════════════════════════════════════════════════════
+async def show(src, text, markup=None):
+    """src — CallbackQuery (редагуємо повідомлення) або Message (надсилаємо нове)."""
+    if hasattr(src, "edit_message_text"):
+        await src.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=markup)
+    else:
+        await src.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=markup)
+
+
+async def after(src, ctx, next_step):
+    """У режимі редагування після кожного кроку — назад у меню, інакше — наступний крок."""
+    if ctx.user_data.get("edit"):
+        return await ask_edit_menu(src, ctx)
+    return await next_step(src, ctx)
+
+
 @guard
 async def new_search(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data["edit"] = False
     ctx.user_data["new"] = {"id": uuid.uuid4().hex[:8], "sources": ["lun", "dimria"],
-                            "condition": "any", "interval": 30}
+                            "condition": "any", "seller": "any", "interval": 30}
     await update.effective_message.reply_text(
         "🏠 <b>Новий пошук</b>\n\nТип угоди:", parse_mode=ParseMode.HTML,
         reply_markup=kb([[(v, f"deal:{k}")] for k, v in DEALS.items()]))
     return S_DEAL
+
+
+@guard
+async def edit_search(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    db: DB = ctx.bot_data["db"]
+    s = db.get(q.message.chat_id, q.data.split(":", 1)[1])
+    if not s:
+        await q.message.reply_text("Пошук не знайдено")
+        return ConversationHandler.END
+    e = copy.deepcopy(s)
+    if "districts" not in e:
+        e["districts"] = district_codes(e)
+        e.pop("district", None)
+    if "keywords" not in e:
+        inc, exc = split_keywords(e)
+        e["keywords"] = inc + [f"-{x}" for x in exc]
+        e.pop("include_keywords", None)
+        e.pop("exclude_keywords", None)
+    e.setdefault("seller", "owner" if (e.get("owner_only") or e.get("no_commission")) else "any")
+    e.pop("owner_only", None)
+    e.pop("no_commission", None)
+    ctx.user_data["edit"] = True
+    ctx.user_data["new"] = e
+    return await ask_edit_menu(q, ctx, new_message=True)
+
+
+async def ask_edit_menu(src, ctx, new_message=False):
+    s = ctx.user_data["new"]
+    rows = []
+    if DISTRICTS.get(s["city"]):
+        rows.append([("📍 Райони", "ed:dist")])
+    rows += [[("🛏 Кімнати", "ed:rooms"), ("💰 Ціна", "ed:price")],
+             [("🛠 Стан", "ed:cond"), ("👤 Продавець", "ed:seller")],
+             [("🔑 Ключові слова", "ed:kw")],
+             [("✅ Зберегти", "ed:save"), ("❌ Скасувати", "ed:cancel")]]
+    s["name"] = auto_name(s)
+    text = summary(s) + "\n\n✏️ <b>Що змінити?</b>"
+    if new_message:
+        await src.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=kb(rows))
+    else:
+        await show(src, text, kb(rows))
+    return S_EDIT
+
+
+async def cb_edit_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    act = q.data.split(":", 1)[1]
+    if act == "dist":
+        return await ask_district(q, ctx)
+    if act == "rooms":
+        return await ask_rooms(q, ctx)
+    if act == "price":
+        return await ask_price(q, ctx)
+    if act == "cond":
+        return await ask_condition(q, ctx)
+    if act == "seller":
+        return await ask_seller(q, ctx)
+    if act == "kw":
+        return await ask_keywords(q, ctx)
+    if act == "cancel":
+        ctx.user_data.pop("new", None)
+        await q.edit_message_text("Зміни скасовано.")
+        return ConversationHandler.END
+    return await finish(q, ctx)
 
 
 async def cb_deal(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -340,22 +482,40 @@ async def cb_city(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await q.answer()
     s = ctx.user_data["new"]
     s["city"] = q.data.split(":", 1)[1]
-    ds = list(DISTRICTS.get(s["city"], {}).keys())
-    if not ds:
-        s["district"] = None
+    s["districts"] = []
+    if not DISTRICTS.get(s["city"]):
         return await ask_rooms(q, ctx)
-    rows = chunks([(DISTRICT_NAMES.get(d, d), f"dist:{d}") for d in ds], 2)
-    rows.append([("🔄 Усе місто", "dist:-")])
-    await q.edit_message_text(f"📍 {CITIES[s['city']]} — район:", reply_markup=kb(rows))
+    return await ask_district(q, ctx)
+
+
+def district_kb(s):
+    sel = s.get("districts") or []
+    ds = list(DISTRICTS.get(s["city"], {}).keys())
+    rows = chunks([(("✅ " if d in sel else "") + DISTRICT_NAMES.get(d, d), f"dsel:{d}") for d in ds], 2)
+    rows.append([("🔄 Усе місто", "dsel:all"), ("✔️ Готово", "dsel:done")])
+    return kb(rows)
+
+
+async def ask_district(src, ctx):
+    s = ctx.user_data["new"]
+    await show(src, f"📍 {CITIES[s['city']]} — райони (можна кілька), потім «Готово»:", district_kb(s))
     return S_DISTRICT
 
 
 async def cb_district(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
-    d = q.data.split(":", 1)[1]
-    ctx.user_data["new"]["district"] = None if d == "-" else d
-    return await ask_rooms(q, ctx)
+    s = ctx.user_data["new"]
+    v = q.data.split(":", 1)[1]
+    sel = s.setdefault("districts", [])
+    if v == "all":
+        s["districts"] = []
+    elif v != "done":
+        sel.remove(v) if v in sel else sel.append(v)
+        await q.edit_message_reply_markup(reply_markup=district_kb(s))
+        return S_DISTRICT
+    s.pop("district", None)
+    return await after(q, ctx, ask_rooms)
 
 
 def rooms_kb(sel):
@@ -364,9 +524,10 @@ def rooms_kb(sel):
     return kb([row, [("🔄 Будь-яка", "rooms:any"), ("✔️ Готово", "rooms:done")]])
 
 
-async def ask_rooms(q, ctx):
-    ctx.user_data["new"]["rooms"] = []
-    await q.edit_message_text("🛏 Кімнати (можна кілька), потім «Готово»:", reply_markup=rooms_kb([]))
+async def ask_rooms(src, ctx):
+    s = ctx.user_data["new"]
+    s["rooms"] = [r for r in (s.get("rooms") or []) if r != 5]
+    await show(src, "🛏 Кімнати (можна кілька), потім «Готово»:", rooms_kb(s["rooms"]))
     return S_ROOMS
 
 
@@ -375,63 +536,58 @@ async def cb_rooms(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await q.answer()
     s = ctx.user_data["new"]
     v = q.data.split(":", 1)[1]
-    sel = s["rooms"]
     if v == "any":
         s["rooms"] = []
     elif v != "done":
         r = int(v)
-        if r in sel:
-            sel.remove(r)
-        else:
-            sel.append(r)
-        await q.edit_message_reply_markup(reply_markup=rooms_kb(sel))
+        s["rooms"].remove(r) if r in s["rooms"] else s["rooms"].append(r)
+        await q.edit_message_reply_markup(reply_markup=rooms_kb(s["rooms"]))
         return S_ROOMS
     if 4 in s["rooms"]:
-        s["rooms"] = sorted(set(s["rooms"]) | {5})
-    s["rooms"] = sorted(s["rooms"])
-    return await ask_budget(q, ctx)
+        s["rooms"] = s["rooms"] + [5]
+    s["rooms"] = sorted(set(s["rooms"]))
+    return await after(q, ctx, ask_price)
 
 
-async def ask_budget(q, ctx):
+async def ask_price(src, ctx):
     s = ctx.user_data["new"]
-    cur, opts = BUDGETS[s["deal"]]
-    rows = chunks([(f"до {money(v, cur)}", f"bud:{v}") for v in opts], 2)
-    rows.append([("Без обмеження", "bud:0")])
-    await q.edit_message_text(f"💰 Максимальна ціна ({'$' if cur == 'USD' else '₴'})?\n"
-                              "<i>або напиши своє число</i>", parse_mode=ParseMode.HTML, reply_markup=kb(rows))
-    return S_BUDGET
+    sym = "$" if currency_of(s["deal"]) == "USD" else "₴"
+    cur = price_label(s)
+    await show(src, f"💰 Ціна ({sym}). Напиши діапазон, наприклад: {PRICE_HINT[s['deal']]}"
+                    + (f"\nЗараз: <b>{cur}</b>" if cur else ""),
+               kb([[("Без обмеження", "price:none")]]))
+    return S_PRICE
 
 
-def set_budget(s, value):
-    cur, _ = BUDGETS[s["deal"]]
+def set_price(s, lo, hi):
     s.pop("price_usd", None)
     s.pop("price_uah", None)
-    if value:
-        s["price_usd" if cur == "USD" else "price_uah"] = {"min": None, "max": value}
+    if lo or hi:
+        s[price_field(s["deal"])] = {"min": lo, "max": hi}
 
 
-async def cb_budget(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def cb_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
-    set_budget(ctx.user_data["new"], int(q.data.split(":", 1)[1]))
-    return await ask_condition(q, ctx)
+    set_price(ctx.user_data["new"], None, None)
+    return await after(q, ctx, ask_condition)
 
 
-async def txt_budget(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    digits = re.sub(r"\D", "", update.message.text or "")
-    if not digits:
-        await update.message.reply_text("⚠️ Напиши число, наприклад 45000")
-        return S_BUDGET
-    set_budget(ctx.user_data["new"], int(digits))
-    return await ask_condition(update.message, ctx)
+async def txt_price(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    lo, hi = parse_price_range(update.message.text)
+    if not (lo or hi):
+        await update.message.reply_text("⚠️ Не зрозумів. Напиши, наприклад, 30000-55000 або до 60к")
+        return S_PRICE
+    s = ctx.user_data["new"]
+    set_price(s, lo, hi)
+    await update.message.reply_text(f"💰 {price_label(s)}")
+    return await after(update.message, ctx, ask_condition)
 
 
 async def ask_condition(src, ctx):
-    rows = [[(v, f"cond:{k}")] for k, v in CONDITIONS.items()]
-    if hasattr(src, "edit_message_text"):
-        await src.edit_message_text("🛠 Стан ремонту:", reply_markup=kb(rows))
-    else:
-        await src.reply_text("🛠 Стан ремонту:", reply_markup=kb(rows))
+    s = ctx.user_data["new"]
+    rows = [[(("✅ " if s.get("condition", "any") == k else "") + v, f"cond:{k}")] for k, v in CONDITIONS.items()]
+    await show(src, "🛠 Стан ремонту:", kb(rows))
     return S_CONDITION
 
 
@@ -439,45 +595,90 @@ async def cb_condition(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
     ctx.user_data["new"]["condition"] = q.data.split(":", 1)[1]
-    await q.edit_message_text(
-        "🚫 Стоп-слова через кому — оголошення з ними не надсилатиму.\n"
-        "<i>Напр.: перший поверх, рієлтор, гуртожиток</i>\n\nАбо /skip",
-        parse_mode=ParseMode.HTML)
-    return S_STOP
+    return await after(q, ctx, ask_seller)
 
 
-async def txt_stop(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    ctx.user_data["new"]["exclude_keywords"] = [w.strip() for w in update.message.text.split(",") if w.strip()]
-    return await finish_new(update, ctx)
+async def ask_seller(src, ctx):
+    s = ctx.user_data["new"]
+    rows = [[(("✅ " if (s.get("seller") or "any") == k else "") + v, f"sel:{k}")] for k, v in SELLERS.items()]
+    await show(src, "👤 Хто продає / здає?\n<i>Власника визначаю за позначками сайтів і текстом "
+                    "(«від власника», «без комісії»). Оголошення, де це неясно, при фільтрі не пройдуть.</i>",
+               kb(rows))
+    return S_SELLER
 
 
-async def skip_stop(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    ctx.user_data["new"]["exclude_keywords"] = []
-    return await finish_new(update, ctx)
+async def cb_seller(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    ctx.user_data["new"]["seller"] = q.data.split(":", 1)[1]
+    return await after(q, ctx, ask_keywords)
 
 
-async def finish_new(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def ask_keywords(src, ctx):
+    s = ctx.user_data["new"]
+    cur = ", ".join(s.get("keywords") or [])
+    await show(src,
+               "🔑 <b>Ключові слова</b> через кому — надсилатиму лише оголошення, де є хоч одне з них.\n"
+               "Щоб <b>виключити</b> слово, постав мінус.\n\n"
+               "<i>Напр.: сіті центр, вид на море, -гуртожиток, -перший поверх</i>\n"
+               + (f"\nЗараз: <code>{esc(cur)}</code>\n" if cur else "")
+               + "\n/skip — без ключових слів")
+    return S_KEYWORDS
+
+
+async def txt_keywords(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    s = ctx.user_data["new"]
+    s["keywords"] = [w.strip() for w in update.message.text.split(",") if w.strip()]
+    s.pop("include_keywords", None)
+    s.pop("exclude_keywords", None)
+    return await after(update.message, ctx, finish)
+
+
+async def skip_keywords(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    s = ctx.user_data["new"]
+    s["keywords"] = []
+    s.pop("include_keywords", None)
+    s.pop("exclude_keywords", None)
+    return await after(update.message, ctx, finish)
+
+
+async def finish(src, ctx):
     db: DB = ctx.bot_data["db"]
+    msg = src.message if hasattr(src, "edit_message_text") else src
+    chat_id = msg.chat_id
     s = ctx.user_data.pop("new")
+    editing = ctx.user_data.pop("edit", False)
     s["name"] = auto_name(s)
     s["next_due"] = 0
     with db.lock:
-        db.searches(update.effective_chat.id).append(s)
+        lst = db.searches(chat_id)
+        if editing:
+            for i, x in enumerate(lst):
+                if x["id"] == s["id"]:
+                    lst[i] = s
+                    break
+            else:
+                lst.append(s)
+        else:
+            lst.append(s)
     db.save()
-    await update.message.reply_text(summary(s) + "\n\n✅ Збережено. Зараз покажу найновіші, далі — лише нові.",
-                                    parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
-    asyncio.create_task(check_search(ctx.application, update.effective_chat.id, s["id"], manual=True))
+    tail = ("✅ Оновлено. Перевірю з новими параметрами (уже надіслане не повторюватиму)."
+            if editing else "✅ Збережено. Зараз покажу найновіші, далі — лише нові.")
+    await msg.reply_text(summary(s) + "\n\n" + tail, parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
+    asyncio.create_task(check_search(ctx.application, chat_id, s["id"], manual=True))
     return ConversationHandler.END
 
 
 async def cancel(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ctx.user_data.pop("new", None)
+    ctx.user_data.pop("edit", None)
     await update.effective_message.reply_text("Скасовано.", reply_markup=MAIN_KB)
     return ConversationHandler.END
 
 
 async def cancel_and_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ctx.user_data.pop("new", None)
+    ctx.user_data.pop("edit", None)
     await my_searches(update, ctx)
     return ConversationHandler.END
 
@@ -487,7 +688,7 @@ async def cancel_and_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 # ═══════════════════════════════════════════════════════════════
 def search_kb(s):
     sid = s["id"]
-    rows = [[("🔍 Перевірити зараз", f"chk:{sid}")]]
+    rows = [[("🔍 Перевірити зараз", f"chk:{sid}"), ("✏️ Змінити", f"edt:{sid}")]]
     rows.append([("▶️ Відновити", f"res:{sid}") if s.get("paused") else ("⏸ Пауза", f"pau:{sid}"),
                  ("⏱ Частота", f"frq:{sid}")])
     rows.append([("🗑 Видалити", f"del:{sid}")])
@@ -682,20 +883,24 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
 
     conv = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^➕ Новий пошук$"), new_search),
-                      CommandHandler("new", new_search)],
+                      CommandHandler("new", new_search),
+                      CallbackQueryHandler(edit_search, pattern=r"^edt:")],
         states={
             S_DEAL: [CallbackQueryHandler(cb_deal, pattern=r"^deal:")],
             S_CITY: [CallbackQueryHandler(cb_city, pattern=r"^city:")],
-            S_DISTRICT: [CallbackQueryHandler(cb_district, pattern=r"^dist:")],
+            S_DISTRICT: [CallbackQueryHandler(cb_district, pattern=r"^dsel:")],
             S_ROOMS: [CallbackQueryHandler(cb_rooms, pattern=r"^rooms:")],
-            S_BUDGET: [CallbackQueryHandler(cb_budget, pattern=r"^bud:"),
-                       MessageHandler(filters.TEXT & ~filters.COMMAND, txt_budget)],
+            S_PRICE: [CallbackQueryHandler(cb_price, pattern=r"^price:"),
+                      MessageHandler(filters.TEXT & ~filters.COMMAND, txt_price)],
             S_CONDITION: [CallbackQueryHandler(cb_condition, pattern=r"^cond:")],
-            S_STOP: [CommandHandler("skip", skip_stop),
-                     MessageHandler(filters.TEXT & ~filters.COMMAND, txt_stop)],
+            S_SELLER: [CallbackQueryHandler(cb_seller, pattern=r"^sel:")],
+            S_KEYWORDS: [CommandHandler("skip", skip_keywords),
+                         MessageHandler(filters.TEXT & ~filters.COMMAND, txt_keywords)],
+            S_EDIT: [CallbackQueryHandler(cb_edit_menu, pattern=r"^ed:")],
         },
         fallbacks=[CommandHandler("cancel", cancel), CommandHandler("start", cmd_start),
-                   MessageHandler(filters.Regex("^📋 Мої пошуки$"), cancel_and_list)],
+                   MessageHandler(filters.Regex("^📋 Мої пошуки$"), cancel_and_list),
+                   MessageHandler(filters.Regex("^📊 Звіт$"), cancel)],
         allow_reentry=True,
     )
     app.add_handler(CommandHandler("start", cmd_start))

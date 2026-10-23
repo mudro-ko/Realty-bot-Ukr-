@@ -17,7 +17,7 @@ REF_RE = re.compile(r"\$[0-9a-f]+")
 FLIGHT_RE = re.compile(r'self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)')
 
 
-def build_url(s: dict, page: int) -> str:
+def build_url(s: dict, page: int, slug: str = None) -> str:
     """Кімнати — повтореним параметром (room_count=3&room_count=4): форму «3,4» ЛУН не розуміє."""
     if s.get("lun_url"):
         # користувач вставив готове посилання з фільтрами з сайту ЛУН
@@ -37,7 +37,8 @@ def build_url(s: dict, page: int) -> str:
 
     section = SECTION[s["deal"]]
     path = f"/{section}/{CITY[s['city']]}/flats"
-    slug = s.get("_district", {}).get("lun")
+    if slug is None:
+        slug = (s.get("_district") or {}).get("lun")
     if slug:
         path += f"-{slug}"
     q = [("room_count", str(r)) for r in s.get("rooms") or []]
@@ -139,13 +140,28 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
 
 
 def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, max_pages: int = 3):
-    """Повертає (нові, загальна_кількість, посилання, додаткові_бачені_ключі, оновлені_вже_бачені)."""
+    """Повертає (нові, загальна_кількість, посилання, додаткові_бачені_ключі, оновлені_вже_бачені).
+    Кілька районів — окрема сторінка ЛУН на кожен."""
     if s["deal"] not in SECTION and not s.get("lun_url"):
         return [], 0, "", [], []
+    slugs = [None] if s.get("lun_url") else ((s.get("_district") or {}).get("lun_slugs") or [None])
+    new, refreshed, total, keys = [], [], 0, set()
+    for slug in slugs:
+        n, t, r = _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug)
+        total += t
+        for l in n:
+            if l.key not in keys:
+                keys.add(l.key); new.append(l)
+        for l in r:
+            if l.key not in keys:
+                keys.add(l.key); refreshed.append(l)
+    return new, total, build_url(s, 1, slugs[0]), [], refreshed
+
+
+def _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug):
     new, refreshed, total = [], [], 0
-    first_url = build_url(s, 1)
     for page in range(1, max_pages + 1):
-        url = build_url(s, page)
+        url = build_url(s, page, slug)
         r = get(url)
         html = r.text
         cards, total = parse_page(html)
@@ -168,8 +184,9 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         unseen = [c for c in cards if f"lun:{c['id']}" not in seen]
         for c in cards:
             (new if f"lun:{c['id']}" not in seen else refreshed).append(to_listing(c, usd_uah))
-        log.info("ЛУН %s стор.%d: карток %d, нових %d, всього %d", s["id"], page, len(cards), len(unseen), total)
+        log.info("ЛУН %s %sстор.%d: карток %d, нових %d, всього %d", s["id"], f"{slug} " if slug else "",
+                 page, len(cards), len(unseen), total)
         # якщо на сторінці вже є бачені — далі старіші, гортати не треба
         if not (first_run or backfill) and len(unseen) < len(cards):
             break
-    return new, total, first_url, [], refreshed
+    return new, total, refreshed

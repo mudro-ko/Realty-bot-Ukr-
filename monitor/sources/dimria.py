@@ -76,6 +76,7 @@ def to_listing(d: dict):
         photo=photo,
         published=(d.get("publishing_date") or "")[:16],
         without_renovation=(cond in NO_RENOVATION) if cond else None,
+        agency=True if (d.get("agencyVerified") or d.get("realtorVerified") or d.get("agency_id")) else None,
         extra_keys=[],
     ), (d.get("district_name_uk") or "")
 

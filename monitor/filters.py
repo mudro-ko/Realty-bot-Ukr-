@@ -74,15 +74,66 @@ def district_match(district: str, wanted: list) -> bool:
     return False
 
 
+def district_codes(s: dict) -> list:
+    """Підтримує і старе поле district: "x", і нове districts: ["x", "y"]."""
+    ds = s.get("districts")
+    if ds is None:
+        ds = [s["district"]] if s.get("district") else []
+    return [d for d in ds if d]
+
+
 def resolve_district(s: dict) -> dict:
-    d = s.get("district")
-    if not d:
+    """Об'єднує кілька районів: сторінки ЛУН, ID і назви для DIM.RIA."""
+    codes = district_codes(s)
+    if not codes:
         return {}
-    known = DISTRICTS.get(s["city"], {}).get(d)
-    if known:
-        return dict(known, names=list(known.get("names", [])))
-    # невідомий район: вважаємо, що це slug ЛУН, а назву перевіряємо по адресі
-    return {"lun": d, "names": [s.get("district_name") or d]}
+    out = {"lun_slugs": [], "ria_ids": [], "names": [], "admin": False}
+    for d in codes:
+        spec = DISTRICTS.get(s["city"], {}).get(d) or {"lun": d, "names": [s.get("district_name") or d]}
+        if spec.get("lun"):
+            out["lun_slugs"].append(spec["lun"])
+        out["ria_ids"] += spec.get("ria_ids", [])
+        out["names"] += spec.get("names", [])
+        out["admin"] = out["admin"] or bool(spec.get("admin"))
+    out["lun"] = out["lun_slugs"][0] if out["lun_slugs"] else None
+    return out
+
+
+OWNER_WORDS = ["від власника", "от собственника", "от хозяина", "без комісії", "без комиссии",
+               "без посередників", "без посредников", "власник", "собственник", "хазяїн", "хозяин"]
+AGENCY_WORDS = ["комісія", "комиссия", "комісії", "комиссии", "агентств", "агентство", "ріелтор", "рієлтор",
+                "риелтор", "риэлтор", "агенція", "послуги агент", "услуги агент"]
+
+
+def seller_of(l: Listing) -> str:
+    """owner | agency | unknown — за позначками сайтів і текстом."""
+    if l.is_owner or l.without_commission:
+        return "owner"
+    if l.agency:
+        return "agency"
+    t = (l.text or "").lower()
+    if any(w in t for w in OWNER_WORDS[:7]):      # чіткі фрази «від власника», «без комісії»
+        return "owner"
+    if l.is_owner is False and l.without_commission is False:
+        return "agency"
+    if any(w in t for w in AGENCY_WORDS):
+        return "agency"
+    if any(w in t for w in OWNER_WORDS[7:]):
+        return "owner"
+    return "unknown"
+
+
+def split_keywords(s: dict):
+    """keywords: ["вид на море", "-гуртожиток"] → (потрібні, заборонені). Підтримує й старі поля."""
+    inc = list(s.get("include_keywords") or [])
+    exc = list(s.get("exclude_keywords") or [])
+    for k in s.get("keywords") or []:
+        k = k.strip()
+        if k.startswith("-") and len(k) > 1:
+            exc.append(k[1:].strip())
+        elif k:
+            inc.append(k.lstrip("+").strip())
+    return [k.lower() for k in inc if k], [k.lower() for k in exc if k]
 
 
 def condition_of(l: Listing) -> str:
@@ -125,16 +176,14 @@ def passes(l: Listing, s: dict):
     if l.floor and l.floors and fl.get("not_last") and l.floor == l.floors:
         return False, "останній поверх"
     text = f"{l.text} {l.geo} {l.street}".lower()
-    inc = [k.lower() for k in s.get("include_keywords") or []]
+    inc, exc = split_keywords(s)
     if inc and not any(k in text for k in inc):
         return False, "ключові слова"
-    exc = [k.lower() for k in s.get("exclude_keywords") or []]
-    if any(re.search(re.escape(k), text) for k in exc):
+    if any(k in text for k in exc):
         return False, "стоп-слова"
-    if s.get("owner_only") and l.is_owner is False:
-        return False, "не власник"
-    if s.get("no_commission") and l.without_commission is False:
-        return False, "комісія"
+    seller = s.get("seller") or ("owner" if (s.get("owner_only") or s.get("no_commission")) else "any")
+    if seller != "any" and seller_of(l) != seller:
+        return False, "продавець"
     want = s.get("condition", "any")
     cond = condition_of(l)
     if want == "needs_repair" and cond != "needs_repair":

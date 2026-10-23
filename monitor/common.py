@@ -52,6 +52,7 @@ class Listing:
     without_renovation: Optional[bool] = None
     is_owner: Optional[bool] = None
     without_commission: Optional[bool] = None
+    agency: Optional[bool] = None                    # явна позначка ріелтора/агентства
     extra_keys: list = field(default_factory=list)   # додаткові ключі для дедуплікації (groupId тощо)
     initial: bool = False                            # з першого запуску джерела (стартова підбірка)
 
