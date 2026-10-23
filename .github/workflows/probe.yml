@@ -16,7 +16,6 @@ jobs:
       - name: push results to claude/probe-out
         run: |
           mkdir -p probe_out
-          cd probe_out && gzip -9 -f *.html *.json 2>/dev/null; cd ..
           git config user.name "probe-bot"; git config user.email "probe@users.noreply.github.com"
           git checkout --orphan claude/probe-out
           git rm -rq --cached . 
