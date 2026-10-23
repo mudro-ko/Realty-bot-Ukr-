@@ -95,11 +95,15 @@ def run_search(s, st, out, settings, report, archive=None, market=None):
             rep["market_filter"] = {"нижче ринку": len(keep), "не дешевше": cut, "мало даних": nodata}
 
     # дедуплікація: те саме авто з AUTO.RIA і з каналу (VIN, посилання на AUTO.RIA, або збіг параметрів)
-    fresh = []
+    fresh, uniq, run_fps = [], [], set()
     for c in sorted(candidates, key=lambda x: x.source != "AUTO.RIA"):
         fp = fingerprint(c)
         keys = {c.key, f"fp:{fp}" if fp else None, f"ria:{c.ria_id}" if c.ria_id else None}
         keys.discard(None)
+        if (fp and fp in run_fps) or (c.ria_id and f"ria:{c.ria_id}" in run_fps):
+            continue                                   # дубль у межах цієї перевірки
+        run_fps.update(k for k in (fp, f"ria:{c.ria_id}" if c.ria_id else None) if k)
+        uniq.append(c)                                 # в архів — навіть якщо вже надсилали
         if any(k in sent for k in keys) or (fp and fp in fps):
             continue
         if fp:
@@ -112,7 +116,7 @@ def run_search(s, st, out, settings, report, archive=None, market=None):
     drops = []
     if archive is not None:
         try:
-            drops = archive.record(s["id"], fresh + refreshed_all)
+            drops = archive.record(s["id"], uniq + refreshed_all)
         except Exception:
             log.exception("%s: архів", s["id"])
 
