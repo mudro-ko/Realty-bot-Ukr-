@@ -46,6 +46,12 @@ class Archive:
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         with self.connect() as c:
             c.executescript(SCHEMA)
+            cols = {r[1] for r in c.execute("PRAGMA table_info(listings)")}
+            if "complex" not in cols:                       # старі бази: додаємо колонку ЖК
+                c.execute("ALTER TABLE listings ADD COLUMN complex TEXT")
+            if "market_pct" not in cols:
+                c.execute("ALTER TABLE listings ADD COLUMN market_pct INTEGER")
+                c.execute("ALTER TABLE listings ADD COLUMN market_label TEXT")
 
     def connect(self):
         c = sqlite3.connect(self.path, timeout=30)
@@ -67,20 +73,28 @@ class Archive:
                     fp = fingerprint(l)
                     if fp and c.execute("SELECT 1 FROM listings WHERE search_id=? AND fp=?", (search_id, fp)).fetchone():
                         continue      # той самий об'єкт уже є в архіві з іншого сайту
-                    c.execute("""INSERT INTO listings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
+                    c.execute("""INSERT INTO listings (search_id, key, source, origin, url, photo,
+                        price_usd, price_uah, currency, first_price_usd, first_price_uah,
+                        rooms, area, floor, floors, street, geo, condition, is_owner, without_commission,
+                        published, first_seen, last_seen, text, fp, complex, market_pct, market_label)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (
                         search_id, l.key, l.source, l.origin, l.url, l.photo,
                         l.price_usd, l.price_uah, l.currency, l.price_usd, l.price_uah,
                         l.rooms, l.area, l.floor, l.floors, l.street, l.geo, condition_of(l),
-                        _b(l.is_owner), _b(l.without_commission), l.published, now, now, (l.text or "")[:1500], fp))
+                        _b(l.is_owner), _b(l.without_commission), l.published, now, now, (l.text or "")[:1500], fp,
+                        l.complex or None, l.market_pct, l.market_label or None))
                     c.execute("INSERT INTO prices VALUES (?,?,?,?,?)", (search_id, l.key, now, l.price_usd, l.price_uah))
                     continue
                 old_usd, old_uah = row["price_usd"], row["price_uah"]
                 changed = (l.price_usd and old_usd and l.price_usd != old_usd) or \
                           (l.currency == "uah" and l.price_uah and old_uah and l.price_uah != old_uah)
                 c.execute("""UPDATE listings SET last_seen=?, price_usd=COALESCE(?,price_usd),
-                             price_uah=COALESCE(?,price_uah), url=?, photo=COALESCE(NULLIF(?,''),photo)
+                             price_uah=COALESCE(?,price_uah), url=?, photo=COALESCE(NULLIF(?,''),photo),
+                             complex=COALESCE(NULLIF(?,''),complex),
+                             market_pct=COALESCE(?,market_pct), market_label=COALESCE(NULLIF(?,''),market_label)
                              WHERE search_id=? AND key=?""",
-                          (now, l.price_usd, l.price_uah, l.url, l.photo, search_id, l.key))
+                          (now, l.price_usd, l.price_uah, l.url, l.photo, l.complex, l.market_pct, l.market_label,
+                           search_id, l.key))
                 if changed:
                     c.execute("INSERT INTO prices VALUES (?,?,?,?,?)", (search_id, l.key, now, l.price_usd, l.price_uah))
                     if l.currency == "uah":

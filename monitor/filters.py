@@ -2,6 +2,7 @@
 import re
 
 from .common import Listing
+from .keywords import matches as kw_match
 
 # Райони: slug сторінки на ЛУН, ID району на DIM.RIA, назви для перевірки адреси
 DISTRICTS = {
@@ -83,7 +84,14 @@ def district_codes(s: dict) -> list:
 
 
 def resolve_district(s: dict) -> dict:
-    """Об'єднує кілька районів: сторінки ЛУН, ID і назви для DIM.RIA."""
+    """Об'єднує кілька районів: сторінки ЛУН, ID і назви для DIM.RIA.
+    Якщо обрано ЖК — шукаємо саме в них (райони тоді не враховуються)."""
+    if s.get("zhk"):
+        from . import zhk as Z
+        items = [Z.by_key(s["city"], k) or {"key": k, "name": k} for k in s["zhk"]]
+        return {"zhk": True, "lun_segs": [z["key"] for z in items],
+                "zhk_names": [z["name"] for z in items],
+                "ria_nb_ids": [z["ria_id"] for z in items if z.get("ria_id")]}
     codes = district_codes(s)
     if not codes:
         return {}
@@ -171,15 +179,21 @@ def passes(l: Listing, s: dict):
     if not _in(l.area, s.get("area")):
         return False, "площа"
     fl = s.get("floors") or {}
-    if l.floor and fl.get("not_first") and l.floor == 1:
+    if l.floor and fl.get("not_first") and l.floor <= 1:
         return False, "перший поверх"
-    if l.floor and l.floors and fl.get("not_last") and l.floor == l.floors:
+    if l.floor and l.floors and fl.get("not_last") and l.floor == l.floors and l.floors > 1:
         return False, "останній поверх"
-    text = f"{l.text} {l.geo} {l.street}".lower()
+    if l.floor and fl.get("min") and l.floor < fl["min"]:
+        return False, "поверх"
+    if l.floor and fl.get("max") and l.floor > fl["max"]:
+        return False, "поверх"
+    if l.floors and fl.get("bld_min") and l.floors < fl["bld_min"]:
+        return False, "поверховість"
+    text = f"{l.text} {l.geo} {l.street} {l.complex}"
     inc, exc = split_keywords(s)
-    if inc and not any(k in text for k in inc):
+    if inc and not any(kw_match(k, text) for k in inc):
         return False, "ключові слова"
-    if any(k in text for k in exc):
+    if any(kw_match(k, text) for k in exc):
         return False, "стоп-слова"
     seller = s.get("seller") or ("owner" if (s.get("owner_only") or s.get("no_commission")) else "any")
     if seller != "any" and seller_of(l) != seller:

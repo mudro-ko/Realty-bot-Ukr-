@@ -52,7 +52,7 @@ def prune(d: dict):
         del d[k]
 
 
-def run_search(s, st, tg, settings, report, archive=None):
+def run_search(s, st, tg, settings, report, archive=None, market=None):
     usd_uah = float(settings.get("usd_uah", 41.5))
     first = not st.get("initialized")          # перший запуск пошуку взагалі
     inited = st.setdefault("init_sources", [])  # джерела, які вже хоч раз відпрацювали
@@ -64,6 +64,7 @@ def run_search(s, st, tg, settings, report, archive=None):
         s["_district"]["names"] += learned
     if s["_district"]:
         s["_district"]["ria_learned"] = st.setdefault("ria_learned", {})   # назва мікрорайону → ID на DIM.RIA
+        s["_district"]["ria_zhk_learned"] = st.setdefault("ria_zhk_learned", {})   # назва ЖК → newbuild_id
     sent = st.setdefault("sent", {})
     today = datetime.now(KYIV).strftime("%Y-%m-%d")
 
@@ -110,9 +111,46 @@ def run_search(s, st, tg, settings, report, archive=None):
             passed += 1
             l.initial = src_first
             candidates.append(l)
+        if market is not None:
+            try:
+                market.add(new + refreshed, s["city"], s["deal"], usd_uah)
+            except Exception:
+                log.exception("ринок: не вдалося записати")
         refreshed_all += [l for l in refreshed if passes(l, s)[0]]
         rep["sources"][name] = {"total": total, "new": len(new), "passed": passed,
                                 "filtered": reasons, "first_run": src_first}
+
+    # ринок: окрема вибірка без фільтрів ціни (раз на добу) + оцінка кожного кандидата
+    bm = s.get("below_market")
+    if market is not None and s["deal"] in ("sale", "rent"):
+        if bm is not None and time.time() - st.get("market_scan", 0) > 20 * 3600:
+            try:
+                scope = {k: v for k, v in s.items() if k not in ("price_usd", "price_uah", "area", "floors", "rooms")}
+                n_scan = 0
+                for name, mod in (("lun", lun),):
+                    deep = 4 if (s.get("_district") or {}).get("zhk") else 8
+                    got, _, _, _, ref = mod.fetch(scope, {}, usd_uah, False, max_pages=deep)
+                    n_scan += market.add(got + ref, s["city"], s["deal"], usd_uah)
+                st["market_scan"] = time.time()
+                rep["market_scan"] = n_scan
+            except Exception:
+                log.exception("%s: ринкова вибірка не вдалася", s["id"])
+        for l in candidates + refreshed_all:
+            try:
+                market.evaluate(l, s["city"], s["deal"], usd_uah)
+            except Exception:
+                log.exception("ринок: оцінка")
+        if bm is not None:
+            keep, cut, nodata = [], 0, 0
+            for l in candidates:
+                if l.market_pct is None:
+                    nodata += 1
+                elif l.market_pct <= -max(1, int(bm)):
+                    keep.append(l)
+                else:
+                    cut += 1
+            candidates = keep
+            rep["market_filter"] = {"нижче ринку": len(keep), "не дешевше": cut, "мало даних": nodata}
 
     # дедуплікація: той самий об'єкт з різних сайтів / повторні публікації
     fresh = []
@@ -157,7 +195,7 @@ def run_search(s, st, tg, settings, report, archive=None):
         parts = []
         if "lun" in totals:
             parts.append(f"ЛУН: {totals['lun']} за кімнатами/ціною/районом")
-        if "dimria" in totals:
+        if totals.get("dimria"):
             parts.append(f"DIM.RIA: {totals['dimria']}")
         archive_note = " Усі — у «📊 Звіт»." if archive is not None else ""
         tg.text(f"🔎 Запустив моніторинг «<b>{esc(s['name'])}</b>».\n"

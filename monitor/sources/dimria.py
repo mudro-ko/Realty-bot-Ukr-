@@ -14,7 +14,7 @@ USD = 239            # код валюти USD у характеристиці 2
 NO_RENOVATION = {511, 512, 513}   # характеристика 516 «стан»: варіанти «без ремонту»
 
 
-def search_params(s: dict, usd_uah: float, limit: int, district_ids=None):
+def search_params(s: dict, usd_uah: float, limit: int, district_ids=None, newbuild_ids=None):
     state_id, city_id = CITY[s["city"]]
     p = [("category", 1), ("realty_type", 2), ("operation", OPERATION[s["deal"]]),
          ("state_id", state_id), ("city_id", city_id), ("wo_dupl", 1),
@@ -30,6 +30,21 @@ def search_params(s: dict, usd_uah: float, limit: int, district_ids=None):
             p.append(("characteristic[234][from]", int(lo * 0.9)))
         if hi:
             p.append(("characteristic[234][to]", int(hi * 1.1)))
+    fl = s.get("floors") or {}
+    fmin = max(fl.get("min") or 0, 2 if fl.get("not_first") else 0)
+    if fmin:
+        p.append(("characteristic[227][from]", fmin))             # 227 — поверх
+    if fl.get("max"):
+        p.append(("characteristic[227][to]", fl["max"]))
+    area = s.get("area") or {}
+    if area.get("min"):
+        p.append(("characteristic[214][from]", area["min"]))      # 214 — загальна площа
+    if area.get("max"):
+        p.append(("characteristic[214][to]", area["max"]))
+    if newbuild_ids:
+        for i, nid in enumerate(newbuild_ids):
+            p.append((f"newbuild_id[{i}]", nid))
+        return p
     ids = s.get("_district", {}).get("ria_ids", []) if district_ids is None else district_ids
     for i, did in enumerate(ids):
         p.append((f"district_id[{i}]", did))
@@ -80,6 +95,8 @@ def to_listing(d: dict):
         agency=True if (d.get("agencyVerified") or d.get("realtorVerified") or d.get("agency_id")) else None,
         district_name=d.get("district_name_uk") or "",
         district_id=d.get("district_id"),
+        complex=d.get("user_newbuild_name_uk") or d.get("user_newbuild_name") or "",
+        complex_id=d.get("newbuild_id") or d.get("user_newbuild_id") or None,
         extra_keys=[],
     ), (d.get("district_name_uk") or "")
 
@@ -100,6 +117,8 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
     if s["city"] not in CITY or s["deal"] not in OPERATION:
         return [], 0, "", [], []
     dist = s.get("_district") or {}
+    if dist.get("zhk"):
+        return _fetch_zhk(s, seen, usd_uah, first_run, backfill, details_cap)
     wanted = dist.get("names")
     learned = dist.setdefault("ria_learned", {})          # назва → ID
     ids_known = sorted(set(dist.get("ria_ids", [])) | set(learned.values()))
@@ -149,6 +168,53 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         if wanted and l.district_id and district:
             learned.setdefault(district, l.district_id)
         (new if is_new else refreshed).append(l)
-    if not total:
-        total = len(ordered)
     return new, total, "https://dom.ria.com/uk/", skipped_ids, refreshed
+
+
+def _fetch_zhk(s, seen, usd_uah, first_run, backfill, details_cap):
+    """Пошук у конкретних ЖК: точний запит за відомими newbuild_id + розвідка по місту,
+    щоб вивчити ID тих ЖК, яких ще не знаємо (записується в s["_district"]["ria_zhk_learned"])."""
+    from ..zhk import same_complex
+    dist = s["_district"]
+    names = dist.get("zhk_names") or []
+    learned = dist.setdefault("ria_zhk_learned", {})       # назва ЖК (як у нас) → newbuild_id
+    known = sorted(set(dist.get("ria_nb_ids") or []) | set(learned.values()))
+    deep = first_run or backfill
+    cap = details_cap or (60 if deep else 25)
+    queries = []
+    if known:
+        queries.append(("exact", search_params(s, usd_uah, 100 if deep else 40, newbuild_ids=known)))
+    if len(learned) + len(dist.get("ria_nb_ids") or []) < len(names):
+        queries.append(("scan", search_params(s, usd_uah, 60 if deep else 30, district_ids=[])))
+    total, ordered, kinds = 0, [], {}
+    for kind, params in queries:
+        data = get(SEARCH, params=params).json()
+        if kind == "exact":
+            total = data.get("count") or 0
+        for i in data.get("items") or []:
+            if i not in kinds:
+                kinds[i] = kind
+                ordered.append(i)
+    unseen = [i for i in ordered if f"ria:{i}" not in seen]
+    targets = [(i, True) for i in unseen] + ([(i, False) for i in ordered if f"ria:{i}" in seen] if backfill else [])
+    log.info("DIM.RIA %s (ЖК): ID %d, нових %d, відомих ЖК %d/%d", s["id"], len(ordered), len(unseen), len(known), len(names))
+    new, refreshed, skipped = [], [], []
+    for n, (rid, is_new) in enumerate(targets):
+        if n >= cap:
+            if is_new:
+                skipped.append(f"ria:{rid}")
+            continue
+        try:
+            l, _ = _details(rid)
+        except Exception as e:
+            log.warning("DIM.RIA деталі %s: %s", rid, e)
+            continue
+        match = next((nm for nm in names if l.complex and same_complex(l.complex, nm)), None)
+        if kinds.get(rid) != "exact" and not match:
+            if is_new:
+                skipped.append(l.key)
+            continue
+        if match and l.complex_id:
+            learned.setdefault(match, l.complex_id)
+        (new if is_new else refreshed).append(l)
+    return new, total, "https://dom.ria.com/uk/", skipped, refreshed

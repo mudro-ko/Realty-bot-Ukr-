@@ -17,7 +17,7 @@ REF_RE = re.compile(r"\$[0-9a-f]+")
 FLIGHT_RE = re.compile(r'self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)')
 
 
-def build_url(s: dict, page: int, slug: str = None) -> str:
+def build_url(s: dict, page: int, seg: str = None) -> str:
     """Кімнати — повтореним параметром (room_count=3&room_count=4): форму «3,4» ЛУН не розуміє."""
     if s.get("lun_url"):
         # користувач вставив готове посилання з фільтрами з сайту ЛУН
@@ -36,11 +36,9 @@ def build_url(s: dict, page: int, slug: str = None) -> str:
         return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), ""))
 
     section = SECTION[s["deal"]]
-    path = f"/{section}/{CITY[s['city']]}/flats"
-    if slug is None:
-        slug = (s.get("_district") or {}).get("lun")
-    if slug:
-        path += f"-{slug}"
+    if seg is None and (s.get("_district") or {}).get("lun"):
+        seg = "flats-" + s["_district"]["lun"]
+    path = f"/{section}/{CITY[s['city']]}/{seg or 'flats'}"
     q = [("room_count", str(r)) for r in s.get("rooms") or []]
     # ціна на стороні ЛУН: валюта ОБОВ'ЯЗКОВО великими літерами (USD/UAH), інакше сторінка порожня
     field, cur = ("price_usd", "USD") if s["deal"] == "sale" else ("price_uah", "UAH")
@@ -51,6 +49,11 @@ def build_url(s: dict, page: int, slug: str = None) -> str:
             q.append(("price_min", str(int(rng["min"]))))
         if rng.get("max"):
             q.append(("price_max", str(int(rng["max"]))))
+    area = s.get("area") or {}
+    if area.get("min"):
+        q.append(("area_min", str(area["min"])))
+    if area.get("max"):
+        q.append(("area_max", str(area["max"])))
     q.append(("sort", "insert_time"))
     if page > 1:
         q.append(("page", str(page)))
@@ -84,9 +87,9 @@ def text_rows(flight: str) -> dict:
 
 def parse_page(html: str):
     flight = "".join(json.loads('"' + m + '"') for m in FLIGHT_RE.findall(html))
-    i = flight.find('{"realties":{"cards":')
+    i = flight.find('{"realties":{')
     if i < 0:
-        return [], 0
+        return None, 0                    # сторінка не та (немає блоку оголошень)
     obj, _ = json.JSONDecoder().raw_decode(flight, i)
     r = obj["realties"]
     cards = r.get("cards") or []
@@ -124,6 +127,10 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
             pu = int(price * 1.08)
             pa = int(pu * usd_uah)
     site = (c.get("site") or {}).get("displayName") or "lun.ua"
+    ents = c.get("geoEntities") or []
+    rc = next((g for g in ents if g.get("type") == "residential_complex"), None)
+    micro = next((g.get("name") for g in ents if g.get("type") == "microdistrict"), "")
+    adm = next((g.get("name") for g in ents if g.get("type") == "district"), "")
     extra = []
     if c.get("groupId"):
         extra.append(f"lung:{c['groupId']}")
@@ -143,6 +150,9 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
         published=(c.get("insertTime") or "").replace("T", " ")[:16],
         without_renovation=c.get("withoutRenovation"),
         is_owner=c.get("isOwner"),
+        complex=(rc or {}).get("name") or "",
+        district_name=micro or "",
+        admin_district=adm or "",
         without_commission=c.get("withoutCommission"),
         extra_keys=extra,
     )
@@ -153,13 +163,27 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
     Кілька районів — окрема сторінка ЛУН на кожен."""
     if s["deal"] not in SECTION and not s.get("lun_url"):
         return [], 0, "", [], []
-    slugs = [None] if s.get("lun_url") else ((s.get("_district") or {}).get("lun_slugs") or [None])
+    d = s.get("_district") or {}
+    if s.get("lun_url"):
+        slugs = [None]
+    elif d.get("zhk"):
+        slugs = d.get("lun_segs") or [None]                         # сторінка кожного ЖК
+    else:
+        slugs = [f"flats-{x}" for x in d.get("lun_slugs") or []] or [None]
     if max_pages is None:
         # перший запуск / після зміни пошуку — глибоко (у звіт), далі — лише свіжі сторінки
         max_pages = 10 if (first_run or backfill) else 3
     new, refreshed, total, keys = [], [], 0, set()
+    failed = []
     for slug in slugs:
-        n, t, r = _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug)
+        try:
+            n, t, r = _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug)
+        except Exception as e:
+            if len(slugs) == 1:
+                raise
+            failed.append(slug)
+            log.warning("ЛУН %s: %s пропущено (%s)", s["id"], slug, type(e).__name__)
+            continue
         total += t
         for l in n:
             if l.key not in keys:
@@ -167,6 +191,8 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         for l in r:
             if l.key not in keys:
                 keys.add(l.key); refreshed.append(l)
+    if failed and len(failed) == len(slugs):
+        raise RuntimeError(f"ЛУН не відповів для жодної сторінки ({len(failed)})")
     return new, total, build_url(s, 1, slugs[0]), [], refreshed
 
 
@@ -177,6 +203,8 @@ def _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug):
         r = get(url)
         html = r.text
         cards, total = parse_page(html)
+        if cards is not None and not cards:
+            break                           # оголошень за фільтрами немає — це нормально
         if not cards:
             if page == 1:
                 try:
