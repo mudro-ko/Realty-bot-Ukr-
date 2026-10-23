@@ -245,7 +245,7 @@ def to_car(post, channel):
     year = next((y for y in years if 1985 <= y <= 2031), None)
     if not price or not (brand or year):
         return None                                   # не оголошення (новини, «продано» тощо)
-    if re.search(r"❌\s*продано|^продано|#продано|продано ❌", low):
+    if re.search(r"#продан|продан\w*\s*❌|❌\s*продан", low) or re.search(r"продан[оаий]", low[:90]):
         return None
     model = find_model(brand, head, after) if brand else None
     vin = VIN_RE.search(t.upper())
