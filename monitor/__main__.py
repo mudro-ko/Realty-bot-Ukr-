@@ -123,7 +123,7 @@ def run_search(s, st, tg, settings, report, archive=None, market=None):
     # ринок: окрема вибірка без фільтрів ціни (раз на добу) + оцінка кожного кандидата
     bm = s.get("below_market")
     if market is not None and s["deal"] in ("sale", "rent"):
-        if bm is not None and time.time() - st.get("market_scan", 0) > 20 * 3600:
+        if time.time() - st.get("market_scan", 0) > 20 * 3600:
             try:
                 scope = {k: v for k, v in s.items() if k not in ("price_usd", "price_uah", "area", "floors", "rooms")}
                 n_scan = 0
