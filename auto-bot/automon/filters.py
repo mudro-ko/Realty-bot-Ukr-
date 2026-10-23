@@ -12,14 +12,20 @@ def _in(v, rng):
 
 
 def split_keywords(s):
+    """→ (обов'язкові, стоп-слова). Слова з «+» — бажані, див. soft_keywords()."""
     inc, exc = [], []
     for k in s.get("keywords") or []:
         k = k.strip()
         if k.startswith("-") and len(k) > 1:
             exc.append(k[1:].strip())
-        elif k:
-            inc.append(k.lstrip("+").strip())
+        elif k and not k.startswith("+"):
+            inc.append(k)
     return inc, exc
+
+
+def soft_keywords(s):
+    """Бажані слова («+шкіра»): не відсіюють авто, лише позначають і піднімають вгору."""
+    return [k.lstrip("+").strip() for k in s.get("keywords") or [] if k.strip().startswith("+") and len(k.strip()) > 1]
 
 
 def car_matches_pair(c: Car, pair) -> bool:
@@ -72,4 +78,7 @@ def passes(c: Car, s: dict):
         return False, "ключові слова"
     if any(kw_match(k, text) for k in exc):
         return False, "стоп-слова"
+    soft = soft_keywords(s)
+    c.wanted = [k for k in soft if kw_match(k, text)]
+    c.wanted_miss = [k for k in soft if k not in c.wanted]
     return True, ""

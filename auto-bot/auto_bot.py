@@ -38,7 +38,7 @@ from automon import catalog as CAT                      # noqa: E402
 from automon.archive import Archive                      # noqa: E402
 from automon.caption import Collector, esc               # noqa: E402
 from automon.export import build_report                  # noqa: E402
-from automon.filters import split_keywords               # noqa: E402
+from automon.filters import split_keywords, soft_keywords               # noqa: E402
 from automon.market import Market                        # noqa: E402
 from automon.run import run_search                       # noqa: E402
 from automon.sources import tgchan as TG                 # noqa: E402
@@ -261,6 +261,8 @@ def summary(s):
     inc, exc = split_keywords(s)
     if inc:
         lines.append("🔑 " + esc(", ".join(inc)))
+    if soft_keywords(s):
+        lines.append("⭐ бажано: " + esc(", ".join(soft_keywords(s))))
     if exc:
         lines.append("🚫 " + esc(", ".join(exc)))
     if market_label(s):
@@ -980,12 +982,16 @@ async def ask_keywords(src, ctx):
     s = ctx.user_data["new"]
     cur = ", ".join(s.get("keywords") or [])
     await show(src,
-               "🔑 <b>Ключові слова</b> через кому — надсилатиму авто, де є хоч одне з них. Мінус — виключити.\n\n"
+               "🔑 <b>Ключові слова</b> через кому:\n"
+               "• звичайне слово — <b>обов'язкове</b> (авто має містити хоч одне з таких);\n"
+               "• <b>+слово</b> — <b>бажане</b>: авто не відсіюється, але з ним піде першим із позначкою ⭐, "
+               "а без — із приміткою «не згадано»;\n"
+               "• <b>-слово</b> — виключити.\n\n"
                "🧠 Розумію відмінки, українську й російську та формулювання: «не фарбований» знайде й «в рідній фарбі», "
                "«один власник» — й «1 владелец».\n"
                "Готові поняття: не фарбований, один власник, офіційний, сервісна історія, без ДТП, рідний пробіг, "
                "обмін, кредит, гарантія, зі США, з Європи, панорама, шкіряний салон, 7 місць, фаркоп, два ключі.\n\n"
-               "<i>Напр.: не фарбований, офіційний, -зі сша</i>\n"
+               "<i>Напр.: +шкіряний салон, +панорама, -зі сша</i>\n"
                + (f"\nЗараз: <code>{esc(cur)}</code>\n" if cur else "")
                + "\n/skip — без ключових слів")
     return S_KEYWORDS

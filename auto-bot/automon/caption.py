@@ -44,6 +44,10 @@ def car_caption(c, search_name: str) -> str:
         flags.append(f"VIN {esc(c.vin)}")
     if flags:
         parts.append(" · ".join(flags))
+    if c.wanted:
+        parts.append("⭐ В описі є: " + esc(", ".join(c.wanted)))
+    if c.wanted_miss:
+        parts.append("➖ В описі не згадано: " + esc(", ".join(c.wanted_miss)) + " (глянь фото)")
     if c.market_pct is not None and c.market_ref:
         p = c.market_pct
         if p <= -35:

@@ -85,6 +85,8 @@ class Car:
     market_mileage: Optional[float] = None
     initial: bool = False
     extra_keys: list = field(default_factory=list)
+    wanted: list = field(default_factory=list)          # бажані слова, знайдені в описі
+    wanted_miss: list = field(default_factory=list)     # бажані слова, яких в описі немає
 
     @property
     def title(self):

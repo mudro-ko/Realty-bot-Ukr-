@@ -112,6 +112,7 @@ def run_search(s, st, out, settings, report, archive=None, market=None):
             fps[f"ria:{c.ria_id}"] = today
         fresh.append(c)
     fresh.sort(key=lambda x: x.published or "", reverse=True)
+    fresh.sort(key=lambda x: -len(x.wanted))             # з бажаними словами — першими (стабільно)
 
     drops = []
     if archive is not None:
