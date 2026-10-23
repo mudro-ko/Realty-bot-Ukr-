@@ -127,7 +127,10 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
             pu = int(price * 1.08)
             pa = int(pu * usd_uah)
     site = (c.get("site") or {}).get("displayName") or "lun.ua"
-    rc = next((g for g in (c.get("geoEntities") or []) if g.get("type") == "residential_complex"), None)
+    ents = c.get("geoEntities") or []
+    rc = next((g for g in ents if g.get("type") == "residential_complex"), None)
+    micro = next((g.get("name") for g in ents if g.get("type") == "microdistrict"), "")
+    adm = next((g.get("name") for g in ents if g.get("type") == "district"), "")
     extra = []
     if c.get("groupId"):
         extra.append(f"lung:{c['groupId']}")
@@ -148,6 +151,8 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
         without_renovation=c.get("withoutRenovation"),
         is_owner=c.get("isOwner"),
         complex=(rc or {}).get("name") or "",
+        district_name=micro or "",
+        admin_district=adm or "",
         without_commission=c.get("withoutCommission"),
         extra_keys=extra,
     )

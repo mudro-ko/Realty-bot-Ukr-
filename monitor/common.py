@@ -73,6 +73,11 @@ class Listing:
     district_id: Optional[int] = None                # ID району на сайті (DIM.RIA)
     complex: str = ""                                # ЖК, як його називає сайт
     complex_id: Optional[int] = None                 # ID ЖК на сайті (DIM.RIA newbuild_id)
+    admin_district: str = ""                         # адмінрайон (Приморський, Київський…)
+    market_pct: Optional[int] = None                 # відхилення від ринку, % (мінус = дешевше)
+    market_ref: Optional[float] = None               # медіана групи ($/м² або ₴)
+    market_n: int = 0                                # скільки оголошень у групі
+    market_label: str = ""                           # з чим порівнювали
     extra_keys: list = field(default_factory=list)   # додаткові ключі для дедуплікації (groupId тощо)
     initial: bool = False                            # з першого запуску джерела (стартова підбірка)
 

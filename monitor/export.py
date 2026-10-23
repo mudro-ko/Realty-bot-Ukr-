@@ -50,9 +50,9 @@ def _header(ws, row, cols, widths=None):
             ws.column_dimensions[get_column_letter(i)].width = max(ws.column_dimensions[get_column_letter(i)].width or 0, w)
 
 
-LIST_COLS = ["Знайдено", "Ціна $", "Ціна ₴", "$/м²", "Кімн.", "Площа м²", "Поверх", "ЖК", "Адреса",
+LIST_COLS = ["Знайдено", "Ціна $", "Ціна ₴", "$/м²", "vs ринок", "Кімн.", "Площа м²", "Поверх", "ЖК", "Адреса",
              "Стан", "Власник", "Зміна ціни", "Сайт", "Посилання", "Опис"]
-LIST_W = [16, 11, 12, 8, 7, 10, 9, 22, 42, 18, 9, 14, 13, 12, 60]
+LIST_W = [16, 11, 12, 8, 10, 7, 10, 9, 22, 42, 18, 9, 14, 13, 12, 60]
 LINK_COL = LIST_COLS.index("Посилання") + 1
 DESC_COL = LIST_COLS.index("Опис") + 1
 
@@ -72,6 +72,7 @@ def listing_sheet(ws, name, rows, deal):
         floor = f"{r['floor']}/{r['floors']}" if r.get("floor") and r.get("floors") else (r.get("floor") or "")
         ws.append([
             r.get("first_seen"), r.get("price_usd"), r.get("price_uah"), _ppm(r) if deal == "sale" else None,
+            (r["market_pct"] / 100) if r.get("market_pct") is not None else None,
             r.get("rooms"), r.get("area"), floor, re.sub(r"^ЖК\s+", "", r.get("complex") or ""), r.get("geo") or r.get("street"),
             COND_SHORT.get(r.get("condition"), "—"), "так" if r.get("is_owner") else "",
             delta_txt, r.get("origin"), "відкрити", " ".join((r.get("text") or "").split())[:300],
@@ -86,6 +87,11 @@ def listing_sheet(ws, name, rows, deal):
         for c in ws.iter_cols(min_col=col, max_col=col, min_row=4):
             for cell in c:
                 cell.number_format = "#,##0"
+    for c in ws.iter_cols(min_col=5, max_col=5, min_row=4):
+        for cell in c:
+            cell.number_format = "+0%;-0%;0%"
+            if isinstance(cell.value, (int, float)) and cell.value <= -0.1:
+                cell.font = Font(bold=True, color="2E7D32")
     for row in ws.iter_rows(min_row=4, max_row=ws.max_row, min_col=DESC_COL, max_col=DESC_COL):
         for cell in row:
             cell.alignment = Alignment(wrap_text=False)

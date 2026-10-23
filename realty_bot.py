@@ -32,6 +32,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
 
 from monitor.__main__ import run_search
 from monitor.archive import Archive
+from monitor.market import Market
 from monitor.export import build_report
 from monitor import zhk as Z
 from monitor.filters import DISTRICTS, district_codes, split_keywords
@@ -143,7 +144,7 @@ PRICE_HINT = {
 }
 
 (S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT, S_AREA,
- S_WHERE, S_ZHK, S_FLOOR, S_FREQ) = range(14)
+ S_WHERE, S_ZHK, S_FLOOR, S_FREQ, S_MARKET) = range(15)
 
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
@@ -276,6 +277,8 @@ def summary(s):
                  + (f" · 📐 {area_label(s)}" if area_label(s) else ""))
     if floor_label(s):
         lines.append(f"🏢 {floor_label(s)}")
+    if market_label(s):
+        lines.append(market_label(s))
     if s.get("condition", "any") != "any":
         lines.append(f"🛠 {CONDITIONS[s['condition']]}")
     if (s.get("seller") or "any") != "any":
@@ -370,7 +373,8 @@ async def check_search(app: Application, chat_id: int, sid: str, manual=False):
         collector = Collector("", "", outbox)       # без токена: повідомлення лише збираються
         t0 = time.time()
         try:
-            await asyncio.to_thread(run_search, scfg, st, collector, SETTINGS, report, app.bot_data["archive"])
+            await asyncio.to_thread(run_search, scfg, st, collector, SETTINGS, report, app.bot_data["archive"],
+                                    app.bot_data.get("market"))
         except Exception:
             log.exception("Перевірка %s впала", sid)
             if manual:
@@ -587,7 +591,7 @@ async def ask_edit_menu(src, ctx, new_message=False):
     if loc:
         rows.append(loc)
     rows += [[("🛏 Кімнати", "ed:rooms"), ("💰 Ціна", "ed:price"), ("📐 Площа", "ed:area")],
-             [("🏢 Поверх", "ed:floor"), ("⏱ Частота", f"fq:{s['id']}:menu")],
+             [("🏢 Поверх", "ed:floor"), ("📉 Ринок", "ed:market"), ("⏱ Частота", f"fq:{s['id']}:menu")],
              [("🛠 Стан", "ed:cond"), ("👤 Продавець", "ed:seller")],
              [("🔑 Ключові слова", "ed:kw")],
              [("✅ Зберегти", "ed:save"), ("❌ Скасувати", "ed:cancel")]]
@@ -616,6 +620,8 @@ async def cb_edit_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return await ask_area(q, ctx)
     if act == "floor":
         return await ask_floor(q, ctx)
+    if act == "market":
+        return await ask_market(q, ctx)
     if act == "cond":
         return await ask_condition(q, ctx)
     if act == "seller":
@@ -869,6 +875,47 @@ async def cb_seller(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
     ctx.user_data["new"]["seller"] = q.data.split(":", 1)[1]
+    return await after(q, ctx, ask_market)
+
+
+MARKET_OPTS = {"off": ("🔄 Усі, з позначкою «дешевше/дорожче ринку»", None),
+               "0": ("📉 Лише нижче медіани", 0),
+               "10": ("📉 На 10%+ дешевше ринку", 10),
+               "20": ("🔥 На 20%+ дешевше ринку", 20)}
+
+
+def market_label(s):
+    bm = s.get("below_market")
+    if bm is None:
+        return ""
+    return "📉 лише нижче медіани ринку" if int(bm) == 0 else f"📉 лише на {int(bm)}%+ дешевше ринку"
+
+
+async def ask_market(src, ctx):
+    s = ctx.user_data["new"]
+    if s["deal"] == "daily":
+        return await after(src, ctx, ask_keywords)
+    cur = s.get("below_market")
+    rows = [[(("✅ " if (cur is None and k == "off") or (cur is not None and str(cur) == k) else "") + t, f"mk:{k}")]
+            for k, (t, _) in MARKET_OPTS.items()]
+    what = "$/м²" if s["deal"] == "sale" else "ціною оренди"
+    await show(src, f"📉 <b>Порівняння з ринком</b> (за {what}).\n"
+                    "Порівнюю з медіаною схожих оголошень: той самий ЖК → мікрорайон → район, з тією ж кількістю "
+                    "кімнат, коли даних досить. Раз на добу збираю ринкову вибірку без твоїх фільтрів ціни.\n"
+                    "<i>Оголошення без даних для порівняння при фільтрі не пройдуть; перші дні вибірка ще накопичується.</i>",
+               kb(rows))
+    return S_MARKET
+
+
+async def cb_market(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    s = ctx.user_data["new"]
+    k = q.data.split(":", 1)[1]
+    if MARKET_OPTS[k][1] is None:
+        s.pop("below_market", None)
+    else:
+        s["below_market"] = MARKET_OPTS[k][1]
     return await after(q, ctx, ask_keywords)
 
 
@@ -1689,6 +1736,7 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     app = b.build()
     app.bot_data["db"] = db or DB()
     app.bot_data["archive"] = Archive(os.path.join(os.path.dirname(app.bot_data["db"].path), "listings.db"))
+    app.bot_data["market"] = Market(os.path.join(os.path.dirname(app.bot_data["db"].path), "market.db"))
     migrate(app.bot_data["db"], app.bot_data["archive"])
 
     conv = ConversationHandler(
@@ -1708,6 +1756,7 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
             S_FLOOR: [CallbackQueryHandler(cb_floor, pattern=r"^fl:"),
                       MessageHandler(filters.TEXT & ~filters.COMMAND, txt_floor)],
             S_FREQ: [CallbackQueryHandler(cb_freq, pattern=r"^fq:")],
+            S_MARKET: [CallbackQueryHandler(cb_market, pattern=r"^mk:")],
             S_AREA: [CallbackQueryHandler(cb_area, pattern=r"^area:"),
                      MessageHandler(filters.TEXT & ~filters.COMMAND, txt_area)],
             S_CONDITION: [CallbackQueryHandler(cb_condition, pattern=r"^cond:")],
