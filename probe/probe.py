@@ -40,14 +40,21 @@ def ria_info(text):
 
 
 TESTS = [
-    ("a_rep_sort", "https://lun.ua/sale/mykolaiv/flats-lisky?room_count=3&room_count=4&sort=insert_time", lun_info),
-    ("b_sort_comma", "https://lun.ua/sale/mykolaiv/flats-lisky?sort=insert_time&room_count=3,4", lun_info),
-    ("c_sort_rep", "https://lun.ua/sale/mykolaiv/flats-lisky?sort=insert_time&room_count=3&room_count=4", lun_info),
-    ("d_comma_only", "https://lun.ua/sale/mykolaiv/flats-lisky?room_count=3,4", lun_info),
-    ("e_sort_only", "https://lun.ua/sale/mykolaiv/flats-lisky?sort=insert_time", lun_info),
-    ("f_ods_rep_sort", "https://lun.ua/sale/odesa/flats?room_count=1&room_count=2&sort=insert_time", lun_info),
-    ("g_ods_comma_sort", "https://lun.ua/sale/odesa/flats?room_count=1,2&sort=insert_time", lun_info),
-    ("h_ods_single_sort", "https://lun.ua/sale/odesa/flats?room_count=2&sort=insert_time", lun_info),
+    ('l_base', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time', lun_info),
+    ('l_pmax', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_max=85000', lun_info),
+    ('l_pmin_pmax_usd', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_min=50000&price_max=85000&currency=usd', lun_info),
+    ('l_pmin_pmax_USD', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_min=50000&price_max=85000&currency=USD', lun_info),
+    ('l_pmax_cur1', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&price_max=85000&currency=1', lun_info),
+    ('l_pmax_cur_usd_only', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&currency=usd&price_max=85000', lun_info),
+    ('l_priceMax', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&priceMax=85000&priceMin=50000', lun_info),
+    ('l_repair', 'https://lun.ua/sale/odesa/flats-kyivskyi-district?room_count=1&room_count=2&sort=insert_time&repair=1', lun_info),
+    ('r_base', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at', None),
+    ('r_rooms', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B209%5D%5Bfrom%5D=1&characteristic%5B209%5D%5Bto%5D=2', None),
+    ('r_price_to', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bto%5D=85000', None),
+    ('r_price_from_to', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
+    ('r_rooms_price', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&characteristic%5B209%5D%5Bfrom%5D=1&characteristic%5B209%5D%5Bto%5D=2&characteristic%5B242%5D=239&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
+    ('r_price_alt', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&price_cur=1&characteristic%5B234%5D%5Bfrom%5D=50000&characteristic%5B234%5D%5Bto%5D=85000', None),
+    ('r_price_simple', 'https://dom.ria.com/node/searchEngine/v2/?category=1&realty_type=2&operation=1&state_id=12&city_id=12&limit=5&page=0&sort=created_at&currency=1&price_from=50000&price_to=85000', None),
 ]
 
 for k, u, fn in TESTS:
