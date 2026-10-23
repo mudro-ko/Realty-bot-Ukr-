@@ -87,9 +87,9 @@ def text_rows(flight: str) -> dict:
 
 def parse_page(html: str):
     flight = "".join(json.loads('"' + m + '"') for m in FLIGHT_RE.findall(html))
-    i = flight.find('{"realties":{"cards":')
+    i = flight.find('{"realties":{')
     if i < 0:
-        return [], 0
+        return None, 0                    # сторінка не та (немає блоку оголошень)
     obj, _ = json.JSONDecoder().raw_decode(flight, i)
     r = obj["realties"]
     cards = r.get("cards") or []
@@ -169,8 +169,16 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         # перший запуск / після зміни пошуку — глибоко (у звіт), далі — лише свіжі сторінки
         max_pages = 10 if (first_run or backfill) else 3
     new, refreshed, total, keys = [], [], 0, set()
+    failed = []
     for slug in slugs:
-        n, t, r = _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug)
+        try:
+            n, t, r = _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug)
+        except Exception as e:
+            if len(slugs) == 1:
+                raise
+            failed.append(slug)
+            log.warning("ЛУН %s: %s пропущено (%s)", s["id"], slug, type(e).__name__)
+            continue
         total += t
         for l in n:
             if l.key not in keys:
@@ -178,6 +186,8 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool =
         for l in r:
             if l.key not in keys:
                 keys.add(l.key); refreshed.append(l)
+    if failed and len(failed) == len(slugs):
+        raise RuntimeError(f"ЛУН не відповів для жодної сторінки ({len(failed)})")
     return new, total, build_url(s, 1, slugs[0]), [], refreshed
 
 
@@ -188,6 +198,8 @@ def _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug):
         r = get(url)
         html = r.text
         cards, total = parse_page(html)
+        if cards is not None and not cards:
+            break                           # оголошень за фільтрами немає — це нормально
         if not cards:
             if page == 1:
                 try:

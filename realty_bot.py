@@ -135,6 +135,7 @@ CONDITIONS = {
 }
 SELLERS = {"any": "🔄 Будь-хто", "owner": "👤 Тільки власник / без комісії", "agency": "🏢 Тільки агентства"}
 INTERVALS = {15: "15 хв", 30: "30 хв", 60: "1 год", 180: "3 год", 360: "6 год"}
+WEEKDAYS_FULL = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"]
 PRICE_HINT = {
     "sale": "<code>30000-55000</code>, <code>від 40000</code>, <code>до 60к</code>",
     "rent": "<code>8000-14000</code>, <code>від 10000</code>, <code>до 15к</code>",
@@ -142,7 +143,7 @@ PRICE_HINT = {
 }
 
 (S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_PRICE, S_CONDITION, S_SELLER, S_KEYWORDS, S_EDIT, S_AREA,
- S_WHERE, S_ZHK) = range(12)
+ S_WHERE, S_ZHK, S_FLOOR, S_FREQ) = range(14)
 
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
@@ -273,6 +274,8 @@ def summary(s):
         lines.append(f"🏢 ЖК ({len(s['zhk'])}): {esc(zhk_summary(s, limit=8))}")
     lines.append(f"🛏 {rooms_label(s.get('rooms'))}" + (f" · 💰 {price_label(s)}" if price_label(s) else "")
                  + (f" · 📐 {area_label(s)}" if area_label(s) else ""))
+    if floor_label(s):
+        lines.append(f"🏢 {floor_label(s)}")
     if s.get("condition", "any") != "any":
         lines.append(f"🛠 {CONDITIONS[s['condition']]}")
     if (s.get("seller") or "any") != "any":
@@ -281,10 +284,8 @@ def summary(s):
     src = " + ".join({"lun": "ЛУН", "dimria": "DIM.RIA"}[x] for x in s.get("sources", []))
     if s.get("paused"):
         status = "⏸ на паузі"
-    elif s.get("digest"):
-        status = digest_label(s["digest"])
     else:
-        status = f"🟢 кожні {INTERVALS.get(s.get('interval', 30), str(s.get('interval')) + ' хв')}"
+        status = freq_text(s)
     lines.append(f"🔔 {status} · {src}")
     if s.get("last_run"):
         lines.append(f"🕒 остання перевірка: {s['last_run']}")
@@ -430,22 +431,41 @@ async def deliver(app: Application, chat_id: int, outbox: list) -> int:
 WEEKDAYS = ["пн", "вт", "ср", "чт", "пт", "сб", "нд"]
 
 
+def digest_kind(dg: dict) -> str:
+    return dg.get("kind") or ("daily" if dg.get("dow") is None else "weekly")
+
+
 def next_digest(dg: dict, after: datetime = None) -> float:
-    """Наступний час дайджесту за місцевим часом комп'ютера. dow=None — щодня."""
+    """Наступний час дайджесту за місцевим часом комп'ютера."""
+    import calendar
     now = after or datetime.now()
-    t = now.replace(hour=int(dg.get("hour", 14)), minute=int(dg.get("minute", 0)), second=0, microsecond=0)
-    if dg.get("dow") is None:
+    hh, mm = int(dg.get("hour", 14)), int(dg.get("minute", 0))
+    kind = digest_kind(dg)
+    if kind == "monthly":
+        dom = int(dg.get("dom", 1))
+        y, m = now.year, now.month
+        for _ in range(3):
+            d = min(dom, calendar.monthrange(y, m)[1])
+            t = datetime(y, m, d, hh, mm)
+            if t > now:
+                return t.timestamp()
+            y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    t = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    if kind == "daily":
         if t <= now:
             t += timedelta(days=1)
     else:
-        t += timedelta(days=(int(dg["dow"]) - t.weekday()) % 7)
+        t += timedelta(days=(int(dg.get("dow", 5)) - t.weekday()) % 7)
         if t <= now:
             t += timedelta(days=7)
     return t.timestamp()
 
 
 def digest_label(dg: dict) -> str:
-    when = "щодня" if dg.get("dow") is None else f"щотижня, {WEEKDAYS[int(dg['dow'])]}"
+    kind = digest_kind(dg)
+    when = {"daily": "щодня",
+            "weekly": f"щотижня, {WEEKDAYS[int(dg.get('dow', 5))]}",
+            "monthly": f"щомісяця, {int(dg.get('dom', 1))}-го"}[kind]
     return f"🗓 дайджест {when} о {int(dg.get('hour', 14)):02d}:{int(dg.get('minute', 0)):02d}"
 
 
@@ -567,6 +587,7 @@ async def ask_edit_menu(src, ctx, new_message=False):
     if loc:
         rows.append(loc)
     rows += [[("🛏 Кімнати", "ed:rooms"), ("💰 Ціна", "ed:price"), ("📐 Площа", "ed:area")],
+             [("🏢 Поверх", "ed:floor"), ("⏱ Частота", f"fq:{s['id']}:menu")],
              [("🛠 Стан", "ed:cond"), ("👤 Продавець", "ed:seller")],
              [("🔑 Ключові слова", "ed:kw")],
              [("✅ Зберегти", "ed:save"), ("❌ Скасувати", "ed:cancel")]]
@@ -593,6 +614,8 @@ async def cb_edit_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return await ask_price(q, ctx)
     if act == "area":
         return await ask_area(q, ctx)
+    if act == "floor":
+        return await ask_floor(q, ctx)
     if act == "cond":
         return await ask_condition(q, ctx)
     if act == "seller":
@@ -742,7 +765,7 @@ async def cb_area(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
     ctx.user_data["new"].pop("area", None)
-    return await after(q, ctx, ask_condition)
+    return await after(q, ctx, ask_floor)
 
 
 async def txt_area(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -754,7 +777,69 @@ async def txt_area(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s = ctx.user_data["new"]
     s["area"] = {"min": lo, "max": hi}
     await update.message.reply_text(f"📐 {area_label(s)}")
-    return await after(update.message, ctx, ask_condition)
+    return await after(update.message, ctx, ask_floor)
+
+
+def floor_label(s):
+    f = s.get("floors") or {}
+    out = []
+    if f.get("min") and f.get("max"):
+        out.append(f"{f['min']}–{f['max']} пов.")
+    elif f.get("min"):
+        out.append(f"від {f['min']} пов.")
+    elif f.get("max"):
+        out.append(f"до {f['max']} пов.")
+    if f.get("not_first"):
+        out.append("не перший")
+    if f.get("not_last"):
+        out.append("не останній")
+    return ", ".join(out)
+
+
+def floor_kb(s):
+    f = s.get("floors") or {}
+    return kb([[(("✅ " if f.get("not_first") else "") + "🚫 Не перший", "fl:nf"),
+                (("✅ " if f.get("not_last") else "") + "🚫 Не останній", "fl:nl")],
+               [("🔄 Будь-який", "fl:any"), ("✔️ Готово", "fl:done")]])
+
+
+async def ask_floor(src, ctx):
+    s = ctx.user_data["new"]
+    cur = floor_label(s)
+    await show(src, "🏢 <b>Поверх.</b> Познач обмеження й натисни «Готово».\n"
+                    "Можна також написати діапазон поверхів: <code>3-12</code>, <code>від 2</code>, <code>до 9</code>"
+                    + (f"\nЗараз: <b>{cur}</b>" if cur else ""), floor_kb(s))
+    return S_FLOOR
+
+
+async def cb_floor(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    s = ctx.user_data["new"]
+    f = s.setdefault("floors", {})
+    act = q.data.split(":", 1)[1]
+    if act in ("nf", "nl"):
+        k = "not_first" if act == "nf" else "not_last"
+        f[k] = not f.get(k)
+        await q.edit_message_reply_markup(reply_markup=floor_kb(s))
+        return S_FLOOR
+    if act == "any":
+        s.pop("floors", None)
+    elif not any(f.values()):
+        s.pop("floors", None)
+    return await after(q, ctx, ask_condition)
+
+
+async def txt_floor(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    lo, hi = parse_price_range((update.message.text or "").lower().replace("пов", ""))
+    if not (lo or hi) or (hi and hi > 60):
+        await update.message.reply_text("⚠️ Напиши, наприклад, 3-12, від 2 або до 9")
+        return S_FLOOR
+    s = ctx.user_data["new"]
+    f = s.setdefault("floors", {})
+    f["min"], f["max"] = lo, hi
+    await update.message.reply_text(f"🏢 {floor_label(s)}", reply_markup=floor_kb(s))
+    return S_FLOOR
 
 
 async def ask_condition(src, ctx):
@@ -791,9 +876,14 @@ async def ask_keywords(src, ctx):
     s = ctx.user_data["new"]
     cur = ", ".join(s.get("keywords") or [])
     await show(src,
-               "🔑 <b>Ключові слова</b> через кому — надсилатиму лише оголошення, де є хоч одне з них.\n"
-               "Щоб <b>виключити</b> слово, постав мінус.\n\n"
-               "<i>Напр.: сіті центр, вид на море, -гуртожиток, -перший поверх</i>\n"
+               "🔑 <b>Ключові слова</b> через кому — надсилатиму оголошення, де є хоч одне з них. "
+               "Мінус перед словом — виключити.\n\n"
+               "🧠 Розумію відмінки, українську й російську та різні формулювання: "
+               "«біля моря» знайде і «до моря 5 хв», і «возле пляжа», і «перша лінія»; "
+               "«сіті центр» — і «City Center»; «ремонт дизайнерський» — і «з дизайнерським ремонтом».\n"
+               "Готові поняття: біля моря, вид на море, сіті центр, дизайнерський ремонт, новий ремонт, "
+               "генератор, паркінг, автономне опалення, з тваринами, тераса, меблі, без комісії.\n\n"
+               "<i>Напр.: біля моря, сіті центр, -гуртожиток</i>\n"
                + (f"\nЗараз: <code>{esc(cur)}</code>\n" if cur else "")
                + "\n/skip — без ключових слів")
     return S_KEYWORDS
@@ -804,7 +894,7 @@ async def txt_keywords(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s["keywords"] = [w.strip() for w in update.message.text.split(",") if w.strip()]
     s.pop("include_keywords", None)
     s.pop("exclude_keywords", None)
-    return await after(update.message, ctx, finish)
+    return await after(update.message, ctx, ask_freq_new)
 
 
 async def skip_keywords(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -812,7 +902,7 @@ async def skip_keywords(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s["keywords"] = []
     s.pop("include_keywords", None)
     s.pop("exclude_keywords", None)
-    return await after(update.message, ctx, finish)
+    return await after(update.message, ctx, ask_freq_new)
 
 
 async def finish(src, ctx):
@@ -1053,6 +1143,101 @@ async def txt_zhk(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return await show_zhk_view(update.message, ctx, ("q", text))
 
 
+# ── Частота сповіщень ─────────────────────────────────────────
+FREQ_TIMES = [9, 12, 14, 18, 21]
+
+
+def freq_menu_kb(sid):
+    return kb([[("⚡ 30 хв", f"fq:{sid}:i:30"), ("🕐 Щогодини", f"fq:{sid}:i:60"), ("🕒 Кожні 3 год", f"fq:{sid}:i:180")],
+               [("📅 Щодня", f"fq:{sid}:d"), ("🗓 Щотижня", f"fq:{sid}:w"), ("📆 Раз на місяць", f"fq:{sid}:m")]])
+
+
+def time_kb(sid, mode, arg):
+    return kb([[(f"{h:02d}:00", f"fq:{sid}:t:{mode}:{arg}:{h}") for h in FREQ_TIMES]])
+
+
+async def ask_freq_new(src, ctx):
+    s = ctx.user_data["new"]
+    await show(src, "⏱ <b>Як часто повідомляти?</b>\n"
+                    "• 30 хв / щогодини / кожні 3 год — кожне нове оголошення приходить одразу після перевірки.\n"
+                    "• Щодня / щотижня / раз на місяць — збираю все в один дайджест у вибраний час "
+                    "(перевіряю у фоні, нічого не пропаде).", freq_menu_kb(s["id"]))
+    return S_FREQ
+
+
+def apply_freq(s, parts):
+    """parts: ['i', '60'] або ['t', mode, arg, hour]."""
+    if parts[0] == "i":
+        s.pop("digest", None)
+        s.pop("digest_next", None)
+        s["interval"] = int(parts[1])
+    else:
+        mode, arg, hour = parts[1], parts[2], int(parts[3])
+        dg = {"kind": {"d": "daily", "w": "weekly", "m": "monthly"}[mode], "hour": hour, "minute": 0}
+        if mode == "w":
+            dg["dow"] = int(arg)
+        if mode == "m":
+            dg["dom"] = int(arg)
+        s["digest"] = dg
+        s["digest_next"] = next_digest(dg)
+        s["interval"] = {"daily": 180, "weekly": 360, "monthly": 720}[dg["kind"]]
+    s["next_due"] = time.time() + int(s["interval"]) * 60 if s.get("next_due") else 0
+
+
+def freq_text(s):
+    if s.get("digest"):
+        return digest_label(s["digest"])
+    return f"🟢 кожні {INTERVALS.get(s.get('interval', 30), str(s.get('interval')) + ' хв')}"
+
+
+@guard
+async def cb_freq(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    _, sid, *parts = q.data.split(":")
+    draft = ctx.user_data.get("new")
+    in_dialog = bool(draft and draft.get("id") == sid)
+    db: DB = ctx.bot_data["db"]
+    target = draft if in_dialog else db.get(q.message.chat_id, sid)
+    if not target:
+        return None
+    step = parts[0]
+    if step == "menu":
+        await q.edit_message_text(summary(target) + "\n\n⏱ <b>Обери частоту:</b>", parse_mode=ParseMode.HTML,
+                                  reply_markup=freq_menu_kb(sid))
+        return S_EDIT if in_dialog else None
+    if step == "d":
+        await q.edit_message_text("📅 Щодня — о котрій?", reply_markup=time_kb(sid, "d", 0))
+        return None
+    if step == "w" and len(parts) == 1:
+        await q.edit_message_text("🗓 Щотижня — в який день?",
+                                  reply_markup=kb([[(d, f"fq:{sid}:w:{i}") for i, d in enumerate(WEEKDAYS_FULL)]]))
+        return None
+    if step == "w":
+        await q.edit_message_text(f"🗓 Щотижня, {WEEKDAYS_FULL[int(parts[1])]} — о котрій?",
+                                  reply_markup=time_kb(sid, "w", parts[1]))
+        return None
+    if step == "m" and len(parts) == 1:
+        await q.edit_message_text("📆 Раз на місяць — якого числа?",
+                                  reply_markup=kb([[(str(d), f"fq:{sid}:m:{d}") for d in (1, 5, 10, 15, 20, 25)]]))
+        return None
+    if step == "m":
+        await q.edit_message_text(f"📆 Щомісяця, {parts[1]}-го — о котрій?", reply_markup=time_kb(sid, "m", parts[1]))
+        return None
+    # фінальний вибір: i:<хв> або t:<mode>:<arg>:<год>
+    if in_dialog:
+        apply_freq(target, parts)
+        if ctx.user_data.get("edit"):
+            return await ask_edit_menu(q, ctx)
+        return await finish(q, ctx)
+    with db.lock:
+        apply_freq(target, parts)
+    db.save()
+    await q.edit_message_text(summary(target) + f"\n\n✅ Частота: {freq_text(target)}", parse_mode=ParseMode.HTML,
+                              reply_markup=search_kb(target))
+    return None
+
+
 # ═══════════════════════════════════════════════════════════════
 # МОЇ ПОШУКИ
 # ═══════════════════════════════════════════════════════════════
@@ -1060,7 +1245,7 @@ def search_kb(s):
     sid = s["id"]
     rows = [[("🔍 Перевірити зараз", f"chk:{sid}"), ("✏️ Змінити", f"edt:{sid}")]]
     rows.append([("▶️ Відновити", f"res:{sid}") if s.get("paused") else ("⏸ Пауза", f"pau:{sid}"),
-                 ("⏱ Частота", f"frq:{sid}")])
+                 ("⏱ Частота", f"fq:{sid}:menu")])
     rows.append([("🗑 Видалити", f"del:{sid}")])
     return kb(rows)
 
@@ -1520,13 +1705,17 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
             S_ROOMS: [CallbackQueryHandler(cb_rooms, pattern=r"^rooms:")],
             S_PRICE: [CallbackQueryHandler(cb_price, pattern=r"^price:"),
                       MessageHandler(filters.TEXT & ~filters.COMMAND, txt_price)],
+            S_FLOOR: [CallbackQueryHandler(cb_floor, pattern=r"^fl:"),
+                      MessageHandler(filters.TEXT & ~filters.COMMAND, txt_floor)],
+            S_FREQ: [CallbackQueryHandler(cb_freq, pattern=r"^fq:")],
             S_AREA: [CallbackQueryHandler(cb_area, pattern=r"^area:"),
                      MessageHandler(filters.TEXT & ~filters.COMMAND, txt_area)],
             S_CONDITION: [CallbackQueryHandler(cb_condition, pattern=r"^cond:")],
             S_SELLER: [CallbackQueryHandler(cb_seller, pattern=r"^sel:")],
             S_KEYWORDS: [CommandHandler("skip", skip_keywords),
                          MessageHandler(filters.TEXT & ~filters.COMMAND, txt_keywords)],
-            S_EDIT: [CallbackQueryHandler(cb_edit_menu, pattern=r"^ed:")],
+            S_EDIT: [CallbackQueryHandler(cb_edit_menu, pattern=r"^ed:"),
+                     CallbackQueryHandler(cb_freq, pattern=r"^fq:")],
         },
         fallbacks=[CommandHandler("cancel", cancel), CommandHandler("start", cmd_start),
                    MessageHandler(filters.Regex("^📋 Мої пошуки$"), cancel_and_list),
@@ -1551,6 +1740,7 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     app.add_handler(MessageHandler(filters.Regex("^📊 Звіт$"), cmd_report))
     app.add_handler(CallbackQueryHandler(cb_preset, pattern=r"^pre:"))
     app.add_handler(CallbackQueryHandler(cb_manage, pattern=r"^(chk|pau|res|frq|frqset|del|delok|delno):"))
+    app.add_handler(CallbackQueryHandler(cb_freq, pattern=r"^fq:"))
     app.add_error_handler(on_error)
     app.job_queue.run_repeating(tick, interval=60, first=15, name="tick")
     return app

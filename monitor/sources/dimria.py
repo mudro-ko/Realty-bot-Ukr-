@@ -30,6 +30,12 @@ def search_params(s: dict, usd_uah: float, limit: int, district_ids=None, newbui
             p.append(("characteristic[234][from]", int(lo * 0.9)))
         if hi:
             p.append(("characteristic[234][to]", int(hi * 1.1)))
+    fl = s.get("floors") or {}
+    fmin = max(fl.get("min") or 0, 2 if fl.get("not_first") else 0)
+    if fmin:
+        p.append(("characteristic[227][from]", fmin))             # 227 — поверх
+    if fl.get("max"):
+        p.append(("characteristic[227][to]", fl["max"]))
     area = s.get("area") or {}
     if area.get("min"):
         p.append(("characteristic[214][from]", area["min"]))      # 214 — загальна площа

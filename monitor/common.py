@@ -23,12 +23,28 @@ def http() -> requests.Session:
     return _session
 
 
-def get(url, params=None, timeout=25, pause=1.2):
-    """GET з паузою між запитами, щоб не навантажувати сайти."""
-    r = http().get(url, params=params, timeout=timeout)
-    time.sleep(pause)
-    r.raise_for_status()
-    return r
+def get(url, params=None, timeout=25, pause=1.2, retries=3):
+    """GET з паузою між запитами; при обриві з'єднання, 429 чи 5xx — повтор з дедалі довшою паузою."""
+    global _session
+    last = None
+    for attempt in range(retries + 1):
+        try:
+            r = http().get(url, params=params, timeout=timeout)
+            time.sleep(pause)
+            if r.status_code in (429, 500, 502, 503, 504) and attempt < retries:
+                raise requests.HTTPError(f"HTTP {r.status_code}", response=r)
+            r.raise_for_status()
+            return r
+        except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as e:
+            last = e
+            if attempt >= retries or (isinstance(e, requests.HTTPError) and e.response is not None
+                                      and e.response.status_code < 429 and e.response.status_code != 408):
+                raise
+            wait = (5, 15, 40)[min(attempt, 2)]
+            log.info("Повтор %s через %dс (%s)", url[:80], wait, type(e).__name__)
+            _session = None          # нове з'єднання
+            time.sleep(wait)
+    raise last
 
 
 @dataclass
