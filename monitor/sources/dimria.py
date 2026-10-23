@@ -79,20 +79,27 @@ def to_listing(d: dict):
     ), (d.get("district_name_uk") or "")
 
 
-def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, details_cap: int = 25):
-    """Повертає (нові_оголошення, загальна_кількість, посилання_на_сайт)."""
+def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, details_cap: int = 25):
+    """Повертає (нові, загальна_кількість, посилання, додаткові_бачені_ключі, оновлені_вже_бачені).
+
+    backfill=True — архів для пошуку порожній: тягнемо деталі й для вже бачених ID, щоб його заповнити.
+    """
     if s["city"] not in CITY or s["deal"] not in OPERATION:
-        return [], 0, "", []
-    data = get(SEARCH, params=search_params(s, usd_uah, limit=60 if first_run else 40)).json()
+        return [], 0, "", [], []
+    data = get(SEARCH, params=search_params(s, usd_uah, limit=60 if (first_run or backfill) else 40)).json()
     ids, total = data.get("items") or [], data.get("count") or 0
     unseen = [i for i in ids if f"ria:{i}" not in seen]
     log.info("DIM.RIA %s: ID %d, нових %d, всього %d", s["id"], len(ids), len(unseen), total)
 
-    # при першому запуску всі ID позначаємо баченими, але деталі тягнемо лише для частини
-    new, skipped_ids = [], []
-    for n, rid in enumerate(unseen):
+    targets = [(i, True) for i in unseen]
+    if backfill:
+        targets += [(i, False) for i in ids if f"ria:{i}" in seen]
+    new, refreshed, skipped_ids = [], [], []
+    wanted = s.get("_district", {}).get("names")
+    for n, (rid, is_new) in enumerate(targets):
         if n >= details_cap:
-            skipped_ids.append(f"ria:{rid}")
+            if is_new:
+                skipped_ids.append(f"ria:{rid}")   # при першому запуску решту просто позначаємо баченими
             continue
         try:
             d = get(DATA.format(id=rid), params={"lang_id": 4}, pause=0.8).json()
@@ -100,9 +107,9 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, details_cap: int
         except Exception as e:
             log.warning("DIM.RIA деталі %s: %s", rid, e)
             continue
-        wanted = s.get("_district", {}).get("names")
         if wanted and not any(w.lower() in district.lower() for w in wanted):
-            skipped_ids.append(l.key)
+            if is_new:
+                skipped_ids.append(l.key)
             continue
-        new.append(l)
-    return new, total, "https://dom.ria.com/uk/", skipped_ids
+        (new if is_new else refreshed).append(l)
+    return new, total, "https://dom.ria.com/uk/", skipped_ids, refreshed

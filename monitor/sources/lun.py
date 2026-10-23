@@ -138,11 +138,11 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
     )
 
 
-def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, max_pages: int = 3):
-    """Повертає (нові, загальна_кількість, посилання_на_пошук, додаткові_бачені_ключі)."""
+def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, max_pages: int = 3):
+    """Повертає (нові, загальна_кількість, посилання, додаткові_бачені_ключі, оновлені_вже_бачені)."""
     if s["deal"] not in SECTION and not s.get("lun_url"):
-        return [], 0, "", []
-    new, total = [], 0
+        return [], 0, "", [], []
+    new, refreshed, total = [], [], 0
     first_url = build_url(s, 1)
     for page in range(1, max_pages + 1):
         url = build_url(s, page)
@@ -151,10 +151,14 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, max_pages: int =
         cards, total = parse_page(html)
         if not cards:
             if page == 1:
-                import gzip, os
-                dbg = os.path.join(os.environ.get("STATE_DIR", "state"), f"debug_lun_{s['id']}.html.gz")
-                with gzip.open(dbg, "wt", encoding="utf-8") as f:
-                    f.write(html)
+                try:
+                    import gzip, os
+                    d = os.environ.get("STATE_DIR", "state")
+                    os.makedirs(d, exist_ok=True)
+                    with gzip.open(os.path.join(d, f"debug_lun_{s['id']}.html.gz"), "wt", encoding="utf-8") as f:
+                        f.write(html)
+                except OSError:
+                    pass
                 title = re.search(r"<title>(.*?)</title>", html, re.S)
                 raise RuntimeError(
                     f"ЛУН не віддав карток: HTTP {r.status_code}, {len(html)} байт, "
@@ -162,10 +166,10 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, max_pages: int =
                     f"flight_chunks={len(FLIGHT_RE.findall(html))}, has_realties={'realties' in html}")
             break
         unseen = [c for c in cards if f"lun:{c['id']}" not in seen]
-        for c in unseen:
-            new.append(to_listing(c, usd_uah))
+        for c in cards:
+            (new if f"lun:{c['id']}" not in seen else refreshed).append(to_listing(c, usd_uah))
         log.info("ЛУН %s стор.%d: карток %d, нових %d, всього %d", s["id"], page, len(cards), len(unseen), total)
         # якщо на сторінці вже є бачені — далі старіші, гортати не треба
-        if not first_run and len(unseen) < len(cards):
+        if not (first_run or backfill) and len(unseen) < len(cards):
             break
-    return new, total, first_url, []
+    return new, total, first_url, [], refreshed

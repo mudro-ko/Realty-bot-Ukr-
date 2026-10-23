@@ -31,6 +31,8 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
                           ConversationHandler, MessageHandler, filters)
 
 from monitor.__main__ import run_search
+from monitor.archive import Archive
+from monitor.export import build_report
 from monitor.filters import DISTRICTS
 from monitor.telegram import Telegram as Collector, esc
 
@@ -140,7 +142,7 @@ INTERVALS = {15: "15 хв", 30: "30 хв", 60: "1 год", 180: "3 год", 360:
 
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
-     [KeyboardButton("❓ Допомога")]],
+     [KeyboardButton("📊 Звіт"), KeyboardButton("❓ Допомога")]],
     resize_keyboard=True, is_persistent=True)
 
 
@@ -245,7 +247,7 @@ async def check_search(app: Application, chat_id: int, sid: str, manual=False):
         collector = Collector("", "", outbox)       # без токена: повідомлення лише збираються
         t0 = time.time()
         try:
-            await asyncio.to_thread(run_search, scfg, st, collector, SETTINGS, report)
+            await asyncio.to_thread(run_search, scfg, st, collector, SETTINGS, report, app.bot_data["archive"])
         except Exception:
             log.exception("Перевірка %s впала", sid)
             if manual:
@@ -590,6 +592,45 @@ async def cb_preset(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     asyncio.create_task(check_search(ctx.application, q.message.chat_id, s["id"], manual=True))
 
 
+# ── Звіт Excel ─────────────────────────────────────────────────
+@guard
+async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    cid = update.effective_chat.id
+    searches = copy.deepcopy(db.searches(cid))
+    if not searches:
+        await update.effective_message.reply_text("Пошуків ще немає — нема з чого робити звіт.")
+        return
+    await update.effective_message.reply_text("⏳ Формую звіт…")
+    stamp = datetime.now(KYIV).strftime("%Y-%m-%d_%H%M")
+    out_dir = os.path.dirname(db.path)
+    path = os.path.join(out_dir, f"Звіт_нерухомість_{stamp}.xlsx")
+    try:
+        stats = await asyncio.to_thread(build_report, ctx.bot_data["archive"], searches, path)
+    except Exception:
+        log.exception("Звіт не сформовано")
+        await update.effective_message.reply_text("⚠️ Не вдалося сформувати звіт, деталі в data/bot.log")
+        return
+    if not stats:
+        await update.effective_message.reply_text(
+            "Архів поки порожній: оголошення почнуть накопичуватись з наступних перевірок "
+            "(можна натиснути «🔍 Перевірити зараз» у пошуку).")
+        return
+    lines = [f"• {esc(k)}: {v}" for k, v in stats.items()]
+    with open(path, "rb") as f:
+        await update.effective_message.reply_document(
+            f, filename=os.path.basename(path),
+            caption="📊 Звіт: аркуш «Аналітика» + окремий аркуш з посиланнями на кожен пошук.\n" + "\n".join(lines),
+            parse_mode=ParseMode.HTML)
+    # тримаємо лише 5 останніх звітів
+    old = sorted(f for f in os.listdir(out_dir) if f.startswith("Звіт_нерухомість_"))[:-5]
+    for f in old:
+        try:
+            os.remove(os.path.join(out_dir, f))
+        except OSError:
+            pass
+
+
 # ═══════════════════════════════════════════════════════════════
 # КОМАНДИ
 # ═══════════════════════════════════════════════════════════════
@@ -605,6 +646,7 @@ async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "Шукаю на ЛУН (там і оголошення з OLX, rieltor.ua) та DIM.RIA і сам пишу про нові.\n\n"
         "➕ <b>Новий пошук</b> — створити\n"
         "📋 <b>Мої пошуки</b> — перевірити, пауза, частота, видалення\n"
+        "📊 <b>Звіт</b> — Excel з посиланнями й аналітикою\n"
         "/presets — готові пошуки (напр. Миколаїв · Ліски)",
         parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
     if not db.searches(update.effective_chat.id) and load_presets():
@@ -620,7 +662,9 @@ async def cmd_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "• Перший раз показую до 10 найновіших, далі — тільки нові.\n"
         "• Той самий об'єкт з різних сайтів приходить один раз.\n"
         "• Стан ремонту визначаю за позначками сайтів і текстом оголошення — це підказка, не гарантія.\n\n"
-        "Команди: /new — новий пошук, /list — мої пошуки, /presets — готові, /cancel — скасувати діалог.",
+        "• Усі оголошення, що пройшли фільтри, зберігаються в архів; якщо ціна знизиться — напишу 📉.\n"
+        "• 📊 Звіт — Excel з посиланнями й аналітикою (медіани, $/м², динаміка, топ дешевих).\n\n"
+        "Команди: /new — новий пошук, /list — мої пошуки, /report — звіт, /presets — готові, /cancel — скасувати.",
         parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
 
 
@@ -634,6 +678,7 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
         b = getattr(b, k)(v)
     app = b.build()
     app.bot_data["db"] = db or DB()
+    app.bot_data["archive"] = Archive(os.path.join(os.path.dirname(app.bot_data["db"].path), "listings.db"))
 
     conv = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^➕ Новий пошук$"), new_search),
@@ -660,6 +705,8 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     app.add_handler(CommandHandler("presets", presets))
     app.add_handler(MessageHandler(filters.Regex("^📋 Мої пошуки$"), my_searches))
     app.add_handler(MessageHandler(filters.Regex("^❓ Допомога$"), cmd_help))
+    app.add_handler(CommandHandler("report", cmd_report))
+    app.add_handler(MessageHandler(filters.Regex("^📊 Звіт$"), cmd_report))
     app.add_handler(CallbackQueryHandler(cb_preset, pattern=r"^pre:"))
     app.add_handler(CallbackQueryHandler(cb_manage, pattern=r"^(chk|pau|res|frq|frqset|del|delok|delno):"))
     app.add_error_handler(on_error)

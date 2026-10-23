@@ -52,7 +52,7 @@ def prune(d: dict):
         del d[k]
 
 
-def run_search(s, st, tg, settings, report):
+def run_search(s, st, tg, settings, report, archive=None):
     usd_uah = float(settings.get("usd_uah", 41.5))
     first = not st.get("initialized")          # перший запуск пошуку взагалі
     inited = st.setdefault("init_sources", [])  # джерела, які вже хоч раз відпрацювали
@@ -62,12 +62,17 @@ def run_search(s, st, tg, settings, report):
     today = datetime.now(KYIV).strftime("%Y-%m-%d")
 
     candidates, totals, links, rep = [], {}, {}, {"first_run": first, "sources": {}}
+    refreshed_all = []
     errors = st.setdefault("errors", {})
+    try:
+        backfill = archive is not None and archive.count(s["id"]) == 0
+    except Exception:
+        backfill = False
     for name in s.get("sources") or ["lun", "dimria"]:
         mod = SOURCES[name]
         src_first = name not in inited
         try:
-            new, total, link, also_seen = mod.fetch(s, seen, usd_uah, src_first)
+            new, total, link, also_seen, refreshed = mod.fetch(s, seen, usd_uah, src_first, backfill=backfill)
             errors[name] = 0
         except Exception as e:
             errors[name] = errors.get(name, 0) + 1
@@ -92,6 +97,7 @@ def run_search(s, st, tg, settings, report):
             passed += 1
             l.initial = src_first
             candidates.append(l)
+        refreshed_all += [l for l in refreshed if passes(l, s)[0]]
         rep["sources"][name] = {"total": total, "new": len(new), "passed": passed,
                                 "filtered": reasons, "first_run": src_first}
 
@@ -108,6 +114,15 @@ def run_search(s, st, tg, settings, report):
         fresh.append(l)
     fresh.sort(key=lambda x: x.published or "", reverse=True)
 
+    # архів + історія цін (лише в боті; GitHub-монітор працює без архіву)
+    drops = []
+    if archive is not None:
+        try:
+            drops = archive.record(s["id"], fresh + refreshed_all)
+            rep["archived"] = len(fresh) + len(refreshed_all)
+        except Exception:
+            log.exception("%s: не вдалося записати архів", s["id"])
+
     # «стартові» (з джерел, що запустились уперше) — лише кілька найновіших; справді нові — всі до ліміту
     initial = [l for l in fresh if l.initial][: int(settings.get("first_run_send", 10))]
     really_new = [l for l in fresh if not l.initial]
@@ -121,6 +136,15 @@ def run_search(s, st, tg, settings, report):
                 f"Показую {len(initial)} найновіших, що пройшли фільтри; далі пишу лише про нові.")
     for l in initial + really_new[:limit]:
         tg.listing(l, s["name"])
+    for l, old_usd, old_uah in drops[:10]:
+        if l.currency == "uah":
+            was, now_ = f"₴{old_uah:,}", f"₴{l.price_uah:,}"
+        else:
+            was, now_ = f"${old_usd:,}", f"${l.price_usd:,}"
+        tg.text(f"📉 <b>Ціна знизилась</b> · {esc(s['name'])}\n"
+                f"{was.replace(',', ' ')} → <b>{now_.replace(',', ' ')}</b>\n"
+                f"{esc(l.geo or l.street)} · {l.rooms or '?'}к · {l.area or '?'} м²\n"
+                f'<a href="{esc(l.url)}">відкрити на {esc(l.origin)}</a>')
     if len(really_new) > limit:
         tg.text(f"…і ще {len(really_new) - limit} нових у «{esc(s['name'])}». "
                 + " ".join(f'<a href="{esc(u)}">{k}</a>' for k, u in links.items() if u))
