@@ -101,7 +101,7 @@ class Telegram:
         if self.dry:
             return
         self._call("sendMessage", {"chat_id": self.chat_id, "text": text, "parse_mode": "HTML",
-                                   "disable_web_page_preview": True})
+                                   "link_preview_options": {"is_disabled": True}})
         self.sent += 1
         time.sleep(1.1)
 
@@ -119,7 +119,7 @@ class Telegram:
                 raise RuntimeError("no photo")
         except Exception:
             self._call("sendMessage", {"chat_id": self.chat_id, "text": cap, "parse_mode": "HTML",
-                                       "reply_markup": btn, "disable_web_page_preview": True})
+                                       "reply_markup": btn, "link_preview_options": {"is_disabled": True}})
         self.sent += 1
         time.sleep(1.1)
 

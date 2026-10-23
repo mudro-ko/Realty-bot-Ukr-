@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from logging.handlers import RotatingFileHandler
 
 import yaml
-from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, LinkPreviewOptions,
                       ReplyKeyboardMarkup, Update)
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
@@ -61,6 +61,7 @@ SETTINGS = {
 }
 
 log = logging.getLogger("bot")
+NO_PREVIEW = LinkPreviewOptions(is_disabled=True)
 
 
 def setup_logging():
@@ -274,7 +275,7 @@ async def deliver(app: Application, chat_id: int, outbox: list) -> int:
         try:
             if m["type"] == "text":
                 await app.bot.send_message(chat_id, m["text"], parse_mode=ParseMode.HTML,
-                                           disable_web_page_preview=True)
+                                           link_preview_options=NO_PREVIEW)
             else:
                 btn = InlineKeyboardMarkup([[InlineKeyboardButton(f"Відкрити на {m.get('origin') or 'сайті'}",
                                                                   url=m["url"])]])
@@ -285,7 +286,7 @@ async def deliver(app: Application, chat_id: int, outbox: list) -> int:
                                              parse_mode=ParseMode.HTML, reply_markup=btn)
                 except TelegramError:
                     await app.bot.send_message(chat_id, m["caption"], parse_mode=ParseMode.HTML,
-                                               reply_markup=btn, disable_web_page_preview=True)
+                                               reply_markup=btn, link_preview_options=NO_PREVIEW)
                 sent += 1
         except TelegramError as e:
             log.warning("Не вдалося надіслати: %s", e)
@@ -671,9 +672,18 @@ def main():
     if not BOT_TOKEN or "ВСТАВ" in BOT_TOKEN:
         print("❌ Немає токена. Впиши BOT_TOKEN=... у файл .env поруч із ботом і запусти ще раз.")
         raise SystemExit(2)      # код 2: start.bat не перезапускає бот у циклі
-    app = build_app(BOT_TOKEN)
-    log.info("Бот v4 запущено. Дані: %s", DATA_DIR)
-    app.run_polling(drop_pending_updates=True)
+    import sys
+    import telegram
+    log.info("Бот v4 запущено. Python %s, python-telegram-bot %s. Дані: %s",
+             sys.version.split()[0], telegram.__version__, DATA_DIR)
+    # Python 3.14 сам не створює цикл подій — створюємо явно
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    try:
+        app = build_app(BOT_TOKEN)
+        app.run_polling(drop_pending_updates=True)
+    except Exception:
+        log.exception("Бот впав")
+        raise
 
 
 if __name__ == "__main__":
