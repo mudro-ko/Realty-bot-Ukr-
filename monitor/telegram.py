@@ -49,8 +49,16 @@ def listing_caption(l: Listing, search_name: str) -> str:
         ref = (f"${round(l.market_ref):,}/м²" if l.price_usd and l.area and l.currency != "uah" and l.market_ref < 20000
                else f"₴{round(l.market_ref):,}").replace(",", " ")
         p = l.market_pct
-        tag = (f"📉 <b>на {-p}% дешевше ринку</b>" if p <= -5 else f"📈 на {p}% дорожче ринку" if p >= 5
-               else "≈ на рівні ринку")
+        if p <= -40:
+            tag = f"⚠️ <b>на {-p}% дешевше ринку</b> — підозріло дешево, перевір площу/ціну"
+        elif p <= -10:
+            tag = f"📉 <b>на {-p}% дешевше ринку</b>"
+        elif p < 0:
+            tag = f"📉 на {-p}% дешевше ринку"
+        elif p == 0:
+            tag = "≈ на рівні ринку"
+        else:
+            tag = f"📈 на {p}% дорожче ринку"
         parts.append(f"{tag} · медіана {esc(l.market_label)}: {ref} ({l.market_n})")
     src = l.source if l.origin in ("dom.ria.com", "lun.ua") else f"{l.origin} через {l.source}"
     footer = f"🔗 {esc(src)}" + (f" · {esc(l.published)}" if l.published else "")
