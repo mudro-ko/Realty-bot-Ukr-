@@ -38,6 +38,7 @@ from monitor.telegram import Telegram as Collector, esc
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "data")
+REPORTS_DIR = os.path.join(HERE, "Звіти")
 os.makedirs(DATA_DIR, exist_ok=True)
 KYIV = timezone(timedelta(hours=3))
 
@@ -650,19 +651,33 @@ async def finish(src, ctx):
     editing = ctx.user_data.pop("edit", False)
     s["name"] = auto_name(s)
     s["next_due"] = 0
+    s["v"] = SCHEMA_V
     with db.lock:
         lst = db.searches(chat_id)
         if editing:
+            old = next((x for x in lst if x["id"] == s["id"]), None)
             for i, x in enumerate(lst):
                 if x["id"] == s["id"]:
                     lst[i] = s
                     break
             else:
                 lst.append(s)
+            # нові фільтри → переглядаємо все заново; вже надіслане не повторюємо
+            st = db.chat(chat_id)["state"].get(s["id"], {})
+            keep = {"sent": st.get("sent", {})}
+            if old and district_codes(old) == district_codes(s) and old.get("city") == s.get("city"):
+                keep["learned_micro"] = st.get("learned_micro", [])
+                keep["ria_learned"] = st.get("ria_learned", {})
+            db.chat(chat_id)["state"][s["id"]] = keep
         else:
             lst.append(s)
     db.save()
-    tail = ("✅ Оновлено. Перевірю з новими параметрами (уже надіслане не повторюватиму)."
+    if editing:
+        try:
+            ctx.bot_data["archive"].clear(s["id"])
+        except Exception:
+            log.exception("Не вдалося очистити архів %s", s["id"])
+    tail = ("✅ Оновлено. Переглядаю все заново з новими фільтрами (уже надіслане не повторюватиму)."
             if editing else "✅ Збережено. Зараз покажу найновіші, далі — лише нові.")
     await msg.reply_text(summary(s) + "\n\n" + tail, parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
     asyncio.create_task(check_search(ctx.application, chat_id, s["id"], manual=True))
@@ -785,6 +800,7 @@ async def cb_preset(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     s.setdefault("sources", ["lun", "dimria"])
     s.setdefault("interval", 30)
     s["next_due"] = 0
+    s["v"] = SCHEMA_V
     with db.lock:
         db.searches(q.message.chat_id).append(s)
     db.save()
@@ -804,7 +820,8 @@ async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
     await update.effective_message.reply_text("⏳ Формую звіт…")
     stamp = datetime.now(KYIV).strftime("%Y-%m-%d_%H%M")
-    out_dir = os.path.dirname(db.path)
+    out_dir = REPORTS_DIR if db.path.startswith(DATA_DIR) else os.path.dirname(db.path)
+    os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"Звіт_нерухомість_{stamp}.xlsx")
     try:
         stats = await asyncio.to_thread(build_report, ctx.bot_data["archive"], searches, path)
@@ -818,18 +835,35 @@ async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "(можна натиснути «🔍 Перевірити зараз» у пошуку).")
         return
     lines = [f"• {esc(k)}: {v}" for k, v in stats.items()]
+    ctx.bot_data["last_report"] = path
+    markup = kb([[("📂 Відкрити на комп'ютері", "openrep")]]) if os.name == "nt" else None
     with open(path, "rb") as f:
         await update.effective_message.reply_document(
             f, filename=os.path.basename(path),
-            caption="📊 Звіт: аркуш «Аналітика» + окремий аркуш з посиланнями на кожен пошук.\n" + "\n".join(lines),
-            parse_mode=ParseMode.HTML)
-    # тримаємо лише 5 останніх звітів
-    old = sorted(f for f in os.listdir(out_dir) if f.startswith("Звіт_нерухомість_"))[:-5]
+            caption="📊 Звіт: аркуш «Аналітика» + окремий аркуш з посиланнями на кожен пошук.\n"
+                    + "\n".join(lines) + f"\n\n💾 Збережено: <code>{esc(path)}</code>",
+            parse_mode=ParseMode.HTML, reply_markup=markup)
+    # тримаємо 30 останніх звітів
+    old = sorted(f for f in os.listdir(out_dir) if f.startswith("Звіт_нерухомість_"))[:-30]
     for f in old:
         try:
             os.remove(os.path.join(out_dir, f))
         except OSError:
             pass
+
+
+@guard
+async def cb_open_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    path = ctx.bot_data.get("last_report")
+    if not path or not os.path.exists(path):
+        await q.answer("Файл не знайдено — сформуй звіт ще раз", show_alert=True)
+        return
+    try:
+        os.startfile(path)          # відкриває в Excel на цьому комп'ютері
+        await q.answer("Відкриваю на комп'ютері")
+    except Exception as e:
+        await q.answer(f"Не вдалося відкрити: {e}"[:190], show_alert=True)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -873,6 +907,31 @@ async def on_error(update, ctx: ContextTypes.DEFAULT_TYPE):
     log.error("Помилка обробника: %s", ctx.error, exc_info=ctx.error)
 
 
+SCHEMA_V = 2
+
+
+def migrate(db: DB, archive: Archive):
+    """Пошуки, створені старою версією, тихо переглядаємо заново з новою логікою."""
+    changed = False
+    with db.lock:
+        for cid, chat in db.data["chats"].items():
+            for s in chat["searches"]:
+                if s.get("v", 1) >= SCHEMA_V:
+                    continue
+                st = chat["state"].get(s["id"], {})
+                chat["state"][s["id"]] = {"sent": st.get("sent", {}), "quiet_initial": True,
+                                          "learned_micro": st.get("learned_micro", []),
+                                          "ria_learned": st.get("ria_learned", {})}
+                try:
+                    archive.clear(s["id"])
+                except Exception:
+                    pass
+                s["v"], s["next_due"], changed = SCHEMA_V, 0, True
+                log.info("Міграція пошуку %s на v%d", s["id"], SCHEMA_V)
+    if changed:
+        db.save()
+
+
 def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     b = Application.builder().token(token)
     for k, v in builder_kw.items():
@@ -880,6 +939,7 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     app = b.build()
     app.bot_data["db"] = db or DB()
     app.bot_data["archive"] = Archive(os.path.join(os.path.dirname(app.bot_data["db"].path), "listings.db"))
+    migrate(app.bot_data["db"], app.bot_data["archive"])
 
     conv = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^➕ Новий пошук$"), new_search),
@@ -911,6 +971,7 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     app.add_handler(MessageHandler(filters.Regex("^📋 Мої пошуки$"), my_searches))
     app.add_handler(MessageHandler(filters.Regex("^❓ Допомога$"), cmd_help))
     app.add_handler(CommandHandler("report", cmd_report))
+    app.add_handler(CallbackQueryHandler(cb_open_report, pattern=r"^openrep$"))
     app.add_handler(MessageHandler(filters.Regex("^📊 Звіт$"), cmd_report))
     app.add_handler(CallbackQueryHandler(cb_preset, pattern=r"^pre:"))
     app.add_handler(CallbackQueryHandler(cb_manage, pattern=r"^(chk|pau|res|frq|frqset|del|delok|delno):"))

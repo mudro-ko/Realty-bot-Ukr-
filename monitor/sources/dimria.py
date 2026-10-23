@@ -14,7 +14,7 @@ USD = 239            # код валюти USD у характеристиці 2
 NO_RENOVATION = {511, 512, 513}   # характеристика 516 «стан»: варіанти «без ремонту»
 
 
-def search_params(s: dict, usd_uah: float, limit: int):
+def search_params(s: dict, usd_uah: float, limit: int, district_ids=None):
     state_id, city_id = CITY[s["city"]]
     p = [("category", 1), ("realty_type", 2), ("operation", OPERATION[s["deal"]]),
          ("state_id", state_id), ("city_id", city_id), ("wo_dupl", 1),
@@ -30,7 +30,8 @@ def search_params(s: dict, usd_uah: float, limit: int):
             p.append(("characteristic[234][from]", int(lo * 0.9)))
         if hi:
             p.append(("characteristic[234][to]", int(hi * 1.1)))
-    for i, did in enumerate(s.get("_district", {}).get("ria_ids", [])):
+    ids = s.get("_district", {}).get("ria_ids", []) if district_ids is None else district_ids
+    for i, did in enumerate(ids):
         p.append((f"district_id[{i}]", did))
     return p
 
@@ -77,41 +78,77 @@ def to_listing(d: dict):
         published=(d.get("publishing_date") or "")[:16],
         without_renovation=(cond in NO_RENOVATION) if cond else None,
         agency=True if (d.get("agencyVerified") or d.get("realtorVerified") or d.get("agency_id")) else None,
+        district_name=d.get("district_name_uk") or "",
+        district_id=d.get("district_id"),
         extra_keys=[],
     ), (d.get("district_name_uk") or "")
 
 
-def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, details_cap: int = 25):
+def _details(rid):
+    d = get(DATA.format(id=rid), params={"lang_id": 4}, pause=0.8).json()
+    return to_listing(d)
+
+
+def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, details_cap: int = None):
     """Повертає (нові, загальна_кількість, посилання, додаткові_бачені_ключі, оновлені_вже_бачені).
 
-    backfill=True — архів для пошуку порожній: тягнемо деталі й для вже бачених ID, щоб його заповнити.
+    Район: якщо відомі ID районів/мікрорайонів (вбудовані або вивчені) — фільтруємо на сайті.
+    Для адмінрайонів додатково переглядаємо найновіші по місту, щоб знаходити нові мікрорайони
+    (знайдені ID записуються в s["_district"]["ria_learned"]).
+    backfill=True — архів порожній: тягнемо деталі й для вже бачених, щоб його заповнити.
     """
     if s["city"] not in CITY or s["deal"] not in OPERATION:
         return [], 0, "", [], []
-    data = get(SEARCH, params=search_params(s, usd_uah, limit=60 if (first_run or backfill) else 40)).json()
-    ids, total = data.get("items") or [], data.get("count") or 0
-    unseen = [i for i in ids if f"ria:{i}" not in seen]
-    log.info("DIM.RIA %s: ID %d, нових %d, всього %d", s["id"], len(ids), len(unseen), total)
+    dist = s.get("_district") or {}
+    wanted = dist.get("names")
+    learned = dist.setdefault("ria_learned", {})          # назва → ID
+    ids_known = sorted(set(dist.get("ria_ids", [])) | set(learned.values()))
+    deep = first_run or backfill
+    cap = details_cap or (60 if deep else 25)
+
+    queries = []
+    if not wanted:
+        queries.append((None, 100 if deep else 40))           # без району: усе місто
+    else:
+        if ids_known:
+            queries.append((ids_known, 100 if deep else 40))  # точний запит по відомих районах
+        if dist.get("admin") or not ids_known:
+            queries.append(([], 60 if deep else 30))          # розвідка по місту
+
+    total, ordered, kinds = 0, [], {}
+    for ids, limit in queries:
+        data = get(SEARCH, params=search_params(s, usd_uah, limit=limit, district_ids=ids)).json()
+        if ids is None or ids:
+            total = max(total, data.get("count") or 0)
+        for i in data.get("items") or []:
+            if i not in kinds:
+                kinds[i] = "exact" if ids else "scan"
+                ordered.append(i)
+    unseen = [i for i in ordered if f"ria:{i}" not in seen]
+    log.info("DIM.RIA %s: ID %d, нових %d, відомих районів %d, всього %d",
+             s["id"], len(ordered), len(unseen), len(ids_known), total)
 
     targets = [(i, True) for i in unseen]
     if backfill:
-        targets += [(i, False) for i in ids if f"ria:{i}" in seen]
+        targets += [(i, False) for i in ordered if f"ria:{i}" in seen]
     new, refreshed, skipped_ids = [], [], []
-    wanted = s.get("_district", {}).get("names")
     for n, (rid, is_new) in enumerate(targets):
-        if n >= details_cap:
+        if n >= cap:
             if is_new:
-                skipped_ids.append(f"ria:{rid}")   # при першому запуску решту просто позначаємо баченими
+                skipped_ids.append(f"ria:{rid}")
             continue
         try:
-            d = get(DATA.format(id=rid), params={"lang_id": 4}, pause=0.8).json()
-            l, district = to_listing(d)
+            l, district = _details(rid)
         except Exception as e:
             log.warning("DIM.RIA деталі %s: %s", rid, e)
             continue
-        if wanted and not district_match(district, wanted):
+        if wanted and kinds.get(rid) != "exact" and not district_match(district, wanted):
             if is_new:
                 skipped_ids.append(l.key)
             continue
+        if wanted and l.district_id and district:
+            learned.setdefault(district, l.district_id)
         (new if is_new else refreshed).append(l)
+    if not total:
+        total = len(ordered)
     return new, total, "https://dom.ria.com/uk/", skipped_ids, refreshed

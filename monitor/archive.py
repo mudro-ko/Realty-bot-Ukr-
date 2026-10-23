@@ -90,6 +90,11 @@ class Archive:
                         drops.append((l, old_usd, old_uah))
         return drops
 
+    def clear(self, search_id):
+        with self.lock, self.connect() as c:
+            c.execute("DELETE FROM listings WHERE search_id=?", (search_id,))
+            c.execute("DELETE FROM prices WHERE search_id=?", (search_id,))
+
     def rows(self, search_id=None):
         q = "SELECT * FROM listings" + (" WHERE search_id=?" if search_id else "") + " ORDER BY first_seen DESC"
         with self.connect() as c:

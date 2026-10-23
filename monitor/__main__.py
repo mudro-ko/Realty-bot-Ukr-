@@ -62,6 +62,9 @@ def run_search(s, st, tg, settings, report, archive=None):
     learned = st.setdefault("learned_micro", [])
     if s["_district"].get("admin"):
         s["_district"]["names"] += learned
+    if s["_district"]:
+        s["_district"]["ria_learned"] = st.setdefault("ria_learned", {})   # назва мікрорайону → ID на DIM.RIA
+    sent = st.setdefault("sent", {})
     today = datetime.now(KYIV).strftime("%Y-%m-%d")
 
     candidates, totals, links, rep = [], {}, {}, {"first_run": first, "sources": {}}
@@ -115,7 +118,7 @@ def run_search(s, st, tg, settings, report, archive=None):
     fresh = []
     for l in candidates:
         fp = fingerprint(l)
-        if any(k in groups for k in l.extra_keys) or (fp and fp in fps):
+        if l.key in sent or (fp and f"fp:{fp}" in sent) or any(k in groups for k in l.extra_keys) or (fp and fp in fps):
             continue
         if fp:
             fps[fp] = today
@@ -139,13 +142,33 @@ def run_search(s, st, tg, settings, report, archive=None):
     limit = int(settings.get("max_per_search", 15))
     rep["to_send"] = len(initial) + min(limit, len(really_new))
 
-    if first and (totals or initial):
-        tot = " + ".join(f"{k}: {v}" for k, v in totals.items())
+    quiet = bool(st.get("quiet_initial")) and first
+    if quiet:
+        initial = []
+        rep["to_send"] = min(limit, len(really_new))
+    if first and totals:
+        st.pop("quiet_initial", None)
+    if quiet and totals:
+        n_init = len([l for l in fresh if l.initial])
+        tg.text(f"♻️ Оновив пошук «<b>{esc(s['name'])}</b>» новою логікою: переглянув заново глибше, "
+                f"твої фільтри пройшли <b>{n_init}</b> оголошень — усі в «📊 Звіт». Далі пишу лише про нові.")
+    elif first and (totals or initial):
+        n_init = len([l for l in fresh if l.initial])
+        parts = []
+        if "lun" in totals:
+            parts.append(f"ЛУН: {totals['lun']} за кімнатами/ціною/районом")
+        if "dimria" in totals:
+            parts.append(f"DIM.RIA: {totals['dimria']}")
+        archive_note = " Усі — у «📊 Звіт»." if archive is not None else ""
         tg.text(f"🔎 Запустив моніторинг «<b>{esc(s['name'])}</b>».\n"
-                f"Актуальних зараз: {tot or '—'} (до фільтрів).\n"
-                f"Показую {len(initial)} найновіших, що пройшли фільтри; далі пишу лише про нові.")
+                f"На сайтах зараз: {'; '.join(parts) or '—'}.\n"
+                f"Переглянув найновіші, твої фільтри пройшли <b>{n_init}</b>. "
+                f"Надсилаю {len(initial)} найсвіжіших.{archive_note} Далі пишу лише про нові.")
     for l in initial + really_new[:limit]:
         tg.listing(l, s["name"])
+        sent[l.key] = today
+        if fingerprint(l):
+            sent[f"fp:{fingerprint(l)}"] = today
     for l, old_usd, old_uah in drops[:10]:
         if l.currency == "uah":
             was, now_ = f"₴{old_uah:,}", f"₴{l.price_uah:,}"
@@ -162,7 +185,7 @@ def run_search(s, st, tg, settings, report, archive=None):
     if totals:
         st["initialized"] = True
     st["last_run"] = now_iso()
-    prune(seen); prune(fps); prune(groups)
+    prune(seen); prune(fps); prune(groups); prune(sent)
     report[s["id"]] = rep
 
 

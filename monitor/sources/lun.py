@@ -42,6 +42,15 @@ def build_url(s: dict, page: int, slug: str = None) -> str:
     if slug:
         path += f"-{slug}"
     q = [("room_count", str(r)) for r in s.get("rooms") or []]
+    # ціна на стороні ЛУН: валюта ОБОВ'ЯЗКОВО великими літерами (USD/UAH), інакше сторінка порожня
+    field, cur = ("price_usd", "USD") if s["deal"] == "sale" else ("price_uah", "UAH")
+    rng = s.get(field) or {}
+    if rng.get("min") or rng.get("max"):
+        q.append(("currency", cur))
+        if rng.get("min"):
+            q.append(("price_min", str(int(rng["min"]))))
+        if rng.get("max"):
+            q.append(("price_max", str(int(rng["max"]))))
     q.append(("sort", "insert_time"))
     if page > 1:
         q.append(("page", str(page)))
@@ -139,12 +148,15 @@ def to_listing(c: dict, usd_uah: float) -> Listing:
     )
 
 
-def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, max_pages: int = 3):
+def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, backfill: bool = False, max_pages: int = None):
     """Повертає (нові, загальна_кількість, посилання, додаткові_бачені_ключі, оновлені_вже_бачені).
     Кілька районів — окрема сторінка ЛУН на кожен."""
     if s["deal"] not in SECTION and not s.get("lun_url"):
         return [], 0, "", [], []
     slugs = [None] if s.get("lun_url") else ((s.get("_district") or {}).get("lun_slugs") or [None])
+    if max_pages is None:
+        # перший запуск / після зміни пошуку — глибоко (у звіт), далі — лише свіжі сторінки
+        max_pages = 10 if (first_run or backfill) else 3
     new, refreshed, total, keys = [], [], 0, set()
     for slug in slugs:
         n, t, r = _fetch_one(s, seen, usd_uah, first_run, backfill, max_pages, slug)
