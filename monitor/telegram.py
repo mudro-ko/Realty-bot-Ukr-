@@ -21,7 +21,7 @@ def fmt_money(v, sym):
 
 def listing_caption(l: Listing, search_name: str) -> str:
     if l.currency == "uah":
-        price = fmt_money(l.price_uah, "₴") + (f"  (~{fmt_money(l.price_usd, '$')})" if l.price_usd else "")
+        price = fmt_money(l.price_uah, "₴")
     else:
         price = fmt_money(l.price_usd, "$")
     per_m = f" · {fmt_money(round(l.price_usd / l.area), '$')}/м²" if l.price_usd and l.area and l.currency != "uah" else ""
