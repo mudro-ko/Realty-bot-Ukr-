@@ -1,6 +1,3 @@
-python-telegram-bot
-requests
-beautifulsoup4
-lxml
-pandas
-openpyxl
+python-telegram-bot[job-queue]>=21.6,<22
+requests>=2.31
+PyYAML>=6.0

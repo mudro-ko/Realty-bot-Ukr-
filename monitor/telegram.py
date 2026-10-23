@@ -108,7 +108,7 @@ class Telegram:
     def listing(self, l: Listing, search_name: str):
         cap = listing_caption(l, search_name)
         btn = {"inline_keyboard": [[{"text": f"Відкрити на {l.origin}", "url": l.url}]]}
-        self.outbox.append({"type": "listing", "caption": cap, "url": l.url, "photo": l.photo})
+        self.outbox.append({"type": "listing", "caption": cap, "url": l.url, "photo": l.photo, "origin": l.origin})
         if self.dry:
             return
         try:

@@ -1,1107 +1,678 @@
 """
-Telegram-бот пошуку нерухомості UA v3.0
-========================================
-pip install python-telegram-bot requests beautifulsoup4 lxml
-BOT_TOKEN=ВАШ_ТОКЕН python realty_bot.py
+Telegram-бот пошуку нерухомості UA v4.0
+=======================================
+Кнопки й діалоги, як у v3, але:
+  • робочі джерела: ЛУН (у т.ч. оголошення з OLX і rieltor.ua) + DIM.RIA
+  • пошуки й «бачені» оголошення зберігаються у файлі data/db.json (не губляться після перезапуску)
+  • перевірка за розкладом усередині бота, нові оголошення приходять самі
+  • ботом користується лише власник (той, хто першим натиснув /start)
+
+Запуск на Windows: start.bat.  Вручну:  pip install -r requirements-bot.txt && python realty_bot.py
+Налаштування у файлі .env (див. .env.example).
 """
-
-import os, re, time, logging, asyncio, uuid
-from dataclasses import dataclass, field
-from typing import Optional
-import requests
-from bs4 import BeautifulSoup
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler,
-    MessageHandler, ContextTypes, filters, ConversationHandler
-)
+import asyncio
+import copy
+import json
+import logging
+import os
+import re
 import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import time
+import uuid
+from datetime import datetime, timedelta, timezone
+from logging.handlers import RotatingFileHandler
 
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
-    def log_message(self, *args):
-        pass
+import yaml
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
+                      ReplyKeyboardMarkup, Update)
+from telegram.constants import ParseMode
+from telegram.error import TelegramError
+from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
+                          ConversationHandler, MessageHandler, filters)
 
-def run_health():
-    HTTPServer(("0.0.0.0", 10000), HealthHandler).serve_forever()
+from monitor.__main__ import run_search
+from monitor.filters import DISTRICTS
+from monitor.telegram import Telegram as Collector, esc
 
-threading.Thread(target=run_health, daemon=True).start()
-logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
-log = logging.getLogger(__name__)
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "ВСТАВЬТЕ_ТОКЕН_СЮДА")
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(HERE, "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+KYIV = timezone(timedelta(hours=3))
 
-# ── Стани діалогу ─────────────────────────────────────────────
-(S_DEAL, S_PROP, S_CITY, S_DISTRICT, S_ROOMS, S_FLOORS,
- S_CURRENCY, S_PRICE_FROM, S_PRICE_TO, S_AREA_FROM, S_AREA_TO,
- S_CONDITION, S_KEYWORDS, S_NAME, S_MONITOR, S_MONITOR_FREQ,
- S_EDIT_CHOOSE, S_EDIT_FIELD, S_RENAME) = range(19)
+# ── .env ───────────────────────────────────────────────────────
+def load_env(path=os.path.join(HERE, ".env")):
+    if not os.path.exists(path):
+        return
+    for line in open(path, encoding="utf-8-sig"):
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+load_env()
+BOT_TOKEN = os.environ.get("BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+ALLOWED = {x.strip() for x in os.environ.get("ALLOWED_CHAT_IDS", "").split(",") if x.strip()}
+SETTINGS = {
+    "usd_uah": float(os.environ.get("USD_UAH", "41.5")),
+    "max_per_search": int(os.environ.get("MAX_PER_SEARCH", "15")),
+    "first_run_send": int(os.environ.get("FIRST_RUN_SEND", "10")),
+}
+
+log = logging.getLogger("bot")
+
+
+def setup_logging():
+    fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    fh = RotatingFileHandler(os.path.join(DATA_DIR, "bot.log"), maxBytes=2_000_000, backupCount=3, encoding="utf-8")
+    fh.setFormatter(fmt)
+    sh = logging.StreamHandler()
+    sh.setFormatter(fmt)
+    root.handlers[:] = [fh, sh]
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+# ── Сховище ────────────────────────────────────────────────────
+class DB:
+    """Один JSON-файл: власник, пошуки й стан кожного чату. Запис атомарний."""
+
+    def __init__(self, path=os.path.join(DATA_DIR, "db.json")):
+        self.path = path
+        self.lock = threading.RLock()
+        self.data = {"owner": None, "chats": {}}
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                self.data = json.load(f)
+        self.data.setdefault("chats", {})
+
+    def save(self):
+        with self.lock:
+            tmp = self.path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, ensure_ascii=False)
+            os.replace(tmp, self.path)
+
+    def chat(self, chat_id) -> dict:
+        with self.lock:
+            return self.data["chats"].setdefault(str(chat_id), {"searches": [], "state": {}})
+
+    def searches(self, chat_id) -> list:
+        return self.chat(chat_id)["searches"]
+
+    def get(self, chat_id, sid):
+        return next((s for s in self.searches(chat_id) if s["id"] == sid), None)
+
+    def delete(self, chat_id, sid):
+        with self.lock:
+            c = self.chat(chat_id)
+            c["searches"] = [s for s in c["searches"] if s["id"] != sid]
+            c["state"].pop(sid, None)
+        self.save()
+
 
 # ── Довідники ──────────────────────────────────────────────────
-DEAL_TYPES = {"🏷 Купівля": "buy", "🔑 Оренда довгострокова": "rent", "📅 Подобова оренда": "daily"}
-PROP_TYPES = {"🏢 Квартира": "flat", "🏡 Будинок": "house"}
-
-CITIES = {
-    "Київ":   {"olx": "kiev",    "domria": 1},
-    "Одеса":  {"olx": "odesa",   "domria": 12},
-    "Львів":  {"olx": "lviv",    "domria": 14},
-    "Харків": {"olx": "kharkiv", "domria": 10},
-    "Дніпро": {"olx": "dnipro",  "domria": 4},
+DEALS = {"sale": "🏷 Купівля", "rent": "🔑 Оренда довгострокова", "daily": "📅 Подобово"}
+DEAL_SHORT = {"sale": "продаж", "rent": "оренда", "daily": "подобово"}
+CITIES = {"odesa": "Одеса", "mykolaiv": "Миколаїв", "kyiv": "Київ"}
+DISTRICT_NAMES = {
+    "lisky": "Ліски", "prymorskyi": "Приморський", "kyivskyi": "Київський",
+    "khadzhybeiskyi": "Хаджибейський", "tsentr": "Центр", "arkadiia": "Аркадія",
+    "serednii-fontan": "Середній Фонтан", "malyi-fontan": "Малий Фонтан",
 }
-
-DISTRICTS = {
-    "Київ":   ["Печерськ","Шевченківський","Оболонь","Подол","Позняки","Осокорки","Троєщина","Голосіїв","Будь-який"],
-    "Одеса":  ["Приморський","Малиновський","Київський","Суворовський","Центр","Аркадія","Таїрово","Будь-який"],
-    "Львів":  ["Центр","Сихів","Франківський","Залізничний","Личаківський","Шевченківський","Будь-який"],
-    "Харків": ["Центр","Салтівка","ХТЗ","Олексіївка","Холодна Гора","Немишля","Будь-який"],
-    "Дніпро": ["Центр","Амур-Нижньодніпровський","Індустріальний","Самарський","Соборний","Будь-який"],
+BUDGETS = {
+    "sale": ("USD", [20000, 30000, 40000, 50000, 70000, 100000, 150000]),
+    "rent": ("UAH", [8000, 10000, 12000, 15000, 20000, 25000, 30000]),
+    "daily": ("UAH", [800, 1200, 1500, 2000, 3000]),
 }
-
-CONDITIONS_BUY   = {"🏗 Без ремонту":"без ремонту","🖌 Косметичний":"косметичний ремонт",
-                    "✨ Авторський":"авторський ремонт","🏢 Від забудовника":"від забудовника","🔄 Будь-який":""}
-CONDITIONS_RENT  = {"🏗 Без ремонту":"без ремонту","🖌 Косметичний":"косметичний ремонт",
-                    "✨ Авторський":"авторський ремонт","🔄 Будь-який":""}
-
-PRICE_OPTS = {
-    "buy":   {"USD":["10 000","30 000","50 000","80 000","100 000","150 000","200 000","Без обмеження"],
-              "UAH":["500 000","1 000 000","2 000 000","3 000 000","5 000 000","8 000 000","Без обмеження"]},
-    "rent":  {"UAH":["3 000","5 000","8 000","12 000","15 000","20 000","30 000","Без обмеження"],
-              "USD":["100","200","400","600","800","1 000","1 500","Без обмеження"]},
-    "daily": {"UAH":["500","800","1 200","2 000","3 000","5 000","Без обмеження"],
-              "USD":["20","40","60","100","150","200","Без обмеження"]},
+CONDITIONS = {
+    "any": "🔄 Будь-який",
+    "needs_repair": "🔨 Тільки під ремонт",
+    "needs_repair_or_cosmetic": "🖌 Під ремонт або косметика",
+    "renovated": "✨ Тільки з ремонтом",
 }
+INTERVALS = {15: "15 хв", 30: "30 хв", 60: "1 год", 180: "3 год", 360: "6 год"}
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-MAX_SEARCHES = 3
-FREQ_MAP = {"30 хв":30,"1 год":60,"2 год":120,"6 год":360,"12 год":720,"24 год":1440}
+(S_DEAL, S_CITY, S_DISTRICT, S_ROOMS, S_BUDGET, S_CONDITION, S_STOP) = range(7)
 
-
-# ── Моделі ────────────────────────────────────────────────────
-@dataclass
-class SearchParams:
-    id: str = ""
-    name: str = ""
-    deal: str = "buy"        # buy | rent | daily
-    prop: str = "flat"       # flat | house
-    city: str = ""
-    district: str = ""
-    rooms: str = ""
-    floors: str = ""         # тільки для будинку
-    currency: str = "USD"
-    price_from: int = 0
-    price_to: int = 0
-    area_from: int = 0
-    area_to: int = 0
-    conditions: list = field(default_factory=list)
-    keywords: list = field(default_factory=list)
-    monitor: bool = False
-    monitor_freq: int = 60
-    paused: bool = False
-    seen_ids: list = field(default_factory=list)
-
-    def auto_name(self) -> str:
-        symbol = "$" if self.currency == "USD" else "₴"
-        deal_emoji = {"buy":"🏷","rent":"🔑","daily":"📅"}.get(self.deal,"")
-        prop_emoji = "🏢" if self.prop == "flat" else "🏡"
-        price = f" до {symbol}{self.price_to:,}".replace(",","") if self.price_to else ""
-        return f"{deal_emoji}{prop_emoji} {self.city} {self.rooms}к{price}"
-
-    def summary(self) -> str:
-        symbol = "$" if self.currency == "USD" else "₴"
-        deal_name = {"buy":"Купівля","rent":"Оренда","daily":"Подобова"}.get(self.deal,"")
-        prop_name = "Квартира" if self.prop == "flat" else "Будинок"
-        pf = f"{symbol}{self.price_from:,}".replace(",","") if self.price_from else "—"
-        pt = f"{symbol}{self.price_to:,}".replace(",","") if self.price_to else "—"
-        af = f"{self.area_from} м²" if self.area_from else "—"
-        at = f"{self.area_to} м²"   if self.area_to   else "—"
-        lines = [
-            f"📋 *{self.name}*",
-            f"🏷 {deal_name} | {prop_name}",
-            f"📍 {self.city}" + (f", {self.district}" if self.district else ""),
-            f"🛏 {self.rooms} кімн." + (f" | 🏠 {self.floors} пов." if self.floors and self.floors != "Будь-яка" else ""),
-            f"💰 {pf} – {pt}",
-            f"📐 {af} – {at}",
-        ]
-        if self.conditions:
-            lines.append(f"🛠 {', '.join(self.conditions)}")
-        if self.keywords:
-            lines.append(f"🔑 {', '.join(self.keywords)}")
-        if self.monitor:
-            freq_str = next((k for k,v in FREQ_MAP.items() if v==self.monitor_freq), f"{self.monitor_freq}хв")
-            status = "⏸ пауза" if self.paused else "🟢 активний"
-            lines.append(f"🔔 Моніторинг кожні {freq_str} — {status}")
-        return "\n".join(lines)
-
-
-@dataclass
-class Listing:
-    source: str
-    title: str
-    price: str
-    price_num: int
-    area: str
-    rooms: str
-    floor: str
-    address: str
-    description: str
-    url: str
-    photo_url: str = ""
-
-
-# ── Сховище пошуків ────────────────────────────────────────────
-user_searches: dict[int, list[SearchParams]] = {}  # chat_id -> [SearchParams]
-
-def get_searches(chat_id: int) -> list[SearchParams]:
-    return user_searches.setdefault(chat_id, [])
-
-def save_search(chat_id: int, sp: SearchParams):
-    searches = get_searches(chat_id)
-    for i, s in enumerate(searches):
-        if s.id == sp.id:
-            searches[i] = sp
-            return
-    searches.append(sp)
-
-def delete_search(chat_id: int, search_id: str):
-    user_searches[chat_id] = [s for s in get_searches(chat_id) if s.id != search_id]
-
-def get_search(chat_id: int, search_id: str) -> Optional[SearchParams]:
-    return next((s for s in get_searches(chat_id) if s.id == search_id), None)
-
-
-# ── Парсери ────────────────────────────────────────────────────
-def parse_domria(sp: SearchParams, pages: int = 3) -> list:
-    results = []
-    city_id = CITIES[sp.city]["domria"]
-    room_map = {"1":1,"2":2,"3":3,"4+":4,"Будь-яка":0}
-    room_num = room_map.get(sp.rooms, 0)
-
-    # Тип операції
-    op_map = {"buy":1,"rent":3,"daily":4}
-    op = op_map.get(sp.deal, 1)
-    # Тип нерухомості
-    cat = 1 if sp.prop == "flat" else 4
-
-    for page in range(0, pages):
-        p = {"category": cat, "operation_type": op, "state_id": city_id,
-             "count": 20, "page": page, "lang_id": 4}
-        if room_num > 0:
-            p["rooms_count[]"] = room_num
-        if sp.price_from > 0:
-            p["price_from"] = sp.price_from if sp.currency == "USD" else sp.price_from // 40
-        if sp.price_to > 0:
-            p["price_to"] = sp.price_to if sp.currency == "USD" else sp.price_to // 40
-        if sp.area_from > 0:
-            p["square_from"] = sp.area_from
-        if sp.area_to > 0:
-            p["square_to"] = sp.area_to
-
-        try:
-            r = requests.get("https://developers.dom.ria.com/api/realty/search",
-                             params=p, headers=HEADERS, timeout=15)
-            data = r.json()
-        except Exception as e:
-            log.warning(f"DOM.RIA: {e}"); break
-
-        items = data.get("items", [])
-        if not items:
-            break
-
-        for item in items:
-            try:
-                price_usd = int(item.get("priceArr",{}).get("1",{}).get("$") or item.get("price") or 0)
-                price_uah = price_usd * 40
-                if sp.currency == "USD":
-                    price_str = f"${price_usd:,}".replace(",", " ")
-                    price_num = price_usd
-                else:
-                    price_str = f"₴{price_uah:,}".replace(",", " ")
-                    price_num = price_uah
-
-                area = item.get("generalSquare", "")
-                floor_str = f"{item.get('floor','')}/{item.get('floorsCount','')}" if item.get("floor") else "—"
-                addr = ", ".join(filter(None,[item.get("cityNameUk",""),item.get("districtNameUk",""),item.get("streetNameUk","")]))
-                desc = (item.get("description_uk") or item.get("description") or "")[:200]
-                url = item.get("beautiful_url") or f"https://dom.ria.com/uk/realty/{item.get('realty_id','')}.html"
-
-                photos = item.get("photos", {})
-                photo_url = ""
-                if photos:
-                    fk = next(iter(photos), None)
-                    if fk:
-                        photo_url = f"https://cdn.riastatic.com/photosnew/dom/photo/{photos[fk]}fl.jpg"
-
-                # Фільтри
-                if sp.keywords and not any(kw.lower() in (desc+addr).lower() for kw in sp.keywords):
-                    continue
-                if sp.district and sp.district != "Будь-який" and sp.district.lower() not in addr.lower():
-                    continue
-                if sp.conditions and "" not in sp.conditions:
-                    if not any(c.lower() in desc.lower() for c in sp.conditions if c):
-                        continue
-                if sp.floors and sp.floors != "Будь-яка":
-                    floors_count = str(item.get("floorsCount",""))
-                    if floors_count != sp.floors:
-                        continue
-
-                results.append(Listing("DOM.RIA",
-                    f"{sp.rooms} кімн., {area} м²" if area else desc[:60],
-                    price_str, price_num, f"{area} м²" if area else "—",
-                    sp.rooms, floor_str, addr, desc, url, photo_url))
-            except Exception as e:
-                log.debug(f"item: {e}")
-        time.sleep(0.8)
-    return results
-
-
-def parse_olx(sp: SearchParams, pages: int = 2) -> list:
-    results = []
-    city_olx = CITIES[sp.city]["olx"]
-    room_map = {"1":"1","2":"2","3":"3","4+":"4","Будь-яка":""}
-    room_param = room_map.get(sp.rooms, "")
-
-    # URL в залежності від типу угоди та нерухомості
-    if sp.prop == "flat":
-        if sp.deal == "buy":
-            base = f"https://www.olx.ua/uk/nedvizhimost/kvartiry/{city_olx}/prodazha/"
-        elif sp.deal == "rent":
-            base = f"https://www.olx.ua/uk/nedvizhimost/kvartiry-komnaty/{city_olx}/"
-        else:
-            base = f"https://www.olx.ua/uk/nedvizhimost/posutochno-pochasovo/{city_olx}/"
-    else:
-        if sp.deal == "buy":
-            base = f"https://www.olx.ua/uk/nedvizhimost/doma/{city_olx}/prodazha/"
-        else:
-            base = f"https://www.olx.ua/uk/nedvizhimost/doma/{city_olx}/"
-
-    for page in range(1, pages + 1):
-        url = base + (f"?rooms={room_param}&page={page}" if room_param else f"?page={page}")
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-            r.raise_for_status()
-        except Exception as e:
-            log.warning(f"OLX: {e}"); break
-
-        soup = BeautifulSoup(r.text, "lxml")
-        for card in soup.select("div[data-cy='l-card']"):
-            try:
-                title_el = card.select_one("h4,h6,[data-testid='ad-title']")
-                price_el = card.select_one("[data-testid='ad-price']")
-                loc_el   = card.select_one("[data-testid='location-date']")
-                link_el  = card.select_one("a[href]")
-                img_el   = card.select_one("img[src]")
-
-                title   = title_el.get_text(strip=True) if title_el else "—"
-                price_s = price_el.get_text(strip=True) if price_el else "—"
-                address = loc_el.get_text(strip=True)   if loc_el   else "—"
-                href    = link_el["href"]                if link_el  else ""
-                if href and not href.startswith("http"):
-                    href = "https://www.olx.ua" + href
-                photo = img_el.get("src","") if img_el else ""
-
-                nums = re.findall(r"\d+", price_s.replace(" ","").replace("\xa0",""))
-                price_num = int("".join(nums[:5])) if nums else 0
-
-                if sp.keywords and not any(kw.lower() in (title+address).lower() for kw in sp.keywords):
-                    continue
-                if sp.district and sp.district != "Будь-який" and sp.district.lower() not in address.lower():
-                    continue
-
-                area_m = re.search(r"(\d{2,4}(?:[.,]\d+)?)\s*м²", title)
-                results.append(Listing("OLX", title, price_s, price_num,
-                    area_m.group(0) if area_m else "—",
-                    sp.rooms, "—", address, "", href, photo))
-            except Exception:
-                pass
-        time.sleep(1.2)
-    return results
-
-
-def run_search(sp: SearchParams) -> list:
-    all_listings = parse_domria(sp, pages=3) + parse_olx(sp, pages=2)
-    seen, unique = set(), []
-    for l in all_listings:
-        if l.url not in seen:
-            seen.add(l.url)
-            unique.append(l)
-    unique.sort(key=lambda x: x.price_num)
-    return unique
-
-
-# ── Відправка оголошення ───────────────────────────────────────
-async def send_listing(context, chat_id: int, l: Listing):
-    text = (
-        f"🏠 *{l.title}*\n"
-        f"💰 {l.price}\n"
-        f"📐 {l.area}" + (f"  |  🏢 {l.floor} пов." if l.floor and l.floor != "—" else "") + "\n"
-        f"📍 {l.address}\n"
-        + (f"📝 _{l.description[:150]}..._\n" if l.description else "")
-    )
-    kb = InlineKeyboardMarkup([[InlineKeyboardButton("👁 Переглянути оголошення", url=l.url)]])
-    try:
-        if l.photo_url and l.photo_url.startswith("http"):
-            await context.bot.send_photo(chat_id=chat_id, photo=l.photo_url,
-                caption=text, parse_mode="Markdown", reply_markup=kb)
-        else:
-            await context.bot.send_message(chat_id=chat_id, text=text,
-                parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=False)
-    except Exception:
-        try:
-            await context.bot.send_message(chat_id=chat_id, text=text,
-                parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=False)
-        except Exception as e:
-            log.warning(f"send: {e}")
-
-
-# ── Моніторинг ─────────────────────────────────────────────────
-async def monitor_job(context: ContextTypes.DEFAULT_TYPE):
-    data = context.job.data
-    chat_id = data["chat_id"]
-    search_id = data["search_id"]
-    sp = get_search(chat_id, search_id)
-    if not sp or sp.paused or not sp.monitor:
-        return
-    loop = asyncio.get_event_loop()
-    listings = await loop.run_in_executor(None, lambda: run_search(sp))
-    new_ones = [l for l in listings if l.url not in sp.seen_ids]
-    if new_ones:
-        await context.bot.send_message(chat_id=chat_id,
-            text=f"🔔 *{sp.name}* — знайдено {len(new_ones)} нових оголошень!",
-            parse_mode="Markdown")
-        for l in new_ones[:10]:
-            await send_listing(context, chat_id, l)
-            sp.seen_ids.append(l.url)
-            await asyncio.sleep(0.5)
-
-
-def start_monitor_job(app, chat_id: int, sp: SearchParams):
-    # Видаляємо старі джоби для цього пошуку
-    jobs = app.job_queue.get_jobs_by_name(f"mon_{chat_id}_{sp.id}")
-    for j in jobs:
-        j.schedule_removal()
-    if sp.monitor and not sp.paused:
-        app.job_queue.run_repeating(
-            monitor_job,
-            interval=sp.monitor_freq * 60,
-            data={"chat_id": chat_id, "search_id": sp.id},
-            name=f"mon_{chat_id}_{sp.id}",
-        )
-
-
-# ── Головне меню (постійна клавіатура) ────────────────────────
 MAIN_KB = ReplyKeyboardMarkup(
     [[KeyboardButton("📋 Мої пошуки"), KeyboardButton("➕ Новий пошук")],
      [KeyboardButton("❓ Допомога")]],
-    resize_keyboard=True, is_persistent=True
-)
+    resize_keyboard=True, is_persistent=True)
 
 
-# ── Допоміжні функції ──────────────────────────────────────────
-def make_kb(items, cols=2, prefix="") -> InlineKeyboardMarkup:
-    rows, row = [], []
-    for item in items:
-        row.append(InlineKeyboardButton(item, callback_data=f"{prefix}{item}"))
-        if len(row) == cols:
-            rows.append(row); row = []
-    if row:
-        rows.append(row)
-    return InlineKeyboardMarkup(rows)
+def money(v, cur):
+    sym = "$" if cur == "USD" else "₴"
+    return f"{sym}{v:,}".replace(",", " ")
 
-def new_sp(ctx) -> SearchParams:
-    sp = SearchParams(id=str(uuid.uuid4())[:8])
-    ctx.user_data["sp"] = sp
-    return sp
 
-def cur_sp(ctx) -> SearchParams:
-    return ctx.user_data.get("sp", SearchParams())
+def kb(rows):
+    return InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=d) for t, d in row] for row in rows])
+
+
+def chunks(items, n):
+    return [items[i:i + n] for i in range(0, len(items), n)]
+
+
+def rooms_label(rooms):
+    if not rooms:
+        return "будь-яка к-сть кімнат"
+    r = sorted(rooms)
+    if 5 in r:
+        r = [x for x in r if x != 5]
+        txt = ",".join(map(str, r)).replace("4", "4+")
+    else:
+        txt = ",".join(map(str, r))
+    return f"{txt}к"
+
+
+def auto_name(s):
+    parts = [CITIES.get(s["city"], s["city"])]
+    if s.get("district"):
+        parts.append(DISTRICT_NAMES.get(s["district"], s["district"]))
+    parts.append(rooms_label(s.get("rooms")))
+    parts.append(DEAL_SHORT[s["deal"]])
+    pu, pa = s.get("price_usd") or {}, s.get("price_uah") or {}
+    if pu.get("max"):
+        parts.append(f"до {money(pu['max'], 'USD')}")
+    if pa.get("max"):
+        parts.append(f"до {money(pa['max'], 'UAH')}")
+    return " · ".join(parts)
+
+
+def summary(s):
+    lines = [f"📋 <b>{esc(s['name'])}</b>"]
+    lines.append(f"{DEALS[s['deal']]} · 📍 {CITIES.get(s['city'], s['city'])}"
+                 + (f", {DISTRICT_NAMES.get(s['district'], s['district'])}" if s.get("district") else ""))
+    lines.append(f"🛏 {rooms_label(s.get('rooms'))}")
+    pu, pa = s.get("price_usd") or {}, s.get("price_uah") or {}
+    if pu.get("max") or pa.get("max"):
+        lines.append("💰 до " + (money(pu["max"], "USD") if pu.get("max") else money(pa["max"], "UAH")))
+    if s.get("condition", "any") != "any":
+        lines.append(f"🛠 {CONDITIONS[s['condition']]}")
+    if s.get("exclude_keywords"):
+        lines.append(f"🚫 {esc(', '.join(s['exclude_keywords']))}")
+    src = " + ".join({"lun": "ЛУН", "dimria": "DIM.RIA"}[x] for x in s.get("sources", []))
+    status = "⏸ на паузі" if s.get("paused") else f"🟢 кожні {INTERVALS.get(s.get('interval', 30), str(s.get('interval')) + ' хв')}"
+    lines.append(f"🔔 {status} · {src}")
+    if s.get("last_run"):
+        lines.append(f"🕒 остання перевірка: {s['last_run']}")
+    return "\n".join(lines)
+
+
+# ── Доступ ─────────────────────────────────────────────────────
+def allowed(update: Update, db: DB) -> bool:
+    cid = str(update.effective_chat.id)
+    if ALLOWED:
+        return cid in ALLOWED
+    if db.data.get("owner") is None:
+        return True          # перший /start зробить цей чат власником
+    return cid == str(db.data["owner"])
+
+
+def guard(fn):
+    async def wrapper(update: Update, ctx: ContextTypes.DEFAULT_TYPE, *a, **kw):
+        db: DB = ctx.bot_data["db"]
+        if not allowed(update, db):
+            if update.callback_query:
+                await update.callback_query.answer("Це приватний бот", show_alert=True)
+            elif update.effective_message:
+                await update.effective_message.reply_text("🔒 Це приватний бот.")
+            return ConversationHandler.END
+        return await fn(update, ctx, *a, **kw)
+    wrapper.__name__ = fn.__name__
+    return wrapper
+
+
+# ── Перевірка пошуку ───────────────────────────────────────────
+CHECK_LOCK = asyncio.Lock()
+
+
+async def check_search(app: Application, chat_id: int, sid: str, manual=False):
+    db: DB = app.bot_data["db"]
+    async with CHECK_LOCK:
+        s = db.get(chat_id, sid)
+        if not s:
+            return
+        chat = db.chat(chat_id)
+        with db.lock:
+            st = copy.deepcopy(chat["state"].get(sid, {}))
+            scfg = copy.deepcopy(s)
+        outbox, report = [], {}
+        collector = Collector("", "", outbox)       # без токена: повідомлення лише збираються
+        t0 = time.time()
+        try:
+            await asyncio.to_thread(run_search, scfg, st, collector, SETTINGS, report)
+        except Exception:
+            log.exception("Перевірка %s впала", sid)
+            if manual:
+                await app.bot.send_message(chat_id, "⚠️ Не вдалося перевірити, деталі в data/bot.log")
+            return
+        rep = report.get(sid, {})
+        with db.lock:
+            if db.get(chat_id, sid) is None:       # пошук видалили, поки перевіряли
+                return
+            chat["state"][sid] = st
+            s["last_run"] = datetime.now(KYIV).strftime("%d.%m %H:%M")
+            s["next_due"] = time.time() + int(s.get("interval", 30)) * 60
+            s["last_report"] = {k: v for k, v in rep.get("sources", {}).items()}
+        db.save()
+        log.info("Перевірка %s за %.1fс: %s", sid, time.time() - t0, json.dumps(rep, ensure_ascii=False))
+
+    sent = await deliver(app, chat_id, outbox)
+    if manual and sent == 0:
+        errs = [f"{k}: {v['error']}" for k, v in rep.get("sources", {}).items() if "error" in v]
+        txt = "Нових оголошень немає ✅" if not errs else "⚠️ Частина джерел не відповіла:\n" + "\n".join(errs)
+        await app.bot.send_message(chat_id, txt[:3500])
+
+
+async def deliver(app: Application, chat_id: int, outbox: list) -> int:
+    sent = 0
+    for m in outbox:
+        try:
+            if m["type"] == "text":
+                await app.bot.send_message(chat_id, m["text"], parse_mode=ParseMode.HTML,
+                                           disable_web_page_preview=True)
+            else:
+                btn = InlineKeyboardMarkup([[InlineKeyboardButton(f"Відкрити на {m.get('origin') or 'сайті'}",
+                                                                  url=m["url"])]])
+                try:
+                    if not m.get("photo"):
+                        raise TelegramError("no photo")
+                    await app.bot.send_photo(chat_id, m["photo"], caption=m["caption"],
+                                             parse_mode=ParseMode.HTML, reply_markup=btn)
+                except TelegramError:
+                    await app.bot.send_message(chat_id, m["caption"], parse_mode=ParseMode.HTML,
+                                               reply_markup=btn, disable_web_page_preview=True)
+                sent += 1
+        except TelegramError as e:
+            log.warning("Не вдалося надіслати: %s", e)
+        await asyncio.sleep(1.0)
+    return sent
+
+
+async def tick(ctx: ContextTypes.DEFAULT_TYPE):
+    """Раз на хвилину: запускає перевірки, у яких настав час."""
+    db: DB = ctx.bot_data["db"]
+    now = time.time()
+    due = []
+    with db.lock:
+        for cid, chat in db.data["chats"].items():
+            for s in chat["searches"]:
+                if not s.get("paused") and s.get("next_due", 0) <= now:
+                    due.append((int(cid), s["id"]))
+    for cid, sid in due:
+        await check_search(ctx.application, cid, sid)
 
 
 # ═══════════════════════════════════════════════════════════════
 # ДІАЛОГ СТВОРЕННЯ ПОШУКУ
 # ═══════════════════════════════════════════════════════════════
-
-async def start_new_search(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    searches = get_searches(chat_id)
-    if len(searches) >= MAX_SEARCHES:
-        await update.effective_message.reply_text(
-            f"⚠️ Максимум {MAX_SEARCHES} пошуки. Видаліть один через 📋 Мої пошуки.",
-            reply_markup=MAIN_KB)
-        return ConversationHandler.END
-
-    new_sp(ctx)
-    kb = make_kb(list(DEAL_TYPES.keys()), cols=1, prefix="deal:")
+@guard
+async def new_search(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data["new"] = {"id": uuid.uuid4().hex[:8], "sources": ["lun", "dimria"],
+                            "condition": "any", "interval": 30}
     await update.effective_message.reply_text(
-        "🏠 *Новий пошук*\n\nТип угоди:",
-        reply_markup=kb, parse_mode="Markdown")
+        "🏠 <b>Новий пошук</b>\n\nТип угоди:", parse_mode=ParseMode.HTML,
+        reply_markup=kb([[(v, f"deal:{k}")] for k, v in DEALS.items()]))
     return S_DEAL
 
 
 async def cb_deal(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    deal = DEAL_TYPES.get(q.data.replace("deal:",""), "buy")
-    cur_sp(ctx).deal = deal
-    kb = make_kb(list(PROP_TYPES.keys()), cols=2, prefix="prop:")
-    await q.edit_message_text("Тип нерухомості:", reply_markup=kb)
-    return S_PROP
-
-
-async def cb_prop(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    prop = PROP_TYPES.get(q.data.replace("prop:",""), "flat")
-    cur_sp(ctx).prop = prop
-    kb = make_kb(list(CITIES.keys()), cols=2, prefix="city:")
-    await q.edit_message_text("📍 Місто:", reply_markup=kb)
+    q = update.callback_query
+    await q.answer()
+    s = ctx.user_data["new"]
+    s["deal"] = q.data.split(":", 1)[1]
+    if s["deal"] == "daily":
+        s["sources"] = ["dimria"]          # на ЛУН подобової оренди немає
+    await q.edit_message_text(f"{DEALS[s['deal']]}\n\n📍 Місто:",
+                              reply_markup=kb([[(v, f"city:{k}") for k, v in CITIES.items()]]))
     return S_CITY
 
 
 async def cb_city(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    city = q.data.replace("city:","")
-    cur_sp(ctx).city = city
-    districts = DISTRICTS.get(city, [])
-    kb = make_kb(districts, cols=2, prefix="dist:")
-    await q.edit_message_text(f"📍 *{city}* — Район:", reply_markup=kb, parse_mode="Markdown")
+    q = update.callback_query
+    await q.answer()
+    s = ctx.user_data["new"]
+    s["city"] = q.data.split(":", 1)[1]
+    ds = list(DISTRICTS.get(s["city"], {}).keys())
+    if not ds:
+        s["district"] = None
+        return await ask_rooms(q, ctx)
+    rows = chunks([(DISTRICT_NAMES.get(d, d), f"dist:{d}") for d in ds], 2)
+    rows.append([("🔄 Усе місто", "dist:-")])
+    await q.edit_message_text(f"📍 {CITIES[s['city']]} — район:", reply_markup=kb(rows))
     return S_DISTRICT
 
 
 async def cb_district(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    d = q.data.replace("dist:","")
-    cur_sp(ctx).district = "" if d == "Будь-який" else d
-    kb = make_kb(["1","2","3","4+","Будь-яка"], cols=3, prefix="rooms:")
-    await q.edit_message_text(f"📍 Район: *{d}*\n\nКількість кімнат:", reply_markup=kb, parse_mode="Markdown")
+    q = update.callback_query
+    await q.answer()
+    d = q.data.split(":", 1)[1]
+    ctx.user_data["new"]["district"] = None if d == "-" else d
+    return await ask_rooms(q, ctx)
+
+
+def rooms_kb(sel):
+    opts = [(1, "1"), (2, "2"), (3, "3"), (4, "4+")]
+    row = [(("✅ " if r in sel else "") + t, f"rooms:{r}") for r, t in opts]
+    return kb([row, [("🔄 Будь-яка", "rooms:any"), ("✔️ Готово", "rooms:done")]])
+
+
+async def ask_rooms(q, ctx):
+    ctx.user_data["new"]["rooms"] = []
+    await q.edit_message_text("🛏 Кімнати (можна кілька), потім «Готово»:", reply_markup=rooms_kb([]))
     return S_ROOMS
 
 
 async def cb_rooms(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    cur_sp(ctx).rooms = q.data.replace("rooms:","")
-    sp = cur_sp(ctx)
-    if sp.prop == "house":
-        kb = make_kb(["1","2","3","Будь-яка"], cols=2, prefix="floors:")
-        await q.edit_message_text("🏠 Кількість поверхів будинку:", reply_markup=kb, parse_mode="Markdown")
-        return S_FLOORS
-    else:
-        return await _ask_currency(q, ctx)
+    q = update.callback_query
+    await q.answer()
+    s = ctx.user_data["new"]
+    v = q.data.split(":", 1)[1]
+    sel = s["rooms"]
+    if v == "any":
+        s["rooms"] = []
+    elif v != "done":
+        r = int(v)
+        if r in sel:
+            sel.remove(r)
+        else:
+            sel.append(r)
+        await q.edit_message_reply_markup(reply_markup=rooms_kb(sel))
+        return S_ROOMS
+    if 4 in s["rooms"]:
+        s["rooms"] = sorted(set(s["rooms"]) | {5})
+    s["rooms"] = sorted(s["rooms"])
+    return await ask_budget(q, ctx)
 
 
-async def cb_floors(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    cur_sp(ctx).floors = q.data.replace("floors:","")
-    return await _ask_currency(q, ctx)
+async def ask_budget(q, ctx):
+    s = ctx.user_data["new"]
+    cur, opts = BUDGETS[s["deal"]]
+    rows = chunks([(f"до {money(v, cur)}", f"bud:{v}") for v in opts], 2)
+    rows.append([("Без обмеження", "bud:0")])
+    await q.edit_message_text(f"💰 Максимальна ціна ({'$' if cur == 'USD' else '₴'})?\n"
+                              "<i>або напиши своє число</i>", parse_mode=ParseMode.HTML, reply_markup=kb(rows))
+    return S_BUDGET
 
 
-async def _ask_currency(src, ctx):
-    sp = cur_sp(ctx)
-    if sp.deal == "buy":
-        opts = ["💵 USD (долар)", "💴 UAH (гривня)"]
-    else:
-        opts = ["💴 UAH (гривня)", "💵 USD (долар)"]
-    kb = make_kb(opts, cols=2, prefix="cur:")
-    text = "💱 Валюта ціни:"
+def set_budget(s, value):
+    cur, _ = BUDGETS[s["deal"]]
+    s.pop("price_usd", None)
+    s.pop("price_uah", None)
+    if value:
+        s["price_usd" if cur == "USD" else "price_uah"] = {"min": None, "max": value}
+
+
+async def cb_budget(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    set_budget(ctx.user_data["new"], int(q.data.split(":", 1)[1]))
+    return await ask_condition(q, ctx)
+
+
+async def txt_budget(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    digits = re.sub(r"\D", "", update.message.text or "")
+    if not digits:
+        await update.message.reply_text("⚠️ Напиши число, наприклад 45000")
+        return S_BUDGET
+    set_budget(ctx.user_data["new"], int(digits))
+    return await ask_condition(update.message, ctx)
+
+
+async def ask_condition(src, ctx):
+    rows = [[(v, f"cond:{k}")] for k, v in CONDITIONS.items()]
     if hasattr(src, "edit_message_text"):
-        await src.edit_message_text(text, reply_markup=kb)
+        await src.edit_message_text("🛠 Стан ремонту:", reply_markup=kb(rows))
     else:
-        await src.message.reply_text(text, reply_markup=kb)
-    return S_CURRENCY
-
-
-async def cb_currency(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    cur_sp(ctx).currency = "USD" if "USD" in q.data else "UAH"
-    return await _ask_price_from(q, ctx)
-
-
-async def _ask_price_from(src, ctx):
-    sp = cur_sp(ctx)
-    opts = PRICE_OPTS.get(sp.deal, PRICE_OPTS["buy"])[sp.currency]
-    symbol = "$" if sp.currency == "USD" else "₴"
-    text = f"💰 Ціна *від* {symbol}?\n_(або напишіть своє число)_"
-    kb = make_kb(opts, cols=2, prefix="pfrom:")
-    if hasattr(src, "edit_message_text"):
-        await src.edit_message_text(text, reply_markup=kb, parse_mode="Markdown")
-    else:
-        await src.message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
-    return S_PRICE_FROM
-
-
-async def handle_pfrom_btn(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    val = q.data.replace("pfrom:","").replace(" ","")
-    cur_sp(ctx).price_from = 0 if "Без" in val else int(val)
-    return await _ask_price_to(q, ctx)
-
-async def handle_pfrom_txt(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    try:
-        cur_sp(ctx).price_from = int(update.message.text.strip().replace(" ","").replace("$","").replace("₴",""))
-    except:
-        await update.message.reply_text("⚠️ Введіть число"); return S_PRICE_FROM
-    return await _ask_price_to(update, ctx)
-
-async def _ask_price_to(src, ctx):
-    sp = cur_sp(ctx)
-    opts = PRICE_OPTS.get(sp.deal, PRICE_OPTS["buy"])[sp.currency]
-    symbol = "$" if sp.currency == "USD" else "₴"
-    pf = f"{symbol}{sp.price_from:,}".replace(",","") if sp.price_from else "—"
-    text = f"Від: *{pf}*\n\n💰 Ціна *до* {symbol}?\n_(або напишіть своє число)_"
-    kb = make_kb(opts, cols=2, prefix="pto:")
-    if hasattr(src, "edit_message_text"):
-        await src.edit_message_text(text, reply_markup=kb, parse_mode="Markdown")
-    else:
-        await src.message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
-    return S_PRICE_TO
-
-async def handle_pto_btn(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    val = q.data.replace("pto:","").replace(" ","")
-    cur_sp(ctx).price_to = 0 if "Без" in val else int(val)
-    return await _ask_area_from(q, ctx)
-
-async def handle_pto_txt(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    try:
-        cur_sp(ctx).price_to = int(update.message.text.strip().replace(" ","").replace("$","").replace("₴",""))
-    except:
-        await update.message.reply_text("⚠️ Введіть число"); return S_PRICE_TO
-    return await _ask_area_from(update, ctx)
-
-async def _ask_area_from(src, ctx):
-    kb = make_kb(["20","30","40","50","60","80","Без обмеження"], cols=3, prefix="afrom:")
-    text = "📐 Площа *від* м²?\n_(або напишіть своє число)_"
-    if hasattr(src, "edit_message_text"):
-        await src.edit_message_text(text, reply_markup=kb, parse_mode="Markdown")
-    else:
-        await src.message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
-    return S_AREA_FROM
-
-async def handle_afrom_btn(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    val = q.data.replace("afrom:","")
-    cur_sp(ctx).area_from = 0 if "Без" in val else int(val)
-    return await _ask_area_to(q, ctx)
-
-async def handle_afrom_txt(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    try:
-        cur_sp(ctx).area_from = int(update.message.text.strip())
-    except:
-        await update.message.reply_text("⚠️ Введіть число"); return S_AREA_FROM
-    return await _ask_area_to(update, ctx)
-
-async def _ask_area_to(src, ctx):
-    kb = make_kb(["40","60","80","100","120","150","Без обмеження"], cols=3, prefix="ato:")
-    text = "📐 Площа *до* м²?\n_(або напишіть своє число)_"
-    if hasattr(src, "edit_message_text"):
-        await src.edit_message_text(text, reply_markup=kb, parse_mode="Markdown")
-    else:
-        await src.message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
-    return S_AREA_TO
-
-async def handle_ato_btn(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    val = q.data.replace("ato:","")
-    cur_sp(ctx).area_to = 0 if "Без" in val else int(val)
-    return await _ask_condition(q, ctx)
-
-async def handle_ato_txt(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    try:
-        cur_sp(ctx).area_to = int(update.message.text.strip())
-    except:
-        await update.message.reply_text("⚠️ Введіть число"); return S_AREA_TO
-    return await _ask_condition(update, ctx)
-
-async def _ask_condition(src, ctx):
-    sp = cur_sp(ctx)
-    ctx.user_data["sel_cond"] = []
-    conds = CONDITIONS_BUY if sp.deal == "buy" else CONDITIONS_RENT
-    rows = [[InlineKeyboardButton(n, callback_data=f"cond:{n}")] for n in conds]
-    rows.append([InlineKeyboardButton("✅ Готово", callback_data="cond:done")])
-    text = "🛠 Стан _(можна кілька)_:"
-    if hasattr(src, "edit_message_text"):
-        await src.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows), parse_mode="Markdown")
-    else:
-        await src.message.reply_text(text, reply_markup=InlineKeyboardMarkup(rows), parse_mode="Markdown")
+        await src.reply_text("🛠 Стан ремонту:", reply_markup=kb(rows))
     return S_CONDITION
+
 
 async def cb_condition(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    val = q.data.replace("cond:","")
-    sp = cur_sp(ctx)
-    conds = CONDITIONS_BUY if sp.deal == "buy" else CONDITIONS_RENT
+    q = update.callback_query
+    await q.answer()
+    ctx.user_data["new"]["condition"] = q.data.split(":", 1)[1]
+    await q.edit_message_text(
+        "🚫 Стоп-слова через кому — оголошення з ними не надсилатиму.\n"
+        "<i>Напр.: перший поверх, рієлтор, гуртожиток</i>\n\nАбо /skip",
+        parse_mode=ParseMode.HTML)
+    return S_STOP
 
-    if val == "done":
-        sp.conditions = ctx.user_data.get("sel_cond", [])
-        await q.edit_message_text(
-            "🔑 Ключові слова _(необов'язково)_:\n\nНапишіть через кому:\n"
-            "_авторський ремонт, вид на море, центр_\n\nАбо /skip",
-            parse_mode="Markdown")
-        return S_KEYWORDS
 
-    selected = ctx.user_data.get("sel_cond", [])
-    cval = conds.get(val, "")
-    if val.startswith("🔄"):
-        selected = []
-    else:
-        if cval in selected: selected.remove(cval)
-        else: selected.append(cval)
-    ctx.user_data["sel_cond"] = selected
+async def txt_stop(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data["new"]["exclude_keywords"] = [w.strip() for w in update.message.text.split(",") if w.strip()]
+    return await finish_new(update, ctx)
 
-    rows = []
-    for name, value in conds.items():
-        check = "✅ " if value in selected else ""
-        rows.append([InlineKeyboardButton(check+name, callback_data=f"cond:{name}")])
-    rows.append([InlineKeyboardButton("✅ Готово", callback_data="cond:done")])
-    await q.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(rows))
-    return S_CONDITION
 
-async def handle_keywords(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    cur_sp(ctx).keywords = [kw.strip() for kw in update.message.text.split(",") if kw.strip()]
-    return await _ask_name(update.message, ctx)
+async def skip_stop(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data["new"]["exclude_keywords"] = []
+    return await finish_new(update, ctx)
 
-async def cmd_skip(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    cur_sp(ctx).keywords = []
-    return await _ask_name(update.message, ctx)
 
-async def _ask_name(msg, ctx):
-    sp = cur_sp(ctx)
-    auto = sp.auto_name()
-    await msg.reply_text(
-        f"🏷 Назва пошуку:\n\nАвто-назва: *{auto}*\n\n"
-        "Напишіть свою назву або /skip щоб використати авто",
-        parse_mode="Markdown")
-    return S_NAME
-
-async def handle_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    cur_sp(ctx).name = update.message.text.strip()
-    return await _ask_monitor_choice(update.message, ctx)
-
-async def cmd_skip_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    sp = cur_sp(ctx)
-    sp.name = sp.auto_name()
-    return await _ask_monitor_choice(update.message, ctx)
-
-async def _ask_monitor_choice(msg, ctx):
-    kb = InlineKeyboardMarkup([[
-        InlineKeyboardButton("🔔 Увімкнути моніторинг", callback_data="mon:yes"),
-        InlineKeyboardButton("🔍 Разовий пошук", callback_data="mon:no"),
-    ]])
-    await msg.reply_text("🔔 Моніторинг нових оголошень?", reply_markup=kb)
-    return S_MONITOR
-
-async def cb_monitor(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    sp = cur_sp(ctx)
-    if q.data == "mon:no":
-        sp.monitor = False
-        await q.edit_message_text("⏳ Зберігаю та шукаю...")
-        await _finish_search(q.message, ctx)
-        return ConversationHandler.END
-    kb = make_kb(list(FREQ_MAP.keys()), cols=3, prefix="freq:")
-    await q.edit_message_text("⏱ Як часто перевіряти?", reply_markup=kb)
-    return S_MONITOR_FREQ
-
-async def cb_monitor_freq(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    freq_str = q.data.replace("freq:","")
-    sp = cur_sp(ctx)
-    sp.monitor = True
-    sp.monitor_freq = FREQ_MAP.get(freq_str, 60)
-    await q.edit_message_text(f"✅ Моніторинг кожні *{freq_str}*\n\n⏳ Зберігаю та шукаю...", parse_mode="Markdown")
-    await _finish_search(q.message, ctx)
+async def finish_new(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    s = ctx.user_data.pop("new")
+    s["name"] = auto_name(s)
+    s["next_due"] = 0
+    with db.lock:
+        db.searches(update.effective_chat.id).append(s)
+    db.save()
+    await update.message.reply_text(summary(s) + "\n\n✅ Збережено. Зараз покажу найновіші, далі — лише нові.",
+                                    parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
+    asyncio.create_task(check_search(ctx.application, update.effective_chat.id, s["id"], manual=True))
     return ConversationHandler.END
 
-async def _finish_search(msg, ctx):
-    chat_id = msg.chat_id
-    sp = cur_sp(ctx)
-    save_search(chat_id, sp)
-    if sp.monitor:
-        start_monitor_job(ctx.application, chat_id, sp)
-    await _do_search(ctx.application, chat_id, sp)
-    await ctx.application.bot.send_message(
-        chat_id=chat_id,
-        text=f"✅ Пошук *{sp.name}* збережено!\n\nКерування через 📋 Мої пошуки",
-        reply_markup=MAIN_KB, parse_mode="Markdown")
+
+async def cancel(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data.pop("new", None)
+    await update.effective_message.reply_text("Скасовано.", reply_markup=MAIN_KB)
+    return ConversationHandler.END
+
+
+async def cancel_and_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ctx.user_data.pop("new", None)
+    await my_searches(update, ctx)
+    return ConversationHandler.END
 
 
 # ═══════════════════════════════════════════════════════════════
 # МОЇ ПОШУКИ
 # ═══════════════════════════════════════════════════════════════
+def search_kb(s):
+    sid = s["id"]
+    rows = [[("🔍 Перевірити зараз", f"chk:{sid}")]]
+    rows.append([("▶️ Відновити", f"res:{sid}") if s.get("paused") else ("⏸ Пауза", f"pau:{sid}"),
+                 ("⏱ Частота", f"frq:{sid}")])
+    rows.append([("🗑 Видалити", f"del:{sid}")])
+    return kb(rows)
 
-async def show_my_searches(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    searches = get_searches(chat_id)
-    if not searches:
+
+@guard
+async def my_searches(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    ss = db.searches(update.effective_chat.id)
+    if not ss:
         await update.effective_message.reply_text(
-            "У вас немає збережених пошуків.\n\nНатисніть ➕ Новий пошук",
-            reply_markup=MAIN_KB)
+            "Пошуків ще немає. Натисни ➕ Новий пошук або /presets — готові пошуки.", reply_markup=MAIN_KB)
         return
-
-    await update.effective_message.reply_text(
-        f"📋 *Мої пошуки* ({len(searches)}/{MAX_SEARCHES}):",
-        parse_mode="Markdown", reply_markup=MAIN_KB)
-
-    for sp in searches:
-        status = "⏸ пауза" if sp.paused else ("🟢 моніторинг" if sp.monitor else "🔍 разовий")
-        text = sp.summary()
-        freq_str = next((k for k,v in FREQ_MAP.items() if v==sp.monitor_freq),"")
-
-        rows = [
-            [InlineKeyboardButton("🔍 Шукати зараз", callback_data=f"srch:{sp.id}")],
-            [InlineKeyboardButton("✏️ Редагувати", callback_data=f"edit:{sp.id}"),
-             InlineKeyboardButton("🏷 Перейменувати", callback_data=f"ren:{sp.id}")],
-        ]
-        if sp.monitor:
-            if sp.paused:
-                rows.append([InlineKeyboardButton("▶️ Відновити моніторинг", callback_data=f"resume:{sp.id}")])
-            else:
-                rows.append([InlineKeyboardButton("⏸ Пауза", callback_data=f"pause:{sp.id}")])
-            rows.append([InlineKeyboardButton(f"⏱ Змінити частоту ({freq_str})", callback_data=f"chfreq:{sp.id}")])
-        else:
-            rows.append([InlineKeyboardButton("🔔 Увімкнути моніторинг", callback_data=f"enmon:{sp.id}")])
-        rows.append([InlineKeyboardButton("🗑 Видалити", callback_data=f"del:{sp.id}")])
-
-        await update.effective_message.reply_text(
-            text, parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(rows))
+    for s in ss:
+        await update.effective_message.reply_text(summary(s), parse_mode=ParseMode.HTML, reply_markup=search_kb(s))
 
 
-async def cb_search_now(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer("Шукаю...")
-    search_id = q.data.replace("srch:","")
-    sp = get_search(q.message.chat_id, search_id)
-    if not sp:
-        await q.message.reply_text("Пошук не знайдено"); return
-    await q.message.reply_text("⏳ Шукаю, зачекайте ~30 сек...")
-    await _do_search(ctx.application, q.message.chat_id, sp)
-
-
-async def cb_pause(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("pause:","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if sp:
-        sp.paused = True
-        jobs = ctx.application.job_queue.get_jobs_by_name(f"mon_{chat_id}_{sp.id}")
-        for j in jobs: j.schedule_removal()
-        await q.message.reply_text(f"⏸ Моніторинг *{sp.name}* призупинено", parse_mode="Markdown")
-
-
-async def cb_resume(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("resume:","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if sp:
-        sp.paused = False
-        start_monitor_job(ctx.application, chat_id, sp)
-        await q.message.reply_text(f"▶️ Моніторинг *{sp.name}* відновлено", parse_mode="Markdown")
-
-
-async def cb_enable_monitor(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("enmon:","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if not sp: return
-    ctx.user_data["edit_id"] = search_id
-    kb = make_kb(list(FREQ_MAP.keys()), cols=3, prefix="enmonfreq:")
-    await q.message.reply_text(f"⏱ Частота моніторингу для *{sp.name}*:", reply_markup=kb, parse_mode="Markdown")
-
-
-async def cb_enable_monitor_freq(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = ctx.user_data.get("edit_id","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if not sp: return
-    freq_str = q.data.replace("enmonfreq:","")
-    sp.monitor = True
-    sp.paused = False
-    sp.monitor_freq = FREQ_MAP.get(freq_str, 60)
-    start_monitor_job(ctx.application, chat_id, sp)
-    await q.edit_message_text(f"🔔 Моніторинг *{sp.name}* увімкнено кожні *{freq_str}*", parse_mode="Markdown")
-
-
-async def cb_change_freq(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("chfreq:","")
-    ctx.user_data["edit_id"] = search_id
-    sp = get_search(q.message.chat_id, search_id)
-    if not sp: return
-    kb = make_kb(list(FREQ_MAP.keys()), cols=3, prefix="newfreq:")
-    await q.message.reply_text(
-        f"⏱ Нова частота для *{sp.name}*:",
-        reply_markup=kb, parse_mode="Markdown")
-
-
-async def cb_new_freq(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = ctx.user_data.get("edit_id","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if not sp: return
-    freq_str = q.data.replace("newfreq:","")
-    sp.monitor_freq = FREQ_MAP.get(freq_str, 60)
-    sp.paused = False
-    start_monitor_job(ctx.application, chat_id, sp)
-    await q.edit_message_text(f"✅ Частота *{sp.name}* змінена на *{freq_str}*", parse_mode="Markdown")
-
-
-async def cb_delete(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("del:","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if not sp: return
-    kb = InlineKeyboardMarkup([[
-        InlineKeyboardButton("✅ Так, видалити", callback_data=f"delok:{search_id}"),
-        InlineKeyboardButton("❌ Скасувати", callback_data=f"delno:{search_id}"),
-    ]])
-    await q.message.reply_text(f"🗑 Видалити пошук *{sp.name}*?", reply_markup=kb, parse_mode="Markdown")
-
-
-async def cb_delete_ok(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("delok:","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if sp:
-        jobs = ctx.application.job_queue.get_jobs_by_name(f"mon_{chat_id}_{sp.id}")
-        for j in jobs: j.schedule_removal()
-        delete_search(chat_id, search_id)
-        await q.edit_message_text(f"🗑 Пошук *{sp.name}* видалено", parse_mode="Markdown")
-
-async def cb_delete_no(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    await q.edit_message_text("❌ Скасовано")
-
-
-# ── Редагування пошуку ─────────────────────────────────────────
-EDIT_FIELDS = {
-    "📍 Місто/Район": "city",
-    "🛏 Кімнати": "rooms",
-    "💰 Ціна": "price",
-    "📐 Площа": "area",
-    "🛠 Стан": "condition",
-    "🔑 Ключові слова": "keywords",
-    "🏷 Тип угоди": "deal",
-}
-
-async def cb_edit(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("edit:","")
-    chat_id = q.message.chat_id
-    sp = get_search(chat_id, search_id)
-    if not sp: return
-    ctx.user_data["sp"] = sp
-    ctx.user_data["edit_id"] = search_id
-
-    rows = [[InlineKeyboardButton(f, callback_data=f"ef:{k}")] for f,k in EDIT_FIELDS.items()]
-    rows.append([InlineKeyboardButton("✅ Готово (зберегти)", callback_data="ef:done")])
-    await q.message.reply_text(
-        f"✏️ *Редагування: {sp.name}*\n\nЩо змінити?",
-        reply_markup=InlineKeyboardMarkup(rows), parse_mode="Markdown")
-    return S_EDIT_CHOOSE
-
-
-async def cb_edit_field(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    field = q.data.replace("ef:","")
-
-    if field == "done":
-        sp = cur_sp(ctx)
-        chat_id = q.message.chat_id
-        save_search(chat_id, sp)
-        if sp.monitor:
-            start_monitor_job(ctx.application, chat_id, sp)
-        await q.edit_message_text(f"✅ *{sp.name}* збережено!", parse_mode="Markdown")
-        return ConversationHandler.END
-
-    ctx.user_data["edit_field"] = field
-
-    if field == "city":
-        kb = make_kb(list(CITIES.keys()), cols=2, prefix="city:")
-        await q.edit_message_text("📍 Нове місто:", reply_markup=kb)
-        return S_CITY
-    elif field == "rooms":
-        kb = make_kb(["1","2","3","4+","Будь-яка"], cols=3, prefix="rooms:")
-        await q.edit_message_text("🛏 Нова кількість кімнат:", reply_markup=kb)
-        return S_ROOMS
-    elif field == "price":
-        return await _ask_currency(q, ctx)
-    elif field == "area":
-        return await _ask_area_from(q, ctx)
-    elif field == "condition":
-        return await _ask_condition(q, ctx)
-    elif field == "keywords":
-        await q.edit_message_text("🔑 Нові ключові слова через кому\nАбо /skip:")
-        return S_KEYWORDS
-    elif field == "deal":
-        kb = make_kb(list(DEAL_TYPES.keys()), cols=1, prefix="deal:")
-        await q.edit_message_text("🏷 Тип угоди:", reply_markup=kb)
-        return S_DEAL
-    return S_EDIT_CHOOSE
-
-
-# ── Перейменування ─────────────────────────────────────────────
-async def cb_rename(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
-    search_id = q.data.replace("ren:","")
-    ctx.user_data["rename_id"] = search_id
-    sp = get_search(q.message.chat_id, search_id)
-    await q.message.reply_text(
-        f"🏷 Поточна назва: *{sp.name}*\n\nВведіть нову назву:",
-        parse_mode="Markdown")
-    return S_RENAME
-
-async def handle_rename(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    search_id = ctx.user_data.get("rename_id","")
-    sp = get_search(update.effective_chat.id, search_id)
-    if sp:
-        old = sp.name
-        sp.name = update.message.text.strip()
-        await update.message.reply_text(f"✅ Перейменовано: *{old}* → *{sp.name}*", parse_mode="Markdown")
-    return ConversationHandler.END
-
-
-# ═══════════════════════════════════════════════════════════════
-# ВИКОНАННЯ ПОШУКУ
-# ═══════════════════════════════════════════════════════════════
-
-async def _do_search(app, chat_id: int, sp: SearchParams):
-    loop = asyncio.get_event_loop()
-    listings = await loop.run_in_executor(None, lambda: run_search(sp))
-
-    if not listings:
-        await app.bot.send_message(chat_id=chat_id,
-            text=f"😕 *{sp.name}* — нічого не знайдено за вашими критеріями.",
-            parse_mode="Markdown")
+@guard
+async def cb_manage(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    db: DB = ctx.bot_data["db"]
+    cid = q.message.chat_id
+    act, sid = q.data.split(":", 1)
+    if act == "frqset":
+        sid, minutes = sid.split(":")
+    s = db.get(cid, sid)
+    if not s:
+        await q.answer("Пошук не знайдено")
         return
+    if act == "chk":
+        await q.answer("Перевіряю…")
+        await q.message.reply_text(f"⏳ Перевіряю «{s['name']}»…")
+        asyncio.create_task(check_search(ctx.application, cid, sid, manual=True))
+        return
+    await q.answer()
+    if act in ("pau", "res"):
+        with db.lock:
+            s["paused"] = act == "pau"
+            if act == "res":
+                s["next_due"] = 0
+        db.save()
+        await q.edit_message_text(summary(s), parse_mode=ParseMode.HTML, reply_markup=search_kb(s))
+    elif act == "frq":
+        rows = [[(t, f"frqset:{sid}:{m}") for m, t in INTERVALS.items()]]
+        await q.edit_message_reply_markup(reply_markup=kb(rows))
+    elif act == "frqset":
+        with db.lock:
+            s["interval"] = int(minutes)
+            s["next_due"] = time.time() + int(minutes) * 60
+        db.save()
+        await q.edit_message_text(summary(s), parse_mode=ParseMode.HTML, reply_markup=search_kb(s))
+    elif act == "del":
+        await q.edit_message_reply_markup(reply_markup=kb([[("✅ Так, видалити", f"delok:{sid}"),
+                                                             ("❌ Ні", f"delno:{sid}")]]))
+    elif act == "delok":
+        db.delete(cid, sid)
+        await q.edit_message_text(f"🗑 Пошук «{esc(s['name'])}» видалено", parse_mode=ParseMode.HTML)
+    elif act == "delno":
+        await q.edit_message_text(summary(s), parse_mode=ParseMode.HTML, reply_markup=search_kb(s))
 
-    symbol = "$" if sp.currency == "USD" else "₴"
-    pf = f"{symbol}{sp.price_from:,}".replace(",","") if sp.price_from else "—"
-    pt = f"{symbol}{sp.price_to:,}".replace(",","") if sp.price_to else "—"
 
-    await app.bot.send_message(chat_id=chat_id, parse_mode="Markdown", text=(
-        f"✅ *{sp.name}* — знайдено *{len(listings)}* оголошень\n"
-        f"💰 {pf} – {pt}" + (f"\n🔑 {', '.join(sp.keywords)}" if sp.keywords else "")
-    ))
+# ── Готові пошуки з searches.yaml ──────────────────────────────
+def load_presets():
+    path = os.path.join(HERE, "searches.yaml")
+    if not os.path.exists(path):
+        return []
+    cfg = yaml.safe_load(open(path, encoding="utf-8")) or {}
+    return cfg.get("searches") or []
 
-    for l in listings[:15]:
-        await send_listing(app, chat_id, l)
-        await asyncio.sleep(0.3)
 
-    if len(listings) > 15:
-        await app.bot.send_message(chat_id=chat_id,
-            text=f"📋 Показано 15 з {len(listings)}. Звузьте критерії для кращих результатів.")
+@guard
+async def presets(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    ps = load_presets()
+    if not ps:
+        await update.effective_message.reply_text("Готових пошуків немає (файл searches.yaml порожній).")
+        return
+    rows = [[(p["name"], f"pre:{p['id']}")] for p in ps]
+    await update.effective_message.reply_text("Готові пошуки з searches.yaml — натисни, щоб додати:",
+                                              reply_markup=kb(rows))
+
+
+@guard
+async def cb_preset(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    db: DB = ctx.bot_data["db"]
+    pid = q.data.split(":", 1)[1]
+    p = next((x for x in load_presets() if x["id"] == pid), None)
+    if not p:
+        return
+    s = {k: v for k, v in copy.deepcopy(p).items() if k != "enabled"}
+    s["id"] = f"{pid}-{uuid.uuid4().hex[:4]}"
+    s.setdefault("sources", ["lun", "dimria"])
+    s.setdefault("interval", 30)
+    s["next_due"] = 0
+    with db.lock:
+        db.searches(q.message.chat_id).append(s)
+    db.save()
+    await q.message.reply_text(summary(s) + "\n\n✅ Додано. Зараз покажу найновіші.", parse_mode=ParseMode.HTML,
+                               reply_markup=MAIN_KB)
+    asyncio.create_task(check_search(ctx.application, q.message.chat_id, s["id"], manual=True))
 
 
 # ═══════════════════════════════════════════════════════════════
 # КОМАНДИ
 # ═══════════════════════════════════════════════════════════════
-
+@guard
 async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 *Вітаю! Пошук нерухомості UA v3.0*\n\n"
-        "📋 *Мої пошуки* — керування збереженими пошуками\n"
-        "➕ *Новий пошук* — створити новий\n"
-        "❓ *Допомога* — інструкція\n\n"
-        "Оберіть дію 👇",
-        reply_markup=MAIN_KB, parse_mode="Markdown")
+    db: DB = ctx.bot_data["db"]
+    if not ALLOWED and db.data.get("owner") is None:
+        db.data["owner"] = update.effective_chat.id
+        db.save()
+        log.info("Власник бота: %s", update.effective_chat.id)
+    await update.effective_message.reply_text(
+        "👋 <b>Пошук нерухомості UA v4</b>\n\n"
+        "Шукаю на ЛУН (там і оголошення з OLX, rieltor.ua) та DIM.RIA і сам пишу про нові.\n\n"
+        "➕ <b>Новий пошук</b> — створити\n"
+        "📋 <b>Мої пошуки</b> — перевірити, пауза, частота, видалення\n"
+        "/presets — готові пошуки (напр. Миколаїв · Ліски)",
+        parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
+    if not db.searches(update.effective_chat.id) and load_presets():
+        await presets(update, ctx)
+    return ConversationHandler.END
 
+
+@guard
 async def cmd_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🏠 *Пошук нерухомості UA v3.0*\n\n"
-        "📋 *Мої пошуки* — список всіх пошуків\n"
-        "   • 🔍 Шукати зараз\n"
-        "   • ✏️ Редагувати параметри\n"
-        "   • 🏷 Перейменувати\n"
-        "   • ⏸/▶️ Пауза/відновлення моніторингу\n"
-        "   • ⏱ Змінити частоту\n"
-        "   • 🗑 Видалити\n\n"
-        "➕ *Новий пошук* — до 3 одночасно\n\n"
-        "Джерела: *OLX* та *DOM.RIA*\n"
-        "Типи: купівля, оренда, подобова\n"
-        "Об'єкти: квартири та будинки",
-        parse_mode="Markdown", reply_markup=MAIN_KB)
-
-async def handle_menu(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text == "📋 Мої пошуки":
-        await show_my_searches(update, ctx)
-    elif text == "➕ Новий пошук":
-        return await start_new_search(update, ctx)
-    elif text == "❓ Допомога":
-        await cmd_help(update, ctx)
+    await update.effective_message.reply_text(
+        "🏠 <b>Як це працює</b>\n\n"
+        "• Кожен пошук перевіряється за розкладом (за замовчуванням раз на 30 хв).\n"
+        "• Перший раз показую до 10 найновіших, далі — тільки нові.\n"
+        "• Той самий об'єкт з різних сайтів приходить один раз.\n"
+        "• Стан ремонту визначаю за позначками сайтів і текстом оголошення — це підказка, не гарантія.\n\n"
+        "Команди: /new — новий пошук, /list — мої пошуки, /presets — готові, /cancel — скасувати діалог.",
+        parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
 
 
-# ═══════════════════════════════════════════════════════════════
-# ЗАПУСК
-# ═══════════════════════════════════════════════════════════════
+async def on_error(update, ctx: ContextTypes.DEFAULT_TYPE):
+    log.error("Помилка обробника: %s", ctx.error, exc_info=ctx.error)
 
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
 
-    # Conversation handler для створення/редагування пошуку
+def build_app(token: str, db: DB = None, **builder_kw) -> Application:
+    b = Application.builder().token(token)
+    for k, v in builder_kw.items():
+        b = getattr(b, k)(v)
+    app = b.build()
+    app.bot_data["db"] = db or DB()
+
     conv = ConversationHandler(
-        entry_points=[
-            MessageHandler(filters.Regex("^➕ Новий пошук$"), start_new_search),
-            CommandHandler("start", cmd_start),
-            CallbackQueryHandler(cb_edit, pattern=r"^edit:"),
-            CallbackQueryHandler(cb_rename, pattern=r"^ren:"),
-        ],
+        entry_points=[MessageHandler(filters.Regex("^➕ Новий пошук$"), new_search),
+                      CommandHandler("new", new_search)],
         states={
-            S_DEAL:         [CallbackQueryHandler(cb_deal,         pattern=r"^deal:")],
-            S_PROP:         [CallbackQueryHandler(cb_prop,         pattern=r"^prop:")],
-            S_CITY:         [CallbackQueryHandler(cb_city,         pattern=r"^city:")],
-            S_DISTRICT:     [CallbackQueryHandler(cb_district,     pattern=r"^dist:")],
-            S_ROOMS:        [CallbackQueryHandler(cb_rooms,        pattern=r"^rooms:")],
-            S_FLOORS:       [CallbackQueryHandler(cb_floors,       pattern=r"^floors:")],
-            S_CURRENCY:     [CallbackQueryHandler(cb_currency,     pattern=r"^cur:")],
-            S_PRICE_FROM:   [CallbackQueryHandler(handle_pfrom_btn,pattern=r"^pfrom:"),
-                             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pfrom_txt)],
-            S_PRICE_TO:     [CallbackQueryHandler(handle_pto_btn,  pattern=r"^pto:"),
-                             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pto_txt)],
-            S_AREA_FROM:    [CallbackQueryHandler(handle_afrom_btn,pattern=r"^afrom:"),
-                             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_afrom_txt)],
-            S_AREA_TO:      [CallbackQueryHandler(handle_ato_btn,  pattern=r"^ato:"),
-                             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ato_txt)],
-            S_CONDITION:    [CallbackQueryHandler(cb_condition,    pattern=r"^cond:")],
-            S_KEYWORDS:     [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_keywords),
-                             CommandHandler("skip", cmd_skip)],
-            S_NAME:         [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_name),
-                             CommandHandler("skip", cmd_skip_name)],
-            S_MONITOR:      [CallbackQueryHandler(cb_monitor,      pattern=r"^mon:")],
-            S_MONITOR_FREQ: [CallbackQueryHandler(cb_monitor_freq, pattern=r"^freq:")],
-            S_EDIT_CHOOSE:  [CallbackQueryHandler(cb_edit_field,   pattern=r"^ef:")],
-            S_RENAME:       [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_rename)],
+            S_DEAL: [CallbackQueryHandler(cb_deal, pattern=r"^deal:")],
+            S_CITY: [CallbackQueryHandler(cb_city, pattern=r"^city:")],
+            S_DISTRICT: [CallbackQueryHandler(cb_district, pattern=r"^dist:")],
+            S_ROOMS: [CallbackQueryHandler(cb_rooms, pattern=r"^rooms:")],
+            S_BUDGET: [CallbackQueryHandler(cb_budget, pattern=r"^bud:"),
+                       MessageHandler(filters.TEXT & ~filters.COMMAND, txt_budget)],
+            S_CONDITION: [CallbackQueryHandler(cb_condition, pattern=r"^cond:")],
+            S_STOP: [CommandHandler("skip", skip_stop),
+                     MessageHandler(filters.TEXT & ~filters.COMMAND, txt_stop)],
         },
-        fallbacks=[CommandHandler("start", cmd_start)],
+        fallbacks=[CommandHandler("cancel", cancel), CommandHandler("start", cmd_start),
+                   MessageHandler(filters.Regex("^📋 Мої пошуки$"), cancel_and_list)],
         allow_reentry=True,
     )
-
-    app.add_handler(conv)
     app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help",  cmd_help))
-    app.add_handler(MessageHandler(filters.Regex("^(📋 Мої пошуки|❓ Допомога)$"), handle_menu))
+    app.add_handler(conv)
+    app.add_handler(CommandHandler("help", cmd_help))
+    app.add_handler(CommandHandler("list", my_searches))
+    app.add_handler(CommandHandler("presets", presets))
+    app.add_handler(MessageHandler(filters.Regex("^📋 Мої пошуки$"), my_searches))
+    app.add_handler(MessageHandler(filters.Regex("^❓ Допомога$"), cmd_help))
+    app.add_handler(CallbackQueryHandler(cb_preset, pattern=r"^pre:"))
+    app.add_handler(CallbackQueryHandler(cb_manage, pattern=r"^(chk|pau|res|frq|frqset|del|delok|delno):"))
+    app.add_error_handler(on_error)
+    app.job_queue.run_repeating(tick, interval=60, first=15, name="tick")
+    return app
 
-    # Inline кнопки поза діалогом
-    app.add_handler(CallbackQueryHandler(cb_search_now,         pattern=r"^srch:"))
-    app.add_handler(CallbackQueryHandler(cb_pause,              pattern=r"^pause:"))
-    app.add_handler(CallbackQueryHandler(cb_resume,             pattern=r"^resume:"))
-    app.add_handler(CallbackQueryHandler(cb_enable_monitor,     pattern=r"^enmon:"))
-    app.add_handler(CallbackQueryHandler(cb_enable_monitor_freq,pattern=r"^enmonfreq:"))
-    app.add_handler(CallbackQueryHandler(cb_change_freq,        pattern=r"^chfreq:"))
-    app.add_handler(CallbackQueryHandler(cb_new_freq,           pattern=r"^newfreq:"))
-    app.add_handler(CallbackQueryHandler(cb_delete,             pattern=r"^del:"))
-    app.add_handler(CallbackQueryHandler(cb_delete_ok,          pattern=r"^delok:"))
-    app.add_handler(CallbackQueryHandler(cb_delete_no,          pattern=r"^delno:"))
 
-    log.info("Бот v3.0 запущено ✅ ok")
-
+def main():
+    setup_logging()
+    if not BOT_TOKEN or "ВСТАВ" in BOT_TOKEN:
+        print("❌ Немає токена. Впиши BOT_TOKEN=... у файл .env поруч із ботом і запусти ще раз.")
+        raise SystemExit(2)      # код 2: start.bat не перезапускає бот у циклі
+    app = build_app(BOT_TOKEN)
+    log.info("Бот v4 запущено. Дані: %s", DATA_DIR)
     app.run_polling(drop_pending_updates=True)
 
 
