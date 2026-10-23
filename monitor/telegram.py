@@ -24,7 +24,7 @@ def listing_caption(l: Listing, search_name: str) -> str:
         price = fmt_money(l.price_uah, "₴")
     else:
         price = fmt_money(l.price_usd, "$")
-    per_m = f" · {fmt_money(round(l.price_usd / l.area), '$')}/м²" if l.price_usd and l.area and l.currency != "uah" else ""
+    per_m = f" · {fmt_money(round(l.price_usd / l.area), '$')}/м²" if l.price_usd and l.price_usd > 5000 and l.area and l.currency != "uah" else ""
     parts = [f"🆕 <b>{esc(search_name)}</b>", f"💰 <b>{price}</b>{per_m}"]
     line = []
     if l.rooms:
