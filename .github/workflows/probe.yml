@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install requests
+      - run: pip install requests pyyaml openpyxl
       - run: mkdir -p probe_out && python probe/probe.py | tee probe_out/summary.txt || true
       - name: push results to claude/probe-out
         run: |
