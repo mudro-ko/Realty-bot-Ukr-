@@ -108,9 +108,16 @@ def fetch(s: dict, seen: dict, usd_uah: float, first_run: bool, max_pages: int =
     first_url = build_url(s, 1)
     for page in range(1, max_pages + 1):
         url = build_url(s, page)
-        html = get(url).text
+        r = get(url)
+        html = r.text
         cards, total = parse_page(html)
         if not cards:
+            if page == 1:
+                title = re.search(r"<title>(.*?)</title>", html, re.S)
+                raise RuntimeError(
+                    f"ЛУН не віддав карток: HTTP {r.status_code}, {len(html)} байт, "
+                    f"final={r.url[:120]}, title={(title.group(1) if title else '')[:80]!r}, "
+                    f"flight_chunks={len(FLIGHT_RE.findall(html))}, has_realties={'realties' in html}")
             break
         unseen = [c for c in cards if f"lun:{c['id']}" not in seen]
         for c in unseen:
