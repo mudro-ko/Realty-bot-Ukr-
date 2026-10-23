@@ -281,13 +281,47 @@ def summary(s):
 
 
 # ── Доступ ─────────────────────────────────────────────────────
+def is_owner(chat_id, db: DB) -> bool:
+    return db.data.get("owner") is not None and str(chat_id) == str(db.data["owner"])
+
+
+def chat_allowed(chat_id, db: DB) -> bool:
+    cid = str(chat_id)
+    if cid in ALLOWED or is_owner(cid, db):
+        return True
+    return cid in (db.data.get("users") or {})
+
+
 def allowed(update: Update, db: DB) -> bool:
-    cid = str(update.effective_chat.id)
-    if ALLOWED:
-        return cid in ALLOWED
-    if db.data.get("owner") is None:
+    if db.data.get("owner") is None and not ALLOWED:
         return True          # перший /start зробить цей чат власником
-    return cid == str(db.data["owner"])
+    return chat_allowed(update.effective_chat.id, db)
+
+
+def norm_phone(p: str) -> str:
+    d = re.sub(r"\D", "", p or "")
+    if len(d) == 10 and d.startswith("0"):
+        d = "38" + d
+    elif len(d) == 9:
+        d = "380" + d
+    return d
+
+
+CONTACT_KB = ReplyKeyboardMarkup([[KeyboardButton("📱 Поділитися номером", request_contact=True)]],
+                                 resize_keyboard=True, one_time_keyboard=True)
+
+
+def owner_only(fn):
+    async def wrapper(update: Update, ctx: ContextTypes.DEFAULT_TYPE, *a, **kw):
+        if not is_owner(update.effective_chat.id, ctx.bot_data["db"]):
+            if update.callback_query:
+                await update.callback_query.answer("Лише для власника бота", show_alert=True)
+            else:
+                await update.effective_message.reply_text("Ця команда лише для власника бота.")
+            return
+        return await fn(update, ctx, *a, **kw)
+    wrapper.__name__ = fn.__name__
+    return wrapper
 
 
 def guard(fn):
@@ -297,7 +331,9 @@ def guard(fn):
             if update.callback_query:
                 await update.callback_query.answer("Це приватний бот", show_alert=True)
             elif update.effective_message:
-                await update.effective_message.reply_text("🔒 Це приватний бот.")
+                await update.effective_message.reply_text(
+                    "🔒 Це приватний бот.\n\nЯкщо власник дав тобі доступ за номером телефону — "
+                    "натисни кнопку нижче, щоб поділитися номером.", reply_markup=CONTACT_KB)
             return ConversationHandler.END
         return await fn(update, ctx, *a, **kw)
     wrapper.__name__ = fn.__name__
@@ -378,6 +414,8 @@ async def tick(ctx: ContextTypes.DEFAULT_TYPE):
     due = []
     with db.lock:
         for cid, chat in db.data["chats"].items():
+            if not chat_allowed(cid, db):
+                continue
             for s in chat["searches"]:
                 if not s.get("paused") and s.get("next_due", 0) <= now:
                     due.append((int(cid), s["id"]))
@@ -880,8 +918,9 @@ async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "(можна натиснути «🔍 Перевірити зараз» у пошуку).")
         return
     lines = [f"• {esc(k)}: {v}" for k, v in stats.items()]
-    ctx.bot_data["last_report"] = path
-    markup = kb([[("📂 Відкрити на комп'ютері", "openrep")]]) if os.name == "nt" else None
+    ctx.chat_data["last_report"] = path
+    markup = kb([[("📂 Відкрити на комп'ютері", "openrep")]]) \
+        if os.name == "nt" and is_owner(cid, db) else None
     with open(path, "rb") as f:
         await update.effective_message.reply_document(
             f, filename=os.path.basename(path),
@@ -897,10 +936,10 @@ async def cmd_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             pass
 
 
-@guard
+@owner_only
 async def cb_open_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    path = ctx.bot_data.get("last_report")
+    path = ctx.chat_data.get("last_report")
     if not path or not os.path.exists(path):
         await q.answer("Файл не знайдено — сформуй звіт ще раз", show_alert=True)
         return
@@ -911,23 +950,206 @@ async def cb_open_report(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await q.answer(f"Не вдалося відкрити: {e}"[:190], show_alert=True)
 
 
+# ── Доступ для інших людей ─────────────────────────────────────
+INVITE_TTL = 7 * 24 * 3600
+
+
+def add_user(db: DB, update: Update, via: str, phone: str = ""):
+    u = update.effective_user
+    with db.lock:
+        db.data.setdefault("users", {})[str(update.effective_chat.id)] = {
+            "name": " ".join(x for x in [u.first_name, u.last_name] if x) or (u.username or "?"),
+            "username": u.username or "", "phone": phone, "via": via,
+            "added": datetime.now(KYIV).strftime("%d.%m.%Y %H:%M")}
+    db.save()
+
+
+async def notify_owner(ctx, text):
+    owner = ctx.bot_data["db"].data.get("owner")
+    if owner:
+        try:
+            await ctx.bot.send_message(owner, text, parse_mode=ParseMode.HTML)
+        except TelegramError:
+            pass
+
+
+async def redeem_invite(update: Update, ctx: ContextTypes.DEFAULT_TYPE, code: str) -> bool:
+    db: DB = ctx.bot_data["db"]
+    inv = (db.data.get("invites") or {}).get(code)
+    if not inv or inv.get("used_by") or time.time() - inv.get("ts", 0) > INVITE_TTL:
+        await update.effective_message.reply_text("⚠️ Посилання-запрошення недійсне або вже використане. "
+                                                  "Попроси власника бота надіслати нове.")
+        return False
+    with db.lock:
+        inv["used_by"] = update.effective_chat.id
+    add_user(db, update, via="запрошення")
+    await notify_owner(ctx, f"👥 За запрошенням приєднався: <b>{esc(db.data['users'][str(update.effective_chat.id)]['name'])}</b>")
+    return True
+
+
+async def on_contact(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    c = update.message.contact
+    if not c or c.user_id != update.effective_user.id:
+        await update.message.reply_text("Надішли, будь ласка, саме свій номер — кнопкою «📱 Поділитися номером».",
+                                        reply_markup=CONTACT_KB)
+        return
+    if chat_allowed(update.effective_chat.id, db):
+        await update.message.reply_text("У тебе вже є доступ 🙂", reply_markup=MAIN_KB)
+        return
+    phone = norm_phone(c.phone_number)
+    allowed_phones = db.data.get("allowed_phones") or {}
+    if phone not in allowed_phones:
+        await update.message.reply_text("🔒 Для цього номера доступу немає. Попроси власника бота додати його.",
+                                        reply_markup=CONTACT_KB)
+        log.info("Відмова за номером …%s", phone[-4:])
+        return
+    add_user(db, update, via="номер", phone=phone)
+    label = allowed_phones.get(phone) or ""
+    await notify_owner(ctx, f"👥 За номером +{phone[:5]}…{phone[-2:]} приєднався: "
+                            f"<b>{esc(db.data['users'][str(update.effective_chat.id)]['name'])}</b>"
+                            + (f" ({esc(label)})" if label else ""))
+    await welcome(update, ctx)
+
+
+def access_kb():
+    return kb([[("🔗 Створити запрошення", "acc:invite")],
+               [("👥 Користувачі", "acc:users"), ("📞 Дозволені номери", "acc:phones")]])
+
+
+@owner_only
+async def cmd_access(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.effective_message.reply_text(
+        "👥 <b>Доступ до бота</b>\n\n"
+        "• <b>За номером:</b> напиши <code>/allow +380671234567 Ім'я</code> — людина відкриє бота, "
+        "натисне «Поділитися номером» і отримає доступ.\n"
+        "• <b>За посиланням:</b> «🔗 Створити запрошення» — одноразове посилання на 7 днів.\n\n"
+        "У кожного свої пошуки й сповіщення. Працює, поки увімкнений цей комп'ютер.",
+        parse_mode=ParseMode.HTML, reply_markup=access_kb())
+
+
+@owner_only
+async def cmd_allow(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    if not ctx.args:
+        await update.message.reply_text("Формат: /allow +380671234567 Ім'я")
+        return
+    # номер може бути з пробілами/дужками: «067 123 45 67», далі — ім'я
+    num_parts, rest = [], list(ctx.args)
+    while rest and re.fullmatch(r"[+\d()\-]+", rest[0]):
+        num_parts.append(rest.pop(0))
+    phone = norm_phone("".join(num_parts))
+    if len(phone) < 11:
+        await update.message.reply_text("⚠️ Не схоже на номер. Приклад: /allow +380671234567 Олена")
+        return
+    label = " ".join(rest)
+    with db.lock:
+        db.data.setdefault("allowed_phones", {})[phone] = label
+    db.save()
+    me = ctx.bot.username
+    await update.message.reply_text(
+        f"✅ Номер +{phone} додано{(' (' + esc(label) + ')') if label else ''}.\n"
+        f"Надішли людині посилання на бота: https://t.me/{me} — хай натисне /start і «Поділитися номером».",
+        parse_mode=ParseMode.HTML)
+
+
+@owner_only
+async def cb_access(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    db: DB = ctx.bot_data["db"]
+    act = q.data.split(":", 1)[1]
+    if act == "invite":
+        code = uuid.uuid4().hex[:10]
+        with db.lock:
+            invs = db.data.setdefault("invites", {})
+            for k in [k for k, v in invs.items() if time.time() - v.get("ts", 0) > INVITE_TTL]:
+                del invs[k]
+            invs[code] = {"ts": time.time(), "used_by": None}
+        db.save()
+        link = f"https://t.me/{ctx.bot.username}?start=inv_{code}"
+        await q.message.reply_text(f"🔗 Одноразове запрошення (дійсне 7 днів):\n{link}\n\n"
+                                   "Перешли його людині — хто перший перейде, той отримає доступ.",
+                                   link_preview_options=NO_PREVIEW)
+    elif act == "users":
+        users = db.data.get("users") or {}
+        if not users:
+            await q.message.reply_text("Інших користувачів поки немає.")
+            return
+        for cid, u in users.items():
+            n = len(db.chat(cid)["searches"]) if cid in db.data["chats"] else 0
+            txt = (f"👤 <b>{esc(u['name'])}</b>" + (f" @{esc(u['username'])}" if u.get("username") else "")
+                   + f"\nдоступ: {u['via']}, з {u['added']} · пошуків: {n}")
+            await q.message.reply_text(txt, parse_mode=ParseMode.HTML,
+                                       reply_markup=kb([[("🚫 Відключити", f"rev:{cid}")]]))
+    elif act == "phones":
+        ph = db.data.get("allowed_phones") or {}
+        if not ph:
+            await q.message.reply_text("Дозволених номерів немає. Додати: /allow +380671234567 Ім'я")
+            return
+        rows = [[(f"🗑 +{p}" + (f" {l}" if l else ""), f"rmph:{p}")] for p, l in ph.items()]
+        await q.message.reply_text("📞 Дозволені номери (натисни, щоб прибрати):", reply_markup=kb(rows))
+
+
+@owner_only
+async def cb_revoke(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    db: DB = ctx.bot_data["db"]
+    kind, val = q.data.split(":", 1)
+    with db.lock:
+        if kind == "rev":
+            u = (db.data.get("users") or {}).pop(val, None)
+            if u and u.get("phone"):
+                (db.data.get("allowed_phones") or {}).pop(u["phone"], None)
+        else:
+            u = (db.data.get("allowed_phones") or {}).pop(val, None)
+    db.save()
+    await q.answer("Готово")
+    if kind == "rev":
+        await q.edit_message_text(f"🚫 Доступ відключено{(': ' + esc(u['name'])) if u else ''}. "
+                                  "Його пошуки більше не перевіряються.", parse_mode=ParseMode.HTML)
+        try:
+            await ctx.bot.send_message(int(val), "🔒 Власник бота відключив тобі доступ.")
+        except TelegramError:
+            pass
+    else:
+        await q.edit_message_text(f"🗑 Номер +{val} прибрано зі списку дозволених.")
+
+
 # ═══════════════════════════════════════════════════════════════
 # КОМАНДИ
 # ═══════════════════════════════════════════════════════════════
-@guard
 async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    arg = (ctx.args or [""])[0] if getattr(ctx, "args", None) else ""
+    if arg.startswith("inv_") and not allowed(update, db):
+        if await redeem_invite(update, ctx, arg[4:]):
+            return await welcome(update, ctx)
+        return ConversationHandler.END
+    return await _start_guarded(update, ctx)
+
+
+@guard
+async def _start_guarded(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     db: DB = ctx.bot_data["db"]
     if not ALLOWED and db.data.get("owner") is None:
         db.data["owner"] = update.effective_chat.id
         db.save()
         log.info("Власник бота: %s", update.effective_chat.id)
+    return await welcome(update, ctx)
+
+
+async def welcome(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    db: DB = ctx.bot_data["db"]
+    owner_hint = "\n👥 /access — доступ для інших (номер телефону або посилання)" \
+        if is_owner(update.effective_chat.id, db) else ""
     await update.effective_message.reply_text(
         "👋 <b>Пошук нерухомості UA v4</b>\n\n"
         "Шукаю на ЛУН (там і оголошення з OLX, rieltor.ua) та DIM.RIA і сам пишу про нові.\n\n"
         "➕ <b>Новий пошук</b> — створити\n"
         "📋 <b>Мої пошуки</b> — перевірити, пауза, частота, видалення\n"
         "📊 <b>Звіт</b> — Excel з посиланнями й аналітикою\n"
-        "/presets — готові пошуки (напр. Миколаїв · Ліски)",
+        "/presets — готові пошуки (напр. Миколаїв · Ліски)" + owner_hint,
         parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
     if not db.searches(update.effective_chat.id) and load_presets():
         await presets(update, ctx)
@@ -944,7 +1166,9 @@ async def cmd_help(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "• Стан ремонту визначаю за позначками сайтів і текстом оголошення — це підказка, не гарантія.\n\n"
         "• Усі оголошення, що пройшли фільтри, зберігаються в архів; якщо ціна знизиться — напишу 📉.\n"
         "• 📊 Звіт — Excel з посиланнями й аналітикою (медіани, $/м², динаміка, топ дешевих).\n\n"
-        "Команди: /new — новий пошук, /list — мої пошуки, /report — звіт, /presets — готові, /cancel — скасувати.",
+        "Команди: /new — новий пошук, /list — мої пошуки, /report — звіт, /presets — готові, /cancel — скасувати."
+        + ("\nВласнику: /access — доступ для інших, /allow +380… Ім'я — дозволити номер."
+           if is_owner(update.effective_chat.id, ctx.bot_data["db"]) else ""),
         parse_mode=ParseMode.HTML, reply_markup=MAIN_KB)
 
 
@@ -1018,6 +1242,12 @@ def build_app(token: str, db: DB = None, **builder_kw) -> Application:
     app.add_handler(MessageHandler(filters.Regex("^📋 Мої пошуки$"), my_searches))
     app.add_handler(MessageHandler(filters.Regex("^❓ Допомога$"), cmd_help))
     app.add_handler(CommandHandler("report", cmd_report))
+    app.add_handler(CommandHandler("access", cmd_access))
+    app.add_handler(CommandHandler("allow", cmd_allow))
+    app.add_handler(CommandHandler("users", lambda u, c: cmd_access(u, c)))
+    app.add_handler(MessageHandler(filters.CONTACT, on_contact))
+    app.add_handler(CallbackQueryHandler(cb_access, pattern=r"^acc:"))
+    app.add_handler(CallbackQueryHandler(cb_revoke, pattern=r"^(rev|rmph):"))
     app.add_handler(CallbackQueryHandler(cb_open_report, pattern=r"^openrep$"))
     app.add_handler(MessageHandler(filters.Regex("^📊 Звіт$"), cmd_report))
     app.add_handler(CallbackQueryHandler(cb_preset, pattern=r"^pre:"))
